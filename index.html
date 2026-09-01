@@ -151,7 +151,7 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
 <body>
 
 <div class="topbar">
-  <h1>Packing List<small>local · offline · v3</small><small id="linkedFileIndicator" style="color:var(--accent);"></small></h1>
+  <h1>Packing List<small>local · offline · <span id="appVersion">v3</span></small><small id="linkedFileIndicator" style="color:var(--accent);"></small></h1>
   <div class="menuWrap">
     <button class="menuToggle" id="menuToggleBtn" onclick="toggleMainMenu()" aria-label="Menu" title="Menu">☰</button>
     <div class="mainMenu" id="mainMenu">
@@ -160,7 +160,7 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
       <button class="secondary" onclick="exportJSON(); closeMainMenu();">⬇ Export</button>
       <button class="secondary" onclick="document.getElementById('importFile').click(); closeMainMenu();">⬆ Import</button>
       <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importJSON(event)">
-      <button class="secondary" id="linkFileBtn" style="display:none" onclick="linkFile(); closeMainMenu();">🔗 Link</button>
+      <button class="secondary" id="linkFileBtn" style="display:none" onclick="handleLinkButtonClick(); closeMainMenu();">🔗 Link</button>
     </div>
   </div>
 </div>
@@ -376,7 +376,7 @@ Cutlery"></textarea>
       <li><b>Lists</b>: individual packing lists for specific trips, filled with items from your inventory.</li>
       <li><b>Bulk Add</b>: add several items to one category at once.</li>
       <li><b>Manage</b>: rename/delete categories &amp; locations, reset inventory.</li>
-      <li><b>☰ menu</b>: Export/Import as a backup file · "Link" saves changes automatically to a local file (only until the page is reloaded).</li>
+      <li><b>☰ menu</b>: Export/Import as a backup file · "Link" saves changes automatically to a local file — stays linked across reloads (may need one click to confirm).</li>
       <li>All data stays in this browser only until you export it.</li>
       <li>Tap category/group headings to collapse/expand them.</li>
     </ul>
@@ -396,6 +396,7 @@ const SEED = [];
 
 let db = null;
 let fileHandle = null;
+let pendingHandle = null;
 let currentTripId = null;
 let pickerTripId = null;
 let pickerSelections = {};
@@ -1678,10 +1679,16 @@ function importJSON(evt){
 async function linkFile(){
   try{
     fileHandle = await window.showSaveFilePicker({suggestedName:'packing_list.json', types:[{description:'JSON', accept:{'application/json':['.json']}}]});
+    pendingHandle = null;
+    await storeLinkedHandle(fileHandle);
     await writeLinkedFile();
     updateLinkedFileUI();
     toast(`File linked: ${fileHandle.name} — changes will be saved to it automatically from now on`);
   }catch(e){ /* user cancelled the picker */ }
+}
+function handleLinkButtonClick(){
+  if(pendingHandle) reconnectLinkedFile();
+  else linkFile();
 }
 // Makes it visible whether & to which file the app is currently linked. Browsers only
 // expose the file name for security reasons, never the full path.
@@ -1691,10 +1698,87 @@ function updateLinkedFileUI(){
   if(fileHandle){
     if(btn) btn.textContent = `✅ Linked: ${fileHandle.name}`;
     if(indicator) indicator.textContent = ` · 🔗 ${fileHandle.name}`;
+  } else if(pendingHandle){
+    if(btn) btn.textContent = `🔗 Resume link: ${pendingHandle.name}`;
+    if(indicator) indicator.textContent = '';
   } else {
     if(btn) btn.textContent = '🔗 Link';
     if(indicator) indicator.textContent = '';
   }
+}
+// Persists the file handle across reloads/restarts (unlike localStorage, IndexedDB
+// can clone/store FileSystemFileHandle objects).
+const HANDLE_DB_NAME = 'packing_list_filehandle_db';
+const HANDLE_STORE = 'handles';
+const HANDLE_KEY = 'linked';
+function openHandleDB(){
+  return new Promise((resolve,reject)=>{
+    const req = indexedDB.open(HANDLE_DB_NAME, 1);
+    req.onupgradeneeded = ()=> req.result.createObjectStore(HANDLE_STORE);
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+}
+async function storeLinkedHandle(handle){
+  try{
+    const hdb = await openHandleDB();
+    await new Promise((resolve,reject)=>{
+      const tx = hdb.transaction(HANDLE_STORE,'readwrite');
+      tx.objectStore(HANDLE_STORE).put(handle, HANDLE_KEY);
+      tx.oncomplete = resolve; tx.onerror = ()=>reject(tx.error);
+    });
+  }catch(e){ console.warn('Could not save file link', e); }
+}
+async function loadLinkedHandle(){
+  try{
+    const hdb = await openHandleDB();
+    return await new Promise((resolve,reject)=>{
+      const req = hdb.transaction(HANDLE_STORE,'readonly').objectStore(HANDLE_STORE).get(HANDLE_KEY);
+      req.onsuccess = ()=> resolve(req.result||null);
+      req.onerror = ()=> reject(req.error);
+    });
+  }catch(e){ return null; }
+}
+async function clearLinkedHandle(){
+  try{
+    const hdb = await openHandleDB();
+    hdb.transaction(HANDLE_STORE,'readwrite').objectStore(HANDLE_STORE).delete(HANDLE_KEY);
+  }catch(e){ /* ignore */ }
+}
+// On startup: load the stored handle and check permission. If permission is still
+// granted, reconnect automatically; otherwise show a button to resume manually
+// (requestPermission strictly requires a user gesture, it can't run automatically).
+async function restoreLinkedFile(){
+  if(!('showSaveFilePicker' in window)) return;
+  const handle = await loadLinkedHandle();
+  if(!handle) return;
+  try{
+    const perm = await handle.queryPermission({mode:'readwrite'});
+    if(perm === 'granted'){
+      fileHandle = handle;
+      toast(`File re-linked: ${fileHandle.name}`);
+    } else {
+      pendingHandle = handle;
+    }
+  }catch(e){ await clearLinkedHandle(); return; }
+  updateLinkedFileUI();
+}
+async function reconnectLinkedFile(){
+  if(!pendingHandle) return;
+  try{
+    const perm = await pendingHandle.requestPermission({mode:'readwrite'});
+    if(perm === 'granted'){
+      fileHandle = pendingHandle;
+      pendingHandle = null;
+      updateLinkedFileUI();
+      toast(`File re-linked: ${fileHandle.name}`);
+    } else {
+      pendingHandle = null;
+      await clearLinkedHandle();
+      updateLinkedFileUI();
+      toast('Could not resume the file link.');
+    }
+  }catch(e){ pendingHandle = null; updateLinkedFileUI(); }
 }
 function toggleMainMenu(){ document.getElementById('mainMenu').classList.toggle('show'); }
 function closeMainMenu(){ document.getElementById('mainMenu').classList.remove('show'); }
@@ -1712,7 +1796,13 @@ async function writeLinkedFile(){
     const w = await fileHandle.createWritable();
     await w.write(JSON.stringify(db,null,2));
     await w.close();
-  }catch(e){ console.warn('File write access failed', e); }
+  }catch(e){
+    console.warn('File write access failed', e);
+    pendingHandle = fileHandle;
+    fileHandle = null;
+    updateLinkedFileUI();
+    toast('Write access was lost — please resume the link from the menu.');
+  }
 }
 
 // =================== Migrations (historical, run once) ===================
@@ -1744,6 +1834,7 @@ loadDB();
 applyMigrations();
 if('showSaveFilePicker' in window) document.getElementById('linkFileBtn').style.display='';
 updateLinkedFileUI();
+restoreLinkedFile();
 renderCatalog();
 renderTripsList();
 </script>
@@ -1755,6 +1846,17 @@ if('serviceWorker' in navigator){
     navigator.serviceWorker.register('service-worker.js').catch(err=>console.warn('Service worker registration failed:', err));
   });
 }
+// Always take the header's version number from service-worker.js so the display
+// and the cache version can never drift apart.
+(async function syncVersionFromServiceWorker(){
+  try{
+    const res = await fetch('service-worker.js', {cache:'no-store'});
+    const text = await res.text();
+    const m = text.match(/CACHE_NAME\s*=\s*'[^']*-v(\d+)'/);
+    const el = document.getElementById('appVersion');
+    if(m && el) el.textContent = 'v'+m[1];
+  }catch(e){ /* offline — display stays whatever is hardcoded in the HTML */ }
+})();
 </script>
 </body>
 </html>
