@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Packing List</title>
+<meta name="description" content="Packing list — local, offline, installable.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<!-- iOS: separate set of meta tags, since Safari only partially supports the web app manifest -->
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Packing List">
+<style>
+:root{
+  --bg:#0f172a; --panel:#1e293b; --panel2:#273549; --text:#e2e8f0; --muted:#94a3b8;
+  --accent:#38bdf8; --accent2:#22c55e; --warn:#f59e0b; --danger:#ef4444; --border:#334155;
+}
+*{box-sizing:border-box;}
+body{margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg); color:var(--text); padding:10px; padding-bottom:74px;
+  padding-left:max(10px, env(safe-area-inset-left)); padding-right:max(10px, env(safe-area-inset-right));
+  padding-top:max(10px, env(safe-area-inset-top));}
+h1{font-size:1.2rem; margin:2px 0 10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+h1 small{color:var(--muted); font-size:0.62rem; font-weight:400;}
+h3{font-size:0.95rem; color:var(--accent); margin:14px 0 8px;}
+button{background:var(--accent); color:#0b1220; border:none; border-radius:8px; padding:9px 12px;
+  font-size:0.87rem; font-weight:600; cursor:pointer;}
+button.secondary{background:var(--panel2); color:var(--text); border:1px solid var(--border);}
+button.danger{background:var(--danger); color:#fff;}
+button.ghost{background:transparent; color:var(--muted); border:1px solid var(--border); padding:6px 9px;}
+button.small{padding:5px 9px; font-size:0.78rem;}
+button:disabled{opacity:.4; cursor:default;}
+input[type=text],input[type=number],input[type=search],select,textarea{
+  background:#0b1220; color:var(--text); border:1px solid var(--border); border-radius:6px;
+  padding:7px 8px; font-size:0.87rem; font-family:inherit;}
+textarea{resize:vertical;}
+.tabbar{display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap;}
+.tabbar button{background:var(--panel2); color:var(--muted);}
+.tabbar button.active{background:var(--accent); color:#0b1220;}
+.view{display:none;} .view.active{display:block;}
+.toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; background:var(--panel);
+  border:1px solid var(--border); border-radius:10px; padding:10px; margin-bottom:12px; position:sticky; top:0; z-index:5;}
+.toolbar input[type=search]{flex:1; min-width:120px;}
+.toolbar select{min-width:110px;}
+.toolbar label{display:flex; align-items:center; gap:5px; font-size:0.8rem; color:var(--muted); white-space:nowrap;}
+details{background:var(--panel); border:1px solid var(--border); border-radius:10px; margin-bottom:8px; overflow:hidden;}
+summary{padding:9px 12px; cursor:pointer; font-weight:600; font-size:0.9rem; color:var(--accent);
+  display:flex; justify-content:space-between; align-items:center; list-style:none; gap:8px;}
+summary::-webkit-details-marker{display:none;}
+summary .cnt{color:var(--muted); font-weight:400; font-size:0.74rem; white-space:nowrap;}
+.row-inline{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+.pill{display:inline-block; background:var(--panel2); color:var(--muted); border-radius:10px; padding:2px 9px; font-size:0.72rem;}
+.pill.warn{background:rgba(245,158,11,.18); color:var(--warn);}
+.pill.ok{background:rgba(34,197,94,.18); color:var(--accent2);}
+.tripcard{background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:10px;}
+.tripcard .row-inline{justify-content:space-between;}
+.tripcard .meta{color:var(--muted); font-size:0.8rem; margin-top:4px;}
+.progress{height:6px; background:var(--panel2); border-radius:4px; overflow:hidden; margin-top:8px;}
+.progress > div{height:100%; background:var(--accent2);}
+
+/* Inventory: cards instead of a table -> readable on mobile devices */
+.bcard{border-top:1px solid var(--border); padding:10px 6px; display:flex; gap:8px; background:var(--panel);}
+.bcard:nth-of-type(even){background:var(--panel2);}
+.bcard:first-child{border-top:none;}
+.bcard.inactive{opacity:.5;}
+.bcard .selcol{padding-top:6px;}
+.bcard .bbody{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px;}
+.bcard .bname{font-weight:600; font-size:0.92rem; width:100%;}
+.bcard .bfields{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:6px;}
+.bcard .bfields div{display:flex; flex-direction:column; gap:2px;}
+.bcard .bfields label{font-size:0.66rem; color:var(--muted); text-transform:uppercase;}
+.bcard .bnote{width:100%; min-height:38px;}
+.bcard .btail{display:flex; justify-content:space-between; align-items:center; gap:8px;}
+.bcard .btail label{display:flex; align-items:center; gap:5px; font-size:0.78rem; color:var(--muted);}
+.bcard .btotal{font-size:0.74rem; color:var(--muted); font-weight:400;}
+.batches{background:var(--panel2); border-radius:8px; padding:6px 8px;}
+.batches .batch-hdr{font-size:0.66rem; color:var(--muted); text-transform:uppercase; margin-bottom:4px;}
+.batch-row{display:flex; gap:6px; align-items:center; margin-bottom:5px; flex-wrap:wrap;}
+.batch-row input[type=number]{width:52px;}
+.batch-row input[type=text]{flex:1; min-width:80px;}
+.batch-row .x{color:var(--danger); background:none; border:none; font-size:0.95rem; cursor:pointer; padding:2px 6px;}
+
+.selectbar{position:sticky; top:56px; z-index:6; background:rgba(56,189,248,.12); border:1px solid var(--accent);
+  border-radius:10px; padding:8px 10px; margin-bottom:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+.selectbar b{color:var(--accent);}
+
+.itemrow{display:flex; align-items:flex-start; gap:8px; padding:8px 4px; border-top:1px solid var(--border); flex-wrap:wrap; background:var(--panel);}
+.itemrow:nth-of-type(even){background:var(--panel2);}
+.itemrow:first-child{border-top:none;}
+.itemrow .name{flex:1; min-width:140px;}
+.itemrow .name b{display:block; font-size:0.88rem;}
+.itemrow .name.packed b{text-decoration:line-through; color:var(--muted);}
+.itemrow .loc{font-size:0.75rem; color:var(--muted); display:block;}
+.itemrow .tags{display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;}
+.itemrow input[type=number]{width:52px;}
+.itemrow .x{color:var(--danger); background:none; border:none; font-size:1rem; cursor:pointer; padding:2px 6px;}
+.tagpill{display:inline-flex; align-items:center; gap:4px; background:rgba(56,189,248,.15); color:var(--accent);
+  border-radius:10px; padding:1px 6px 1px 8px; font-size:0.7rem;}
+.tagpill button{background:none; border:none; color:var(--accent); padding:0; margin:0; font-size:0.85rem; cursor:pointer; line-height:1;}
+.taginput{width:90px; font-size:0.72rem; padding:3px 6px;}
+
+.modal-bg{display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50; align-items:center; justify-content:center; padding:16px; overflow:auto;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px; width:100%; max-width:560px; max-height:88vh; overflow:auto;}
+.modal h2{margin:0 0 10px; font-size:1.05rem;}
+.picker-item{display:flex; align-items:center; gap:8px; padding:5px 2px; border-top:1px solid var(--border);}
+.picker-item:first-child{border-top:none;}
+.picker-item .n{flex:1; font-size:0.86rem;}
+.picker-item input[type=number]{width:46px;}
+.footer-fixed{position:fixed; bottom:0; left:0; right:0; background:var(--panel); border-top:1px solid var(--border);
+  padding:8px 12px; padding-bottom:max(8px, env(safe-area-inset-bottom)); display:flex; gap:8px; flex-wrap:wrap; justify-content:center; z-index:10;}
+.empty{color:var(--muted); font-style:italic; padding:14px; text-align:center;}
+#toast{position:fixed; bottom:64px; left:50%; transform:translateX(-50%); background:var(--accent2);
+  color:#0b1220; padding:9px 16px; border-radius:8px; font-weight:600; opacity:0; transition:opacity .3s; pointer-events:none; z-index:99; max-width:90vw; text-align:center;}
+#toast.show{opacity:1;}
+.newitem-form{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; background:var(--panel2); padding:10px; border-radius:8px;}
+.newitem-form input,.newitem-form select,.newitem-form textarea{width:100%;}
+.newitem-form .full{grid-column:1/-1;}
+a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:pointer;}
+.manage-section{background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:12px;}
+.manage-row{display:flex; gap:8px; align-items:center; padding:7px 0; border-top:1px solid var(--border); flex-wrap:wrap;}
+.manage-row:first-child{border-top:none;}
+.manage-row .grow{flex:1; min-width:120px;}
+.danger-zone{border:1px solid var(--danger); border-radius:10px; padding:12px; background:rgba(239,68,68,.08);}
+.danger-zone h3{color:var(--danger);}
+.radiogroup{display:flex; gap:14px; flex-wrap:wrap; margin-bottom:10px;}
+.radiogroup label{display:flex; align-items:center; gap:5px; font-size:0.86rem; cursor:pointer;}
+@media (max-width:640px){
+  .toolbar{position:static;}
+  .selectbar{position:static;}
+  .bcard{flex-direction:column;}
+  .bcard .selcol{padding-top:0;}
+  h1{font-size:1.05rem;}
+}
+</style>
+</head>
+<body>
+
+<h1>Packing List<small>local · offline · v1</small></h1>
+
+<div class="tabbar">
+  <button id="tabBestand" class="active" onclick="showTab('bestand')">Inventory</button>
+  <button id="tabTrips" onclick="showTab('trips')">Packing Lists</button>
+  <button id="tabBulk" onclick="showTab('bulk')">Bulk Add</button>
+  <button id="tabManage" onclick="showTab('manage')">Management</button>
+</div>
+
+<div id="view-bestand" class="view active">
+  <div class="toolbar">
+    <input type="search" id="bSearch" placeholder="Search…" oninput="renderCatalog()">
+    <select id="bCat" onchange="renderCatalog()"><option value="">All categories</option></select>
+    <select id="bLoc" onchange="renderCatalog()">
+      <option value="">All locations</option>
+      <option value="__none__">Incomplete location (destination or origin missing)</option>
+    </select>
+    <select id="bStatus" onchange="renderCatalog()">
+      <option value="active">Active only</option>
+      <option value="all">All (active + inactive)</option>
+      <option value="inactive">Inactive only</option>
+    </select>
+    <button class="ghost small" onclick="toggleAllBestandGroups()" id="bToggleAllBtn">Collapse all</button>
+    <button onclick="openNewItemModal()">+ New item</button>
+  </div>
+  <div id="bSelectBar"></div>
+  <div id="catalogList"></div>
+</div>
+
+<div id="view-trips" class="view">
+  <div id="tripsListView">
+    <div class="toolbar">
+      <button onclick="createTrip()">+ New packing list</button>
+      <button class="secondary" onclick="document.getElementById('importTripFile').click()">⬆ Import packing list</button>
+      <input type="file" id="importTripFile" accept="application/json" style="display:none" onchange="importTripFile(event)">
+    </div>
+    <div id="tripsList"></div>
+  </div>
+  <div id="tripDetailView" style="display:none;"></div>
+</div>
+
+<div id="view-bulk" class="view">
+  <div class="manage-section">
+    <h3>Add multiple items at once</h3>
+    <div class="newitem-form">
+      <div>
+        <label style="font-size:0.72rem;color:var(--muted);">Category</label>
+        <input type="text" id="baCat" list="categoryOptions" placeholder="e.g. Kitchen (new or existing)">
+      </div>
+      <div>
+        <label style="font-size:0.72rem;color:var(--muted);">Quantity per item (default)</label>
+        <input type="number" id="baQtyDefault" value="1" min="1">
+      </div>
+      <div>
+        <label style="font-size:0.72rem;color:var(--muted);">Destination (optional, for all)</label>
+        <input type="text" id="baLocTo" list="locationOptions">
+      </div>
+      <div>
+        <label style="font-size:0.72rem;color:var(--muted);">Origin (optional, for all)</label>
+        <input type="text" id="baLocFrom" list="locationOptions">
+      </div>
+      <div class="full">
+        <label style="font-size:0.72rem;color:var(--muted);">Item names (one name per line)</label>
+        <textarea id="baNames" rows="6" placeholder="Bowl
+Pan
+Cutlery"></textarea>
+      </div>
+      <button class="full" onclick="previewBulkAdd()">Create preview</button>
+    </div>
+    <div id="baPreviewWrap"></div>
+  </div>
+</div>
+
+<div id="view-manage" class="view">
+  <div class="manage-section">
+    <h3>Categories</h3>
+    <div class="row-inline" style="margin-bottom:8px;">
+      <input type="text" id="newCatName" placeholder="New category…" style="flex:1;">
+      <button class="small" onclick="addCategoryFromInput()">+ Create</button>
+    </div>
+    <div id="manageCatList"></div>
+  </div>
+  <div class="manage-section">
+    <h3>Locations (destination &amp; origin)</h3>
+    <div id="manageLocList"></div>
+  </div>
+  <div class="danger-zone">
+    <h3>⚠ Danger zone</h3>
+    <p class="meta" style="color:var(--muted); font-size:0.82rem;">Permanently deletes the entire item inventory (packing lists remain as empty shells).</p>
+    <button class="danger" onclick="wipeCatalog()">Delete entire inventory</button>
+  </div>
+</div>
+
+<div class="footer-fixed">
+  <button class="secondary" onclick="exportJSON()">⬇ Export (JSON)</button>
+  <button class="secondary" onclick="document.getElementById('importFile').click()">⬆ Import (JSON)</button>
+  <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importJSON(event)">
+  <button class="secondary" id="linkFileBtn" style="display:none" onclick="linkFile()">🔗 Link file</button>
+</div>
+
+<div id="toast"></div>
+<datalist id="categoryOptions"></datalist>
+<datalist id="locationOptions"></datalist>
+
+<!-- Item picker (packing list: add items) -->
+<div class="modal-bg" id="pickerModal">
+  <div class="modal">
+    <h2>Add items</h2>
+    <div class="row-inline" style="margin-bottom:10px;">
+      <input type="search" id="pSearch" placeholder="Search inventory…" oninput="renderPicker()" style="flex:1;">
+      <select id="pCat" onchange="renderPicker()"><option value="">All categories</option></select>
+      <select id="pLoc" onchange="renderPicker()"><option value="">All current locations</option></select>
+    </div>
+    <div id="pickerList"></div>
+    <p><a class="backlink" onclick="toggleNewItemForm()">+ create new item in inventory</a></p>
+    <div class="newitem-form" id="newItemForm" style="display:none;">
+      <input type="text" id="niName" placeholder="Name">
+      <input type="text" id="niCat" list="categoryOptions" placeholder="Category (new or existing)">
+      <input type="number" id="niQty" placeholder="Quantity" value="1" min="1">
+      <input type="text" id="niLoc" list="locationOptions" placeholder="Destination (optional)">
+      <input type="text" id="niLocFrom" list="locationOptions" placeholder="Origin (optional)">
+      <button class="full small" onclick="quickAddCatalogItem()">Create &amp; add to list</button>
+    </div>
+    <div class="row-inline" style="justify-content:flex-end; margin-top:12px;">
+      <button class="secondary" onclick="closePicker()">Cancel</button>
+      <button onclick="confirmPicker()">Add selected</button>
+    </div>
+  </div>
+</div>
+
+<!-- New item (inventory) -->
+<div class="modal-bg" id="newItemModal">
+  <div class="modal">
+    <h2>New item</h2>
+    <div class="newitem-form">
+      <input type="text" id="mNiName" placeholder="Name" class="full">
+      <input type="text" id="mNiCat" list="categoryOptions" placeholder="Category (new or existing)">
+      <input type="number" id="mNiQty" placeholder="Quantity" value="1" min="1">
+      <input type="text" id="mNiLocTo" list="locationOptions" placeholder="Destination">
+      <input type="text" id="mNiLocFrom" list="locationOptions" placeholder="Origin">
+      <textarea id="mNiNote" placeholder="Note" class="full" rows="2"></textarea>
+    </div>
+    <div class="row-inline" style="justify-content:flex-end;">
+      <button class="secondary" onclick="closeNewItemModal()">Cancel</button>
+      <button onclick="submitNewItemModal()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Duplicate resolution -->
+<div class="modal-bg" id="dupModal">
+  <div class="modal">
+    <h2>Same name, different category</h2>
+    <p id="dupExistingLabel" class="meta" style="color:var(--muted);"></p>
+    <p id="dupNewLabel" class="meta" style="color:var(--muted);"></p>
+    <div class="row-inline" style="flex-direction:column; align-items:stretch; margin-top:10px;">
+      <button onclick="resolveDupChoice('B')" id="dupOptB"></button>
+      <button class="secondary" onclick="resolveDupChoice('A')" id="dupOptA"></button>
+      <button class="ghost" onclick="cancelDupModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete category -->
+<div class="modal-bg" id="deleteCategoryModal">
+  <div class="modal">
+    <h2 id="delCatTitle">Delete category</h2>
+    <div class="row-inline" style="margin-bottom:10px;">
+      <button class="small secondary" onclick="deleteCategoryMoveAll()">Move all items to "Miscellaneous" &amp; delete category</button>
+    </div>
+    <p class="meta" style="color:var(--muted); font-size:0.8rem;">Or select individually which items should be deleted (unchecked = will be moved to "Miscellaneous"):</p>
+    <div id="delCatList"></div>
+    <div class="row-inline" style="justify-content:flex-end; margin-top:12px;">
+      <button class="secondary" onclick="closeDeleteCategoryModal()">Cancel</button>
+      <button class="danger" onclick="confirmDeleteCategory()">Delete selected, move the rest</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export packing list -->
+<div class="modal-bg" id="exportModal">
+  <div class="modal">
+    <h2>Export packing list</h2>
+    <div class="radiogroup">
+      <label><input type="radio" name="exportMode" value="pack" checked> Packing list (where to pack things)</label>
+      <label><input type="radio" name="exportMode" value="unpack"> Unpacking list (where to put things back)</label>
+    </div>
+    <div class="radiogroup">
+      <label><input type="radio" name="exportGroup" value="category" checked> Group by: Category</label>
+      <label><input type="radio" name="exportGroup" value="location"> Group by: Destination/Origin</label>
+      <label><input type="radio" name="exportGroup" value="current"> Group by: Current location</label>
+    </div>
+    <p class="meta" style="color:var(--muted); font-size:0.78rem; margin:-4px 0 8px;">
+      Destination/Origin — Packing list: by destination (where to pack things). Unpacking list: by origin (where to put things back).<br>
+      Current location — both lists: by the place the item is currently at (where to pack from / unpack from).
+    </p>
+    <div class="radiogroup">
+      <label><input type="checkbox" id="exportIncNote"> Include note in export</label>
+      <label><input type="checkbox" id="exportIncTags"> Include tags in export</label>
+    </div>
+    <div class="row-inline" style="flex-direction:column; align-items:stretch;">
+      <button onclick="doExport('copy')">📋 Copy to clipboard</button>
+      <button class="secondary" onclick="doExport('txt')">⬇ Download as TXT file</button>
+      <button class="secondary" onclick="doExport('share')">📤 Share (smartphone)</button>
+      <button class="secondary" onclick="openPrintView()">🖨 Print view (print / save as PDF)</button>
+      <button class="ghost" onclick="closeExportModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATEGORIES_DEFAULT = [];
+const KNOWN_LOCATIONS = [];
+
+// Empty starting inventory — no example items. Use "Import (JSON)" in the footer
+// with a starter file (see README.md) to fill it, or add items manually.
+const SEED = [];
+
+let db = null;
+let fileHandle = null;
+let currentTripId = null;
+let pickerTripId = null;
+let pickerSelections = {};
+let selectedBestand = new Set();
+let selectedTripItems = new Set();
+let tripClosedGroups = new Set();
+let tripSubTab = 'artikel';
+function showTripSubTab(name){
+  tripSubTab = name;
+  const artSec = document.getElementById('tripArtikelSection');
+  const aufSec = document.getElementById('tripAufgabenSection');
+  if(artSec) artSec.style.display = name==='artikel' ? '' : 'none';
+  if(aufSec) aufSec.style.display = name==='aufgaben' ? '' : 'none';
+  const bArt = document.getElementById('tripSubArtikel');
+  const bAuf = document.getElementById('tripSubAufgaben');
+  if(bArt) bArt.classList.toggle('active', name==='artikel');
+  if(bAuf) bAuf.classList.toggle('active', name==='aufgaben');
+}
+let pendingDup = null;
+let pendingDeleteCategory = null;
+
+function normKey(s){ return (s||'').trim().toLowerCase(); }
+function slugify(s){ return (s||'').replace(/[^a-z0-9]+/gi,'_').replace(/^_+|_+$/g,'')||'unnamed'; }
+function fileTimestamp(){ return new Date().toISOString().replace(/[:.]/g,'-').slice(0,19); }
+const GROUP_LABEL_FOR_FILENAME = {category:'category', location:'location', current:'currentlocation'};
+function esc(s){ return (s||'').replace(/"/g,'&quot;'); }
+
+function loadDB(){
+  const raw = localStorage.getItem('packliste_v3_db');
+  if(raw){
+    db = JSON.parse(raw);
+    if(!db.categories) db.categories = CATEGORIES_DEFAULT.slice();
+    db.catalog.forEach(i=>{
+      if(!db.categories.some(c=>normKey(c)===normKey(i.category))) db.categories.push(i.category);
+    });
+    migrateToBatches();
+    if(!db.locations) db.locations = KNOWN_LOCATIONS.slice();
+    db.catalog.forEach(i=>i.batches.forEach(b=>{
+      if(b.locTo && !db.locations.some(l=>normKey(l)===normKey(b.locTo))) db.locations.push(b.locTo);
+      if(b.locFrom && !db.locations.some(l=>normKey(l)===normKey(b.locFrom))) db.locations.push(b.locFrom);
+    }));
+    db.trips.forEach(t=>{
+      t.items.forEach(ti=>{ if(!ti.tags) ti.tags=[]; });
+      if(!t.tasksBefore) t.tasksBefore=[];
+      if(!t.tasksAfter) t.tasksAfter=[];
+    });
+    if(!db.appliedMigrations) db.appliedMigrations=[];
+    return;
+  }
+  db = {nextId:1, catalog:[], trips:[], appliedMigrations:[], categories: CATEGORIES_DEFAULT.slice(),
+    locations: KNOWN_LOCATIONS.slice(), schemaBatches:true};
+  SEED.forEach(s=>{
+    const batch = {id:genBatchId(), qty:s[2], locTo:s[3], locFrom:s[4]};
+    db.catalog.push({id:genId(), name:s[0], category:s[1], note:s[5], active: !!s[6], batches:[batch]});
+  });
+  saveDB();
+}
+// Migration: old structure (one qty/locTo/locFrom per item) -> batch model
+// (multiple quantity groups, each with its own destination/origin, per item)
+function migrateToBatches(){
+  if(db.schemaBatches) return;
+  db.catalog.forEach(item=>{
+    if(!item.batches){
+      item.batches = [{id:genBatchId(), qty:item.qty||0, locTo:item.locTo||'', locFrom:item.locFrom||''}];
+      delete item.qty; delete item.locTo; delete item.locFrom;
+    }
+  });
+  db.trips.forEach(t=>{
+    t.items.forEach(ti=>{
+      if(!ti.batchId && ti.catalogId){
+        const item = db.catalog.find(i=>i.id===ti.catalogId);
+        if(item && item.batches[0]) ti.batchId = item.batches[0].id;
+        delete ti.catalogId;
+      }
+    });
+    t.items = t.items.filter(ti=>ti.batchId);
+  });
+  db.schemaBatches = true;
+  saveDB();
+}
+function saveDB(){
+  localStorage.setItem('packliste_v3_db', JSON.stringify(db));
+  if(fileHandle) writeLinkedFile();
+}
+function genId(){ return 'c'+(db.nextId++); }
+function genBatchId(){ return 'b'+(db.nextId++); }
+function resolveBatch(batchId){
+  for(const item of db.catalog){
+    const b = item.batches.find(x=>x.id===batchId);
+    if(b) return {item, batch:b};
+  }
+  return null;
+}
+function totalQty(item){ return item.batches.reduce((s,b)=>s+b.qty,0); }
+
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toast._h); toast._h=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+function showTab(name){
+  ['bestand','trips','bulk','manage'].forEach(v=>document.getElementById('view-'+v).classList.toggle('active', v===name));
+  document.getElementById('tabBestand').classList.toggle('active', name==='bestand');
+  document.getElementById('tabTrips').classList.toggle('active', name==='trips');
+  document.getElementById('tabBulk').classList.toggle('active', name==='bulk');
+  document.getElementById('tabManage').classList.toggle('active', name==='manage');
+  if(name==='bestand') renderCatalog();
+  if(name==='trips'){ if(currentTripId) renderTripDetail(currentTripId); else renderTripsList(); }
+  if(name==='manage') renderManage();
+}
+
+function fillCategoryFilterSelect(sel){
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All categories</option>' + db.categories.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  sel.value = cur;
+}
+function renderCategoryDatalist(){
+  document.getElementById('categoryOptions').innerHTML = db.categories.map(c=>`<option value="${esc(c)}">`).join('');
+}
+function renderLocationDatalist(){
+  document.getElementById('locationOptions').innerHTML = uniqueLocations().map(l=>`<option value="${esc(l)}">`).join('');
+}
+function uniqueLocations(){
+  const set = new Set(db.locations||KNOWN_LOCATIONS);
+  db.catalog.forEach(i=>i.batches.forEach(b=>{ if(b.locTo) set.add(b.locTo); if(b.locFrom) set.add(b.locFrom); }));
+  return [...set].sort((a,b)=>a.localeCompare(b,'en'));
+}
+
+// ---- resolve categories / locations (case-insensitive, creates a new category if needed) ----
+function resolveCategory(name){
+  const k = normKey(name);
+  if(!k) return 'Miscellaneous';
+  const existing = db.categories.find(c=>normKey(c)===k);
+  if(existing) return existing;
+  const created = name.trim();
+  db.categories.push(created);
+  return created;
+}
+function resolveLocation(name){
+  const k = normKey(name);
+  if(!k) return '';
+  const existing = uniqueLocations().find(l=>normKey(l)===k);
+  if(existing) return existing;
+  const created = name.trim();
+  if(!db.locations.some(l=>normKey(l)===k)) db.locations.push(created);
+  return created;
+}
+function categoryStats(cat){
+  const items = db.catalog.filter(i=>i.category===cat);
+  const active = items.filter(i=>i.active).length;
+  return {total: items.length, active, inactive: items.length-active};
+}
+// Fixed, distinguishable accent colors per group (category or location grouping),
+// deterministic via category index or a hash for other group names.
+const GROUP_PALETTE = ['#f87171','#fb923c','#fbbf24','#a3e635','#34d399','#22d3ee','#60a5fa','#a78bfa','#f472b6','#94a3b8','#4ade80','#e879f9'];
+function colorFor(key){
+  let idx = db.categories.indexOf(key);
+  if(idx===-1){
+    let h=0; for(let i=0;i<key.length;i++) h = (h*31 + key.charCodeAt(i))>>>0;
+    idx = h % GROUP_PALETTE.length;
+  } else idx = idx % GROUP_PALETTE.length;
+  return GROUP_PALETTE[idx];
+}
+function mergeItemBatches(sourceId, targetItem){
+  const src = db.catalog.find(i=>i.id===sourceId);
+  if(!src || src.id===targetItem.id) return;
+  targetItem.batches.push(...src.batches);
+  db.catalog = db.catalog.filter(i=>i.id!==sourceId);
+  // Trip references stay valid: batchId is unique and moves with the batch to the target item.
+}
+
+// =================== BESTAND ===================
+let bestandClosedGroups = new Set();
+function onDetailsToggle(el){
+  const key = el.dataset.key;
+  const set = el.dataset.scope==='trip' ? tripClosedGroups : bestandClosedGroups;
+  if(el.open) set.delete(key); else set.add(key);
+}
+function toggleAllBestandGroups(){
+  const details = [...document.querySelectorAll('#catalogList > details')];
+  const anyOpen = details.some(d=>d.open);
+  if(anyOpen) details.forEach(d=>bestandClosedGroups.add(d.dataset.key));
+  else details.forEach(d=>bestandClosedGroups.delete(d.dataset.key));
+  renderCatalog();
+}
+function renderCatalog(){
+  renderCategoryDatalist(); renderLocationDatalist();
+  const search = document.getElementById('bSearch').value.trim().toLowerCase();
+  const catSel = document.getElementById('bCat'); fillCategoryFilterSelect(catSel);
+  const catF = catSel.value;
+  const locSel = document.getElementById('bLoc');
+  const curLoc = locSel.value;
+  locSel.innerHTML = '<option value="">All locations</option><option value="__none__">Incomplete location (destination or origin missing)</option>'
+    + uniqueLocations().map(l=>`<option value="${esc(l)}">${esc(l)}</option>`).join('');
+  locSel.value = curLoc;
+  const locF = locSel.value;
+  const statusF = document.getElementById('bStatus').value;
+
+  let items = db.catalog.filter(i=>{
+    if(statusF==='active' && !i.active) return false;
+    if(statusF==='inactive' && i.active) return false;
+    if(catF && i.category!==catF) return false;
+    if(locF==='__none__' && !i.batches.some(b=>!b.locTo || !b.locFrom)) return false;
+    else if(locF && locF!=='__none__' && !i.batches.some(b=>b.locTo===locF || b.locFrom===locF)) return false;
+    if(search && !(i.name.toLowerCase().includes(search) || (i.note||'').toLowerCase().includes(search))) return false;
+    return true;
+  });
+
+  const byCat = {};
+  items.forEach(i=>{ (byCat[i.category]=byCat[i.category]||[]).push(i); });
+
+  renderSelectBar();
+  const wrap = document.getElementById('catalogList');
+  if(items.length===0){ wrap.innerHTML='<p class="empty">No items found.</p>'; return; }
+
+  const order = db.categories.filter(c=>byCat[c]).concat(Object.keys(byCat).filter(c=>!db.categories.includes(c)));
+  const btnAll = document.getElementById('bToggleAllBtn');
+  if(btnAll) btnAll.textContent = order.every(c=>bestandClosedGroups.has(c)) ? 'Expand all' : 'Collapse all';
+  wrap.innerHTML = order.map(cat=>{
+    const list = byCat[cat].sort((a,b)=>a.name.localeCompare(b.name,'en'));
+    const st = categoryStats(cat);
+    const c = colorFor(cat);
+    const isOpen = !bestandClosedGroups.has(cat);
+    return `<details ${isOpen?'open':''} data-key="${esc(cat)}" data-scope="bestand" ontoggle="onDetailsToggle(this)" style="border-left:4px solid ${c};">
+      <summary style="color:${c};">${esc(cat)} <span class="cnt">${st.active} active · ${st.inactive} inactive</span></summary>
+      ${list.map(i=>`<div class="bcard ${i.active?'':'inactive'}">
+        <div class="selcol"><input type="checkbox" ${selectedBestand.has(i.id)?'checked':''} onchange="toggleSelectBestand('${i.id}',this.checked)"></div>
+        <div class="bbody">
+          <input type="text" class="bname" value="${esc(i.name)}" onchange="updateItem('${i.id}','name',this.value)">
+          <div><label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;">Category</label>
+          <input type="text" list="categoryOptions" value="${esc(i.category)}" onchange="updateItem('${i.id}','category',this.value)"></div>
+          <div class="batches">
+            <div class="batch-hdr">Batches (${totalQty(i)}x total)</div>
+            ${i.batches.map(b=>`<div class="batch-row">
+              <input type="number" min="0" value="${b.qty}" title="Quantity" onchange="updateBatch('${i.id}','${b.id}','qty',parseInt(this.value)||0)">
+              <input type="text" list="locationOptions" value="${esc(b.locTo)}" placeholder="Destination" onchange="updateBatch('${i.id}','${b.id}','locTo',this.value)">
+              <input type="text" list="locationOptions" value="${esc(b.locFrom)}" placeholder="Origin" onchange="updateBatch('${i.id}','${b.id}','locFrom',this.value)">
+              <button class="x" onclick="removeBatch('${i.id}','${b.id}')" title="Remove batch">✕</button>
+            </div>`).join('')}
+            <button class="small secondary" onclick="addBatch('${i.id}')">+ Batch (own location)</button>
+          </div>
+          <div><label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;">Note</label>
+          <textarea class="bnote" rows="2" onchange="updateItem('${i.id}','note',this.value)">${esc(i.note)}</textarea></div>
+          <div class="btail">
+            <label><input type="checkbox" ${i.active?'checked':''} onchange="updateItem('${i.id}','active',this.checked)"> active</label>
+            <button class="ghost small" onclick="deleteItem('${i.id}')">✕ Delete item</button>
+          </div>
+        </div>
+      </div>`).join('')}
+      </details>`;
+  }).join('');
+}
+
+function renderSelectBar(){
+  const el = document.getElementById('bSelectBar');
+  if(selectedBestand.size===0){ el.innerHTML=''; return; }
+  el.innerHTML = `<div class="selectbar">
+    <b>${selectedBestand.size} selected</b>
+    <input type="text" id="bulkCatInput" list="categoryOptions" placeholder="Change category to…" style="width:160px;">
+    <button class="small" onclick="bulkSetCategory()">Move</button>
+    <button class="small secondary" onclick="bulkSetActive(true)">Set active</button>
+    <button class="small secondary" onclick="bulkSetActive(false)">Set inactive</button>
+    <button class="small danger" onclick="bulkDelete()">Delete</button>
+    <button class="small ghost" onclick="clearSelection()">Clear selection</button>
+  </div>`;
+}
+function toggleSelectBestand(id, checked){
+  if(checked) selectedBestand.add(id); else selectedBestand.delete(id);
+  renderCatalog();
+}
+function clearSelection(){ selectedBestand.clear(); renderCatalog(); }
+function bulkSetActive(active){
+  selectedBestand.forEach(id=>{ const it=db.catalog.find(i=>i.id===id); if(it) it.active=active; });
+  saveDB(); renderCatalog(); toast('Status updated');
+}
+function bulkDelete(){
+  if(!confirm(`Really delete ${selectedBestand.size} item(s)? Their batches will also be removed from packing lists.`)) return;
+  selectedBestand.forEach(id=>{
+    const item = db.catalog.find(i=>i.id===id); if(!item) return;
+    const batchIds = new Set(item.batches.map(b=>b.id));
+    db.catalog = db.catalog.filter(i=>i.id!==id);
+    db.trips.forEach(t=>{ t.items = t.items.filter(ti=>!batchIds.has(ti.batchId)); });
+  });
+  selectedBestand.clear(); saveDB(); renderCatalog(); toast('Item(s) deleted');
+}
+function bulkSetCategory(){
+  const val = document.getElementById('bulkCatInput').value.trim();
+  if(!val) return;
+  const target = resolveCategory(val);
+  selectedBestand.forEach(id=>{
+    const it = db.catalog.find(i=>i.id===id); if(!it) return;
+    it.category = target;
+  });
+  // Automatically merge items with the same name within the target category into one item with multiple batches
+  let merged = 0;
+  const seen = {};
+  db.catalog.filter(i=>i.category===target).forEach(i=>{
+    const k = normKey(i.name);
+    if(seen[k]){ mergeItemBatches(i.id, seen[k]); merged++; }
+    else seen[k]=i;
+  });
+  selectedBestand.clear(); saveDB(); renderCatalog();
+  toast(`Moved to "${target}"` + (merged?` — ${merged} item(s) merged into batches`:''));
+}
+
+function updateItem(id, field, value){
+  const item = db.catalog.find(i=>i.id===id);
+  if(!item) return;
+  if(field==='category'){
+    const resolved = resolveCategory(value);
+    const dup = db.catalog.find(i=>i.id!==id && normKey(i.name)===normKey(item.name) && normKey(i.category)===normKey(resolved));
+    if(dup && resolved!==item.category){
+      if(confirm(`"${item.name}" already exists in "${dup.category}". Merge all batches of this item there and remove this entry?`)){
+        mergeItemBatches(id, dup); saveDB(); renderCatalog(); toast('Batches merged'); return;
+      } else { renderCatalog(); return; }
+    }
+    item.category = resolved;
+  } else if(field==='name'){
+    const dup = db.catalog.find(i=>i.id!==id && normKey(i.name)===normKey(value) && i.category===item.category);
+    if(dup){
+      if(confirm(`"${value}" already exists in this category. Merge all batches of this item there and remove this entry?`)){
+        mergeItemBatches(id, dup); saveDB(); renderCatalog(); toast('Batches merged'); return;
+      } else { renderCatalog(); return; }
+    }
+    item.name = value;
+  } else {
+    item[field]=value;
+  }
+  saveDB(); renderCatalog();
+}
+function addBatch(itemId){
+  const item = db.catalog.find(i=>i.id===itemId); if(!item) return;
+  item.batches.push({id:genBatchId(), qty:1, locTo:'', locFrom:''});
+  saveDB(); renderCatalog();
+}
+function updateBatch(itemId, batchId, field, value){
+  const item = db.catalog.find(i=>i.id===itemId); if(!item) return;
+  const batch = item.batches.find(b=>b.id===batchId); if(!batch) return;
+  batch[field] = (field==='locTo'||field==='locFrom') ? resolveLocation(value) : value;
+  saveDB(); renderCatalog();
+}
+function removeBatch(itemId, batchId){
+  const item = db.catalog.find(i=>i.id===itemId); if(!item) return;
+  if(item.batches.length<=1){ toast('An item needs at least one batch — delete the whole item instead'); return; }
+  item.batches = item.batches.filter(b=>b.id!==batchId);
+  db.trips.forEach(t=>{ t.items = t.items.filter(ti=>ti.batchId!==batchId); });
+  saveDB(); renderCatalog();
+}
+function deleteItem(id){
+  if(!confirm('Really delete this item from the inventory? All its batches will also be removed from existing packing lists.')) return;
+  const item = db.catalog.find(i=>i.id===id); if(!item) return;
+  const batchIds = new Set(item.batches.map(b=>b.id));
+  db.catalog = db.catalog.filter(i=>i.id!==id);
+  db.trips.forEach(t=>{ t.items = t.items.filter(ti=>!batchIds.has(ti.batchId)); });
+  selectedBestand.delete(id);
+  saveDB(); renderCatalog(); toast('Item deleted');
+}
+
+// ---- New item (modal, with duplicate check) ----
+function openNewItemModal(){
+  ['mNiName','mNiCat','mNiQty','mNiLocTo','mNiLocFrom','mNiNote'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mNiQty').value=1;
+  document.getElementById('newItemModal').classList.add('show');
+}
+function closeNewItemModal(){ document.getElementById('newItemModal').classList.remove('show'); }
+function submitNewItemModal(){
+  const name = document.getElementById('mNiName').value.trim();
+  if(!name){ toast('Please enter a name'); return; }
+  const draft = {
+    name, category: document.getElementById('mNiCat').value.trim()||'Miscellaneous',
+    qty: parseInt(document.getElementById('mNiQty').value)||1,
+    locTo: document.getElementById('mNiLocTo').value.trim(),
+    locFrom: document.getElementById('mNiLocFrom').value.trim(),
+    note: document.getElementById('mNiNote').value.trim(), active:true
+  };
+  closeNewItemModal();
+  checkAndCreateItem(draft, ()=>{ renderCatalog(); toast('Item created'); });
+}
+
+// ---- shared creation logic with duplicate detection ----
+// draft: {name, category, qty, locTo, locFrom, note, active}
+// onDone(item, batch) is called after creation/merging
+function checkAndCreateItem(draft, onDone){
+  draft.category = resolveCategory(draft.category);
+  draft.locTo = resolveLocation(draft.locTo);
+  draft.locFrom = resolveLocation(draft.locFrom);
+  const sameCat = db.catalog.find(i=>normKey(i.name)===normKey(draft.name) && i.category===draft.category);
+  if(sameCat){
+    // same item, same category -> simply add as a new batch, no dialog needed
+    const batch = {id:genBatchId(), qty:draft.qty, locTo:draft.locTo||'', locFrom:draft.locFrom||''};
+    sameCat.batches.push(batch); saveDB(); onDone(sameCat, batch); return;
+  }
+  const otherCat = db.catalog.find(i=>normKey(i.name)===normKey(draft.name));
+  if(otherCat){ openDupModal(draft, otherCat, onDone); return; }
+  createItemRaw(draft, onDone);
+}
+function createItemRaw(draft, onDone){
+  const batch = {id:genBatchId(), qty:draft.qty, locTo:draft.locTo||'', locFrom:draft.locFrom||''};
+  const item = {id:genId(), name:draft.name, category:draft.category, note:draft.note||'', active: draft.active!==false, batches:[batch]};
+  db.catalog.push(item); saveDB();
+  onDone && onDone(item, batch);
+}
+function openDupModal(draft, existing, onDone){
+  pendingDup = {draft, existing, onDone};
+  document.getElementById('dupExistingLabel').textContent = `"${existing.name}" already exists in category "${existing.category}" (${totalQty(existing)}x in ${existing.batches.length} batch(es)).`;
+  document.getElementById('dupNewLabel').textContent = `You are creating: ${draft.qty}x "${draft.name}" in category "${draft.category}".`;
+  document.getElementById('dupOptB').textContent = `Create as a separate item in "${draft.category}" (recommended if a different category is intentional)`;
+  document.getElementById('dupOptA').textContent = `Add as a new batch to "${existing.category}" instead`;
+  document.getElementById('dupModal').classList.add('show');
+}
+function cancelDupModal(){ pendingDup=null; document.getElementById('dupModal').classList.remove('show'); }
+function resolveDupChoice(choice){
+  const {draft, existing, onDone} = pendingDup;
+  if(choice==='A'){
+    const batch = {id:genBatchId(), qty:draft.qty, locTo:draft.locTo||'', locFrom:draft.locFrom||''};
+    existing.batches.push(batch); saveDB(); onDone(existing, batch);
+  } else if(choice==='B'){
+    createItemRaw(draft, onDone);
+  }
+  document.getElementById('dupModal').classList.remove('show');
+  pendingDup=null;
+}
+
+// =================== PACKLISTEN ===================
+function renderTripsList(){
+  document.getElementById('tripsListView').style.display='';
+  document.getElementById('tripDetailView').style.display='none';
+  const wrap = document.getElementById('tripsList');
+  if(db.trips.length===0){ wrap.innerHTML='<p class="empty">No packing list created yet.</p>'; return; }
+  wrap.innerHTML = db.trips.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(t=>{
+    const total = t.items.reduce((s,i)=>s+i.qty,0);
+    const packed = t.items.filter(i=>i.packed).reduce((s,i)=>s+i.qty,0);
+    const pct = total? Math.round(packed/total*100):0;
+    return `<div class="tripcard">
+      <div class="row-inline">
+        <div><b>${esc(t.name)}</b> <span class="pill">${esc(t.type)}</span></div>
+        <div class="row-inline">
+          <button class="small" onclick="openTrip('${t.id}')">Open</button>
+          <button class="small secondary" onclick="duplicateTrip('${t.id}')">Duplicate</button>
+          <button class="small danger" onclick="deleteTrip('${t.id}')">Delete</button>
+        </div>
+      </div>
+      <div class="meta">${t.date||''} · ${t.items.length} item type(s) · ${packed}/${total} packed</div>
+      <div class="progress"><div style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function createTrip(){
+  const name = prompt('Packing list name (e.g. "Summer Trip 2026"):');
+  if(!name) return;
+  const type = prompt('Type of trip:\nCampsite, Off-grid, Festival, Road trip, Apartment, Other', 'Campsite') || 'Miscellaneous';
+  const trip = {id:genId(), name, type, date:new Date().toISOString().slice(0,10), items:[], tasksBefore:[], tasksAfter:[]};
+  db.trips.push(trip); saveDB();
+  openTrip(trip.id);
+}
+function duplicateTrip(id){
+  const t = db.trips.find(x=>x.id===id); if(!t) return;
+  const name = prompt('Name of the new packing list:', t.name+' (Copy)');
+  if(!name) return;
+  const copy = {id:genId(), name, type:t.type, date:new Date().toISOString().slice(0,10),
+    items:t.items.map(i=>({batchId:i.batchId, qty:i.qty, packed:false, tags:(i.tags||[]).slice()})),
+    tasksBefore:(t.tasksBefore||[]).map(x=>({id:genId(), text:x.text, done:false})),
+    tasksAfter:(t.tasksAfter||[]).map(x=>({id:genId(), text:x.text, done:false}))};
+  db.trips.push(copy); saveDB(); renderTripsList(); toast('Packing list duplicated');
+}
+function deleteTrip(id){
+  if(!confirm('Really delete this packing list?')) return;
+  db.trips = db.trips.filter(t=>t.id!==id); saveDB(); renderTripsList();
+}
+function openTrip(id){ currentTripId=id; selectedTripItems.clear(); document.getElementById('tripDetailView').dataset.built=''; renderTripDetail(id); }
+function backToTrips(){ currentTripId=null; document.getElementById('tripDetailView').style.display='none';
+  document.getElementById('tripsListView').style.display=''; renderTripsList(); }
+
+function toggleAllTripGroups(){
+  const details = [...document.querySelectorAll('#tripItemsWrap > details')];
+  const anyOpen = details.some(d=>d.open);
+  if(anyOpen) details.forEach(d=>tripClosedGroups.add(d.dataset.key));
+  else details.forEach(d=>tripClosedGroups.delete(d.dataset.key));
+  renderTripDetail(currentTripId);
+}
+
+// ---- Task list per packing list (before/after the trip), appended on export ----
+function renderTripTasks(t){
+  const el = document.getElementById('tripTasksWrap'); if(!el) return;
+  const section = (list, when, label) => `
+    <details open>
+      <summary>${label} <span class="cnt">${list.filter(x=>x.done).length}/${list.length} done</span></summary>
+      <div>
+        ${list.map(task=>`<div class="itemrow">
+          <input type="checkbox" ${task.done?'checked':''} onchange="toggleTask('${t.id}','${when}','${task.id}',this.checked)">
+          <input type="text" value="${esc(task.text)}" onchange="updateTaskText('${t.id}','${when}','${task.id}',this.value)" style="flex:1;">
+          <button class="x" onclick="removeTask('${t.id}','${when}','${task.id}')">✕</button>
+        </div>`).join('')}
+        <div class="row-inline" style="padding:8px 4px;">
+          <input type="text" class="grow" placeholder="New task…" id="newTask_${when}" onkeydown="if(event.key==='Enter'){addTask('${t.id}','${when}',this.value); this.value='';}">
+          <button class="small secondary" onclick="var inp=document.getElementById('newTask_${when}'); addTask('${t.id}','${when}',inp.value); inp.value='';">+ Add</button>
+        </div>
+      </div>
+    </details>`;
+  el.innerHTML = section(t.tasksBefore||[], 'before', '✅ Tasks before the trip') + section(t.tasksAfter||[], 'after', '✅ Tasks after the trip');
+}
+function taskListKey(when){ return when==='before' ? 'tasksBefore' : 'tasksAfter'; }
+function addTask(tripId, when, text){
+  text = (text||'').trim(); if(!text) return;
+  const t = db.trips.find(x=>x.id===tripId); if(!t) return;
+  const key = taskListKey(when);
+  t[key] = t[key]||[];
+  t[key].push({id:genId(), text, done:false});
+  saveDB(); renderTripTasks(t);
+}
+function toggleTask(tripId, when, taskId, done){
+  const t = db.trips.find(x=>x.id===tripId); if(!t) return;
+  const task = (t[taskListKey(when)]||[]).find(x=>x.id===taskId); if(!task) return;
+  task.done = done; saveDB(); renderTripTasks(t);
+}
+function updateTaskText(tripId, when, taskId, text){
+  const t = db.trips.find(x=>x.id===tripId); if(!t) return;
+  const task = (t[taskListKey(when)]||[]).find(x=>x.id===taskId); if(!task) return;
+  task.text = text; saveDB(); renderTripTasks(t);
+}
+function removeTask(tripId, when, taskId){
+  const t = db.trips.find(x=>x.id===tripId); if(!t) return;
+  const key = taskListKey(when);
+  t[key] = (t[key]||[]).filter(x=>x.id!==taskId);
+  saveDB(); renderTripTasks(t);
+}
+
+function renderTripDetail(id){
+  const t = db.trips.find(x=>x.id===id);
+  if(!t){ backToTrips(); return; }
+  document.getElementById('tripsListView').style.display='none';
+  const view = document.getElementById('tripDetailView');
+  view.style.display='';
+
+  if(view.dataset.built!==id){
+    view.dataset.built = id;
+    view.innerHTML = `
+      <a class="backlink" onclick="backToTrips()">← Back to packing lists</a>
+      <div class="row-inline" style="margin:8px 0;">
+        <input type="text" id="tName" value="${esc(t.name)}" onchange="updateTrip('name',this.value)" style="font-size:1rem; font-weight:600; flex:1;">
+        <button class="small secondary" onclick="openExportModal()">📤 As text</button>
+        <button class="small secondary" onclick="exportTripFile()" title="Save/share as an importable file">💾 As file</button>
+      </div>
+      <div id="tripProgress"></div>
+      <div class="tabbar">
+        <button id="tripSubArtikel" class="active" onclick="showTripSubTab('artikel')">📦 Items</button>
+        <button id="tripSubAufgaben" onclick="showTripSubTab('aufgaben')">✅ Tasks</button>
+      </div>
+      <div id="tripArtikelSection">
+        <div class="toolbar">
+          <input type="search" id="dSearch" placeholder="Search…" oninput="renderTripDetail(currentTripId)">
+          <select id="dCat" onchange="renderTripDetail(currentTripId)"></select>
+          <select id="dStatus" onchange="renderTripDetail(currentTripId)">
+            <option value="">All</option><option value="open">Open</option><option value="packed">Packed</option>
+          </select>
+          <select id="dTag" onchange="renderTripDetail(currentTripId)"><option value="">All tags</option></select>
+          <select id="dGroup" onchange="renderTripDetail(currentTripId)">
+            <option value="category">Group by: Category</option>
+            <option value="locTo">Group by: Destination</option>
+            <option value="locFrom">Group by: Origin</option>
+            <option value="current">Group by: Current location</option>
+          </select>
+          <button class="ghost small" onclick="toggleAllTripGroups()" id="tToggleAllBtn">Collapse all</button>
+          <button onclick="openPicker('${t.id}')">+ Add items</button>
+        </div>
+        <div id="tripSelectBar"></div>
+        <div id="tripItemsWrap"></div>
+      </div>
+      <div id="tripAufgabenSection" style="display:none;">
+        <div id="tripTasksWrap"></div>
+      </div>`;
+    fillCategoryFilterSelect(document.getElementById('dCat'));
+    tripClosedGroups.clear();
+    tripSubTab = 'artikel';
+  }
+  showTripSubTab(tripSubTab);
+  renderTripTasks(t);
+
+  const total = t.items.reduce((s,i)=>s+i.qty,0);
+  const packed = t.items.filter(i=>i.packed).reduce((s,i)=>s+i.qty,0);
+  const pct = total? Math.round(packed/total*100):0;
+  document.getElementById('tripProgress').innerHTML =
+    `<div class="meta" style="color:var(--muted); font-size:0.82rem;">${packed}/${total} packed (${pct}%)</div>
+     <div class="progress"><div style="width:${pct}%"></div></div>`;
+
+  const allTags = [...new Set(t.items.flatMap(i=>i.tags||[]))].sort((a,b)=>a.localeCompare(b,'en'));
+  const tagSel = document.getElementById('dTag');
+  const curTag = tagSel.value;
+  tagSel.innerHTML = '<option value="">All tags</option>' + allTags.map(tg=>`<option value="${esc(tg)}">${esc(tg)}</option>`).join('');
+  tagSel.value = curTag;
+
+  const search = document.getElementById('dSearch').value.trim().toLowerCase();
+  const catF = document.getElementById('dCat').value;
+  const statusF = document.getElementById('dStatus').value;
+  const tagF = document.getElementById('dTag').value;
+  const groupMode = document.getElementById('dGroup').value;
+
+  let rows = t.items.map(ti=>{
+    const found = resolveBatch(ti.batchId);
+    return found ? {ti, item:found.item, batch:found.batch} : null;
+  }).filter(Boolean);
+
+  if(catF) rows = rows.filter(r=>r.item.category===catF);
+  if(statusF==='open') rows = rows.filter(r=>!r.ti.packed);
+  if(statusF==='packed') rows = rows.filter(r=>r.ti.packed);
+  if(tagF) rows = rows.filter(r=>(r.ti.tags||[]).some(tg=>normKey(tg)===normKey(tagF)));
+  if(search) rows = rows.filter(r=>r.item.name.toLowerCase().includes(search));
+
+  renderTripSelectBar();
+
+  function groupKeyFor(r){
+    if(groupMode==='category') return r.item.category;
+    if(groupMode==='locTo') return r.batch.locTo || '(no destination)';
+    if(groupMode==='locFrom') return r.batch.locFrom || '(no origin)';
+    return r.ti.packed ? (r.batch.locTo||'(unknown)') : (r.batch.locFrom||r.batch.locTo||'(unknown)');
+  }
+  const byGroup={};
+  rows.forEach(r=>{ (byGroup[groupKeyFor(r)]=byGroup[groupKeyFor(r)]||[]).push(r); });
+
+  const wrap = document.getElementById('tripItemsWrap');
+  if(rows.length===0){ wrap.innerHTML='<p class="empty">No items in this view. Add some via "+ Add items".</p>'; return; }
+
+  let groupOrder = Object.keys(byGroup);
+  groupOrder = groupMode==='category' ? db.categories.filter(c=>byGroup[c]).concat(groupOrder.filter(g=>!db.categories.includes(g))) : groupOrder.sort((a,b)=>a.localeCompare(b,'en'));
+
+  const tBtnAll = document.getElementById('tToggleAllBtn');
+  if(tBtnAll) tBtnAll.textContent = groupOrder.every(g=>tripClosedGroups.has(g)) ? 'Expand all' : 'Collapse all';
+
+  wrap.innerHTML = groupOrder.map(g=>{
+    const list = byGroup[g].sort((a,b)=>a.item.name.localeCompare(b.item.name,'en'));
+    const packedCount = list.filter(r=>r.ti.packed).length;
+    const gc = colorFor(g);
+    const gOpen = !tripClosedGroups.has(g);
+    return `<details ${gOpen?'open':''} data-key="${esc(g)}" data-scope="trip" ontoggle="onDetailsToggle(this)" style="border-left:4px solid ${gc};">
+      <summary style="color:${gc};">${esc(g)} <span class="cnt">${packedCount}/${list.length} packed</span></summary>
+      <div>${list.map(r=>{
+        const loc = r.ti.packed ? (r.batch.locTo||'—') : (r.batch.locFrom||r.batch.locTo||'—');
+        const locLabel = r.ti.packed ? 'now' : 'currently';
+        const tags = r.ti.tags||[];
+        return `<div class="itemrow">
+          <input type="checkbox" ${r.ti.packed?'checked':''} onchange="toggleTripItem('${t.id}','${r.ti.batchId}',this.checked)">
+          <input type="checkbox" title="select" ${selectedTripItems.has(r.ti.batchId)?'checked':''} onchange="toggleSelectTripItem('${r.ti.batchId}',this.checked)">
+          <div class="name ${r.ti.packed?'packed':''}">
+            <b>${esc(r.item.name)}</b>
+            <span class="loc">📍 ${locLabel}: ${esc(loc)}${r.item.note?' · '+esc(r.item.note):''}</span>
+            <div class="tags">
+              ${tags.map(tg=>`<span class="tagpill">${esc(tg)}<button onclick="removeTag('${t.id}','${r.ti.batchId}','${esc(tg)}')">✕</button></span>`).join('')}
+              <input type="text" class="taginput" placeholder="+ Tag" onkeydown="if(event.key==='Enter'){addTag('${t.id}','${r.ti.batchId}',this.value); this.value='';}">
+            </div>
+          </div>
+          <input type="number" min="0" value="${r.ti.qty}" onchange="updateTripItemQty('${t.id}','${r.ti.batchId}',parseInt(this.value)||0)">
+          <button class="x" onclick="removeTripItem('${t.id}','${r.ti.batchId}')" title="remove">✕</button>
+        </div>`;
+      }).join('')}</div>
+      </details>`;
+  }).join('');
+}
+
+function renderTripSelectBar(){
+  const el = document.getElementById('tripSelectBar'); if(!el) return;
+  if(selectedTripItems.size===0){ el.innerHTML=''; return; }
+  el.innerHTML = `<div class="selectbar">
+    <b>${selectedTripItems.size} selected</b>
+    <button class="small" onclick="bulkTripSetPacked(true)">Mark as packed</button>
+    <button class="small secondary" onclick="bulkTripSetPacked(false)">Mark as open</button>
+    <button class="small secondary" onclick="bulkTripAddTag()">Add tag</button>
+    <button class="small danger" onclick="bulkTripRemove()">Remove</button>
+    <button class="small ghost" onclick="clearTripSelection()">Clear selection</button>
+  </div>`;
+}
+function toggleSelectTripItem(batchId, checked){
+  if(checked) selectedTripItems.add(batchId); else selectedTripItems.delete(batchId);
+  renderTripDetail(currentTripId);
+}
+function clearTripSelection(){ selectedTripItems.clear(); renderTripDetail(currentTripId); }
+function bulkTripSetPacked(packed){
+  const t = db.trips.find(x=>x.id===currentTripId);
+  t.items.forEach(ti=>{ if(selectedTripItems.has(ti.batchId)) ti.packed=packed; });
+  saveDB(); renderTripDetail(currentTripId);
+}
+function bulkTripRemove(){
+  const t = db.trips.find(x=>x.id===currentTripId);
+  t.items = t.items.filter(ti=>!selectedTripItems.has(ti.batchId));
+  selectedTripItems.clear(); saveDB(); renderTripDetail(currentTripId);
+}
+function bulkTripAddTag(){
+  const tag = prompt('Tag for the selected items:'); if(!tag) return;
+  const t = db.trips.find(x=>x.id===currentTripId);
+  t.items.forEach(ti=>{
+    if(selectedTripItems.has(ti.batchId)){
+      ti.tags = ti.tags||[];
+      if(!ti.tags.some(tg=>normKey(tg)===normKey(tag))) ti.tags.push(tag.trim());
+    }
+  });
+  saveDB(); renderTripDetail(currentTripId);
+}
+function addTag(tripId, batchId, value){
+  const tag = value.trim(); if(!tag) return;
+  const t = db.trips.find(x=>x.id===tripId);
+  const ti = t.items.find(i=>i.batchId===batchId);
+  ti.tags = ti.tags||[];
+  if(!ti.tags.some(tg=>normKey(tg)===normKey(tag))) ti.tags.push(tag);
+  saveDB(); renderTripDetail(tripId);
+}
+function removeTag(tripId, batchId, tag){
+  const t = db.trips.find(x=>x.id===tripId);
+  const ti = t.items.find(i=>i.batchId===batchId);
+  ti.tags = (ti.tags||[]).filter(tg=>tg!==tag);
+  saveDB(); renderTripDetail(tripId);
+}
+
+function updateTrip(field, value){
+  const t = db.trips.find(x=>x.id===currentTripId); if(!t) return;
+  t[field]=value; saveDB();
+}
+function toggleTripItem(tripId, batchId, packed){
+  const t = db.trips.find(x=>x.id===tripId);
+  const ti = t.items.find(i=>i.batchId===batchId);
+  ti.packed = packed; saveDB(); renderTripDetail(tripId);
+}
+function updateTripItemQty(tripId, batchId, qty){
+  const t = db.trips.find(x=>x.id===tripId);
+  const ti = t.items.find(i=>i.batchId===batchId);
+  ti.qty = qty; saveDB(); renderTripDetail(tripId);
+}
+function removeTripItem(tripId, batchId){
+  const t = db.trips.find(x=>x.id===tripId);
+  t.items = t.items.filter(i=>i.batchId!==batchId);
+  selectedTripItems.delete(batchId);
+  saveDB(); renderTripDetail(tripId);
+}
+
+// groupBy: 'category' | 'location' (destination when packing, origin when unpacking) | 'current' (current location, mode-independent)
+function tripGroupFn(mode, groupBy){
+  if(groupBy==='current') return r=>r.ti.packed ? (r.batch.locTo||'(unknown)') : (r.batch.locFrom||r.batch.locTo||'(unknown)');
+  if(groupBy==='location') return mode==='pack' ? (r=>r.batch.locTo||'(no destination set)') : (r=>r.batch.locFrom||'(no origin set)');
+  return r=>r.item.category;
+}
+// Location text per line — omits whatever is already shown as the group heading (no redundancy)
+function tripLineLocText(mode, groupBy, r){
+  const packed = !!r.ti.packed;
+  const to = r.batch.locTo || '(unknown)';
+  const from = r.batch.locFrom || '(no origin set)';
+  const fromOrTo = r.batch.locFrom || r.batch.locTo || '(unknown)';
+  if(mode==='pack'){
+    if(groupBy==='category') return packed ? `currently: ${to}` : `from ${fromOrTo} to ${to}`;
+    if(groupBy==='location') return packed ? '' : `from ${fromOrTo}`;
+    return packed ? '' : `to ${to}`; // current
+  }
+  if(groupBy==='category') return packed ? `currently: ${to} → back to: ${from}` : `not packed (last known location: ${fromOrTo})`;
+  if(groupBy==='location') return packed ? `currently: ${to}` : 'not packed';
+  return packed ? `back to: ${from}` : 'not packed'; // current
+}
+function buildTripText(trip, mode, opts){
+  opts = opts || {};
+  const groupBy = opts.groupBy || 'category';
+  const rows = trip.items.map(ti=>{ const found=resolveBatch(ti.batchId); return found?{item:found.item, batch:found.batch, ti}:null; }).filter(Boolean);
+  const title = mode==='pack' ? `Packing list: ${trip.name} (${trip.type})` : `Unpacking list: ${trip.name} (${trip.type})`;
+  const groupFn = tripGroupFn(mode, groupBy);
+  const lineFn = r=>{
+    const status = r.ti.packed?'[x]':'[ ]';
+    const loc = tripLineLocText(mode, groupBy, r);
+    return `${status} ${r.ti.qty}x ${r.item.name}${loc?' — '+loc:''}`;
+  };
+  const extra = r=>{
+    let s = '';
+    if(opts.includeNote && r.item.note) s += ` | Note: ${r.item.note}`;
+    if(opts.includeTags && r.ti.tags && r.ti.tags.length) s += ` | Tags: ${r.ti.tags.join(', ')}`;
+    return s;
+  };
+  const byGroup={};
+  rows.forEach(r=>{ (byGroup[groupFn(r)]=byGroup[groupFn(r)]||[]).push(r); });
+  let out = `${title}\n${'='.repeat(title.length)}\n`;
+  let groupOrder = Object.keys(byGroup);
+  groupOrder = groupBy==='category'
+    ? db.categories.filter(c=>byGroup[c]).concat(groupOrder.filter(g=>!db.categories.includes(g)))
+    : groupOrder.sort((a,b)=>a.localeCompare(b,'en'));
+  groupOrder.forEach(g=>{
+    out += `\n${g}:\n`;
+    byGroup[g].sort((a,b)=>a.item.name.localeCompare(b.item.name,'en')).forEach(r=>{ out += lineFn(r)+extra(r)+'\n'; });
+  });
+  out += taskSectionText(trip.tasksBefore, 'Before the trip');
+  out += taskSectionText(trip.tasksAfter, 'After the trip');
+  return out;
+}
+function taskSectionText(list, label){
+  if(!list || list.length===0) return '';
+  let out = `\n${label}:\n`;
+  list.forEach(task=>{ out += `${task.done?'[x]':'[ ]'} ${task.text}\n`; });
+  return out;
+}
+function openExportModal(){ document.getElementById('exportModal').classList.add('show'); }
+function closeExportModal(){ document.getElementById('exportModal').classList.remove('show'); }
+function doExport(action){
+  const t = db.trips.find(x=>x.id===currentTripId); if(!t) return;
+  const mode = document.querySelector('input[name=exportMode]:checked').value;
+  const groupBy = document.querySelector('input[name=exportGroup]:checked').value;
+  const opts = {
+    groupBy,
+    includeNote: document.getElementById('exportIncNote').checked,
+    includeTags: document.getElementById('exportIncTags').checked
+  };
+  const text = buildTripText(t, mode, opts);
+  if(action==='copy'){
+    navigator.clipboard?.writeText(text).then(()=>toast('Copied to clipboard')).catch(()=>{ prompt('Copy failed — select manually:', text); });
+  } else if(action==='txt'){
+    const blob = new Blob([text], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${mode==='pack'?'packing-list':'unpacking-list'}_${GROUP_LABEL_FOR_FILENAME[groupBy]||groupBy}_${slugify(t.name)}_${fileTimestamp()}.txt`;
+    a.click();
+  } else if(action==='share'){
+    if(navigator.share){ navigator.share({title:t.name, text}).catch(()=>{}); }
+    else { navigator.clipboard?.writeText(text).then(()=>toast('Sharing not available — copied to clipboard')); }
+  }
+  closeExportModal();
+}
+
+function buildTripHtml(trip, mode, opts){
+  opts = opts || {};
+  const groupBy = opts.groupBy || 'category';
+  const rows = trip.items.map(ti=>{ const found=resolveBatch(ti.batchId); return found?{item:found.item, batch:found.batch, ti}:null; }).filter(Boolean);
+  const title = mode==='pack' ? `Packing list: ${trip.name} (${trip.type})` : `Unpacking list: ${trip.name} (${trip.type})`;
+  const groupFn = tripGroupFn(mode, groupBy);
+  const lineHtml = r=>{
+    const packed = !!r.ti.packed;
+    const loc = tripLineLocText(mode, groupBy, r);
+    let extra = '';
+    if(opts.includeNote && r.item.note) extra += ` <span class="pnote">· ${esc(r.item.note)}</span>`;
+    if(opts.includeTags && r.ti.tags && r.ti.tags.length) extra += ` <span class="ptags">[${r.ti.tags.map(esc).join(', ')}]</span>`;
+    return `<li class="${packed?'done':''}"><span class="pbox">${packed?'☑':'☐'}</span> <b>${r.ti.qty}x ${esc(r.item.name)}</b>${loc?' — '+esc(loc):''}${extra}</li>`;
+  };
+  const byGroup={};
+  rows.forEach(r=>{ (byGroup[groupFn(r)]=byGroup[groupFn(r)]||[]).push(r); });
+  let groupOrder = Object.keys(byGroup);
+  groupOrder = groupBy==='category'
+    ? db.categories.filter(c=>byGroup[c]).concat(groupOrder.filter(g=>!db.categories.includes(g)))
+    : groupOrder.sort((a,b)=>a.localeCompare(b,'en'));
+  let bodyHtml = groupOrder.map(g=>`<h2>${esc(g)}</h2><ul>${
+    byGroup[g].sort((a,b)=>a.item.name.localeCompare(b.item.name,'en')).map(lineHtml).join('')
+  }</ul>`).join('');
+  const taskHtml = (list, label) => (!list||list.length===0) ? '' :
+    `<h2>${esc(label)}</h2><ul>${list.map(task=>`<li class="${task.done?'done':''}"><span class="pbox">${task.done?'☑':'☐'}</span> ${esc(task.text)}</li>`).join('')}</ul>`;
+  bodyHtml += taskHtml(trip.tasksBefore, 'Before the trip');
+  bodyHtml += taskHtml(trip.tasksAfter, 'After the trip');
+  return {title, bodyHtml};
+}
+function openPrintView(){
+  const t = db.trips.find(x=>x.id===currentTripId); if(!t) return;
+  const mode = document.querySelector('input[name=exportMode]:checked').value;
+  const groupBy = document.querySelector('input[name=exportGroup]:checked').value;
+  const opts = {
+    groupBy,
+    includeNote: document.getElementById('exportIncNote').checked,
+    includeTags: document.getElementById('exportIncTags').checked
+  };
+  const {title, bodyHtml} = buildTripHtml(t, mode, opts);
+  const win = window.open('', '_blank');
+  if(!win){ toast('Popup blocked — please allow popups for this site'); return; }
+  win.document.write(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${esc(title)}</title>
+<style>
+  body{font-family:Arial,Helvetica,sans-serif; color:#111; padding:24px; max-width:720px; margin:0 auto;}
+  h1{font-size:1.35rem; margin-bottom:4px;}
+  h2{font-size:1.05rem; margin-top:20px; border-bottom:2px solid #333; padding-bottom:4px;}
+  ul{list-style:none; padding:0; margin:6px 0;}
+  li{padding:5px 0; border-bottom:1px solid #ddd; font-size:0.92rem;}
+  li.done{color:#888; text-decoration:line-through;}
+  .pbox{display:inline-block; width:20px; font-size:1.05rem;}
+  .pnote{color:#555; font-style:italic;}
+  .ptags{color:#1d4ed8;}
+  .printbar{margin-bottom:16px;}
+  .printbar button{font-size:0.95rem; padding:8px 14px; cursor:pointer;}
+  @media print{ .printbar{display:none;} body{padding:0;} }
+</style></head><body>
+<div class="printbar"><button onclick="window.print()">🖨 Print / Save as PDF</button></div>
+<h1>${esc(title)}</h1>
+${bodyHtml}
+</body></html>`);
+  win.document.close();
+  closeExportModal();
+}
+
+// ---- Packing list as a standalone, importable file (save/load) ----
+// (independent of the text-export options above: contains all raw data, no formatted text)
+function exportTripFile(){
+  const t = db.trips.find(x=>x.id===currentTripId); if(!t) return;
+  const rows = t.items.map(ti=>{
+    const found = resolveBatch(ti.batchId); if(!found) return null;
+    return {
+      itemName: found.item.name, itemCategory: found.item.category, itemNote: found.item.note||'',
+      batchQty: found.batch.qty, batchLocTo: found.batch.locTo||'', batchLocFrom: found.batch.locFrom||'',
+      qty: ti.qty, packed: !!ti.packed, tags: ti.tags||[]
+    };
+  }).filter(Boolean);
+  const payload = {
+    fileType: 'packliste-trip', version: 1, exportedAt: new Date().toISOString(),
+    trip: {name:t.name, type:t.type, date:t.date, items:rows,
+      tasksBefore:(t.tasksBefore||[]).map(x=>({text:x.text, done:x.done})),
+      tasksAfter:(t.tasksAfter||[]).map(x=>({text:x.text, done:x.done}))}
+  };
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `packing_list_file_${slugify(t.name)}_${fileTimestamp()}.json`;
+  a.click();
+}
+function importTripFile(evt){
+  const file = evt.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      if(data.fileType!=='packliste-trip' || !data.trip) throw new Error('This is not a packing list file (wrong format)');
+      const src = data.trip;
+      let name = src.name || 'Imported packing list';
+      if(db.trips.some(t=>t.name===name)) name = name+' (Import)';
+      const newTrip = {id:genId(), name, type:src.type||'Miscellaneous', date:src.date||new Date().toISOString().slice(0,10), items:[],
+        tasksBefore:(src.tasksBefore||[]).map(x=>({id:genId(), text:x.text, done:!!x.done})),
+        tasksAfter:(src.tasksAfter||[]).map(x=>({id:genId(), text:x.text, done:!!x.done}))};
+      let reused=0, created=0;
+      (src.items||[]).forEach(row=>{
+        if(!row.itemName) return;
+        const category = resolveCategory(row.itemCategory);
+        const locTo = resolveLocation(row.batchLocTo);
+        const locFrom = resolveLocation(row.batchLocFrom);
+        let item = db.catalog.find(i=>normKey(i.name)===normKey(row.itemName) && i.category===category);
+        if(!item){
+          item = {id:genId(), name:row.itemName, category, note:row.itemNote||'', active:true, batches:[]};
+          db.catalog.push(item);
+        }
+        let batch = item.batches.find(b=>normKey(b.locTo)===normKey(locTo) && normKey(b.locFrom)===normKey(locFrom));
+        if(batch){ reused++; }
+        else {
+          batch = {id:genBatchId(), qty:row.batchQty||row.qty||1, locTo, locFrom};
+          item.batches.push(batch);
+          created++;
+        }
+        newTrip.items.push({batchId:batch.id, qty:row.qty||1, packed:!!row.packed, tags:row.tags||[]});
+      });
+      db.trips.push(newTrip);
+      saveDB();
+      toast(`Packing list imported (${reused} batch(es) reused, ${created} newly created)`);
+      showTab('trips'); openTrip(newTrip.id);
+    }catch(e){ alert('Import failed: '+e.message); }
+  };
+  reader.readAsText(file);
+  evt.target.value='';
+}
+
+// ---- Picker (add items to packing list) ----
+function openPicker(tripId){
+  pickerTripId = tripId; pickerSelections = {};
+  const sel = document.getElementById('pCat'); fillCategoryFilterSelect(sel);
+  document.getElementById('pSearch').value='';
+  document.getElementById('newItemForm').style.display='none';
+  renderCategoryDatalist(); renderLocationDatalist();
+  renderPicker();
+  document.getElementById('pickerModal').classList.add('show');
+}
+function closePicker(){ document.getElementById('pickerModal').classList.remove('show'); }
+function toggleNewItemForm(){
+  const f = document.getElementById('newItemForm');
+  f.style.display = f.style.display==='none' ? 'grid' : 'none';
+}
+function currentLocOf(b){ return b.locFrom || b.locTo || ''; }
+function renderPicker(){
+  const search = document.getElementById('pSearch').value.trim().toLowerCase();
+  const catF = document.getElementById('pCat').value;
+  const t = db.trips.find(x=>x.id===pickerTripId);
+  const already = new Set(t.items.map(i=>i.batchId));
+
+  // one row per batch (not per item), so items with the same name but different
+  // location/category can be selected independently
+  let pairs = [];
+  db.catalog.filter(i=>i.active).forEach(item=>{
+    item.batches.forEach(b=>{ if(!already.has(b.id)) pairs.push({item, batch:b}); });
+  });
+
+  const locSel = document.getElementById('pLoc');
+  const curLocF = locSel.value;
+  const availableLocs = [...new Set(pairs.map(p=>currentLocOf(p.batch)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'en'));
+  locSel.innerHTML = '<option value="">All current locations</option>' + availableLocs.map(l=>`<option value="${esc(l)}">${esc(l)}</option>`).join('');
+  locSel.value = curLocF;
+  const locF = locSel.value;
+
+  if(catF) pairs = pairs.filter(p=>p.item.category===catF);
+  if(locF) pairs = pairs.filter(p=>currentLocOf(p.batch)===locF);
+  if(search) pairs = pairs.filter(p=>p.item.name.toLowerCase().includes(search));
+  pairs.sort((a,b)=> a.item.category.localeCompare(b.item.category) || a.item.name.localeCompare(b.item.name,'en') || currentLocOf(a.batch).localeCompare(currentLocOf(b.batch),'en'));
+  const wrap = document.getElementById('pickerList');
+  if(pairs.length===0){ wrap.innerHTML='<p class="empty">No matching items (may already be in the list).</p>'; return; }
+  let lastCat='';
+  wrap.innerHTML = pairs.map(p=>{
+    const head = p.item.category!==lastCat ? (lastCat='', `<div class="pill" style="margin:8px 0 2px;">${esc(p.item.category)}</div>`) : '';
+    lastCat = p.item.category;
+    const sel = pickerSelections[p.batch.id];
+    const cl = currentLocOf(p.batch);
+    const showArrow = p.batch.locTo && p.batch.locTo!==cl;
+    return `${head}<div class="picker-item">
+      <input type="checkbox" ${sel?'checked':''} onchange="pickerToggle('${p.batch.id}',this.checked)">
+      <span class="n">${esc(p.item.name)}${cl?' <span class="loc" style="color:var(--muted)">— currently: '+esc(cl)+(showArrow?' → '+esc(p.batch.locTo):'')+'</span>':''}</span>
+      <input type="number" min="1" value="${sel?sel.qty:p.batch.qty}" onchange="pickerQty('${p.batch.id}',parseInt(this.value)||1)">
+    </div>`;
+  }).join('');
+}
+function pickerToggle(batchId, checked){
+  if(checked){
+    const found = resolveBatch(batchId);
+    pickerSelections[batchId] = {qty: found? found.batch.qty : 1};
+  } else delete pickerSelections[batchId];
+}
+function pickerQty(batchId, qty){
+  if(!pickerSelections[batchId]) pickerSelections[batchId] = {qty};
+  else pickerSelections[batchId].qty = qty;
+}
+function confirmPicker(){
+  const t = db.trips.find(x=>x.id===pickerTripId);
+  Object.keys(pickerSelections).forEach(batchId=>{
+    t.items.push({batchId, qty: pickerSelections[batchId].qty, packed:false, tags:[]});
+  });
+  saveDB(); closePicker(); renderTripDetail(pickerTripId); toast('Item(s) added');
+}
+function quickAddCatalogItem(){
+  const name = document.getElementById('niName').value.trim();
+  if(!name) return;
+  const draft = {
+    name, category: document.getElementById('niCat').value.trim()||'Miscellaneous',
+    qty: parseInt(document.getElementById('niQty').value)||1,
+    locTo: document.getElementById('niLoc').value.trim(),
+    locFrom: document.getElementById('niLocFrom').value.trim(), note:'', active:true
+  };
+  const requestedQty = draft.qty;
+  checkAndCreateItem(draft, (item, batch)=>{
+    const t = db.trips.find(x=>x.id===pickerTripId);
+    if(!t.items.some(ti=>ti.batchId===batch.id)) t.items.push({batchId:batch.id, qty:requestedQty, packed:false, tags:[]});
+    saveDB();
+    document.getElementById('niName').value=''; document.getElementById('niQty').value='1';
+    document.getElementById('niLoc').value=''; document.getElementById('niLocFrom').value='';
+    renderPicker(); renderTripDetail(pickerTripId); toast('Item created & added');
+  });
+}
+
+// =================== BULK ADD ===================
+let bulkAddRows = [];
+function previewBulkAdd(){
+  renderCategoryDatalist(); renderLocationDatalist();
+  const catRaw = document.getElementById('baCat').value.trim();
+  if(!catRaw){ toast('Please enter a category'); return; }
+  const qtyDefault = parseInt(document.getElementById('baQtyDefault').value)||1;
+  const names = document.getElementById('baNames').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if(names.length===0){ toast('Please enter at least one item name'); return; }
+  bulkAddRows = names.map(name=>{
+    const sameCat = db.catalog.find(i=>normKey(i.name)===normKey(name) && normKey(i.category)===normKey(catRaw));
+    const otherCat = !sameCat ? db.catalog.find(i=>normKey(i.name)===normKey(name)) : null;
+    return {name, qty:qtyDefault, sameCat, otherCat};
+  });
+  renderBulkPreview(catRaw);
+}
+function renderBulkPreview(catRaw){
+  const wrap = document.getElementById('baPreviewWrap');
+  wrap.innerHTML = `<h3>Preview (${bulkAddRows.length} item(s) in "${esc(catRaw)}")</h3>
+    ${bulkAddRows.map((r,idx)=>`<div class="manage-row">
+      <span class="grow">${esc(r.name)}</span>
+      <input type="number" min="0" value="${r.qty}" style="width:60px;" onchange="bulkAddRows[${idx}].qty=parseInt(this.value)||0">
+      <select id="baAction_${idx}">
+        <option value="new">Create new in "${esc(catRaw)}"</option>
+        ${r.sameCat? `<option value="batch" selected>Add as new batch to "${esc(r.sameCat.name)}" (${totalQty(r.sameCat)}x present)</option>`:''}
+        ${r.otherCat? `<option value="batch_other">Add as new batch to existing item in "${esc(r.otherCat.category)}"</option>`:''}
+        <option value="skip">Skip</option>
+      </select>
+    </div>`).join('')}
+    <div class="row-inline" style="margin-top:10px; justify-content:flex-end;">
+      <button onclick="commitBulkAdd('${esc(catRaw).replace(/'/g,"&#39;")}')">Create now</button>
+    </div>`;
+}
+function commitBulkAdd(catRaw){
+  const category = resolveCategory(catRaw);
+  const locTo = resolveLocation(document.getElementById('baLocTo').value.trim());
+  const locFrom = resolveLocation(document.getElementById('baLocFrom').value.trim());
+  let created=0, batched=0, skipped=0;
+  bulkAddRows.forEach((r,idx)=>{
+    const action = document.getElementById('baAction_'+idx).value;
+    if(action==='skip'){ skipped++; return; }
+    if(action==='batch' && r.sameCat){
+      const target = db.catalog.find(i=>i.id===r.sameCat.id);
+      if(target){ target.batches.push({id:genBatchId(), qty:r.qty, locTo, locFrom}); batched++; return; }
+    }
+    if(action==='batch_other' && r.otherCat){
+      const target = db.catalog.find(i=>i.id===r.otherCat.id);
+      if(target){ target.batches.push({id:genBatchId(), qty:r.qty, locTo, locFrom}); batched++; return; }
+    }
+    db.catalog.push({id:genId(), name:r.name, category, note:'', active:true, batches:[{id:genBatchId(), qty:r.qty, locTo, locFrom}]});
+    created++;
+  });
+  saveDB();
+  document.getElementById('baNames').value='';
+  document.getElementById('baPreviewWrap').innerHTML='';
+  bulkAddRows=[];
+  toast(`${created} created, ${batched} added as batch, ${skipped} skipped`);
+  showTab('bestand');
+}
+
+// =================== MANAGEMENT ===================
+function renderManage(){
+  renderCategoryDatalist(); renderLocationDatalist();
+  const catWrap = document.getElementById('manageCatList');
+  catWrap.innerHTML = db.categories.map(c=>{
+    const st = categoryStats(c);
+    return `<div class="manage-row" data-old="${esc(c)}">
+      <input type="text" class="grow catNewName" value="${esc(c)}">
+      <span class="pill">${st.active} active · ${st.inactive} inactive</span>
+      <button class="small secondary" onclick="renameCategoryRow(this)">Save</button>
+      <button class="small danger" onclick="openDeleteCategoryModal('${esc(c).replace(/'/g,"&#39;")}')">Delete</button>
+    </div>`;
+  }).join('');
+
+  const locWrap = document.getElementById('manageLocList');
+  const locs = uniqueLocations();
+  if(locs.length===0){ locWrap.innerHTML='<p class="empty">No locations set yet.</p>'; return; }
+  locWrap.innerHTML = locs.map(l=>{
+    let asTo=0, asFrom=0;
+    db.catalog.forEach(i=>i.batches.forEach(b=>{ if(b.locTo===l) asTo++; if(b.locFrom===l) asFrom++; }));
+    return `<div class="manage-row" data-old="${esc(l)}">
+      <input type="text" class="grow locNewName" value="${esc(l)}">
+      <span class="pill">Destination: ${asTo} · Origin: ${asFrom}</span>
+      <button class="small secondary" onclick="renameLocationRow(this)">Save</button>
+      <button class="small ghost" onclick="clearLocationRow(this)" title="Remove from all batches, location stays in the list">Clear</button>
+      <button class="small danger" onclick="deleteLocationRow(this)" title="Remove from all batches AND delete from the list">Delete</button>
+    </div>`;
+  }).join('');
+}
+function addCategoryFromInput(){
+  const val = document.getElementById('newCatName').value.trim();
+  if(!val) return;
+  if(db.categories.some(c=>normKey(c)===normKey(val))){ toast('Category already exists'); return; }
+  db.categories.push(val); saveDB(); document.getElementById('newCatName').value=''; renderManage(); toast('Category created');
+}
+function renameCategoryRow(btn){
+  const row = btn.closest('.manage-row');
+  const oldName = row.dataset.old;
+  const newName = row.querySelector('.catNewName').value.trim();
+  if(!newName || newName===oldName) return;
+  const clash = db.categories.find(c=>normKey(c)===normKey(newName) && c!==oldName);
+  if(clash){
+    if(!confirm(`Category "${clash}" already exists. Move all items from "${oldName}" to "${clash}" and remove "${oldName}"?`)) return;
+    db.catalog.forEach(i=>{ if(i.category===oldName) i.category=clash; });
+    db.categories = db.categories.filter(c=>c!==oldName);
+  } else {
+    db.catalog.forEach(i=>{ if(i.category===oldName) i.category=newName; });
+    db.categories = db.categories.map(c=>c===oldName?newName:c);
+  }
+  saveDB(); renderManage(); toast('Category renamed');
+}
+function openDeleteCategoryModal(catName){
+  pendingDeleteCategory = catName;
+  const items = db.catalog.filter(i=>i.category===catName);
+  document.getElementById('delCatTitle').textContent = `Delete category "${catName}" (${items.length} item(s))`;
+  document.getElementById('delCatList').innerHTML = items.map(i=>`
+    <div class="manage-row" data-id="${i.id}">
+      <input type="checkbox" class="delCatCheck">
+      <span class="grow">${esc(i.name)} (${totalQty(i)}x, ${i.batches.length} batch(es))${i.active?'':' — inactive'}</span>
+    </div>`).join('') || '<p class="empty">No items in this category.</p>';
+  document.getElementById('deleteCategoryModal').classList.add('show');
+}
+function closeDeleteCategoryModal(){ pendingDeleteCategory=null; document.getElementById('deleteCategoryModal').classList.remove('show'); }
+function deleteCategoryMoveAll(){
+  document.querySelectorAll('#delCatList .delCatCheck').forEach(cb=>cb.checked=false);
+  confirmDeleteCategory();
+}
+function confirmDeleteCategory(){
+  const rows = [...document.querySelectorAll('#delCatList > div[data-id]')];
+  rows.forEach(row=>{
+    const id = row.dataset.id;
+    const del = row.querySelector('.delCatCheck').checked;
+    const it = db.catalog.find(i=>i.id===id);
+    if(!it) return;
+    if(del){
+      const batchIds = new Set(it.batches.map(b=>b.id));
+      db.catalog = db.catalog.filter(i=>i.id!==id);
+      db.trips.forEach(t=>{ t.items = t.items.filter(ti=>!batchIds.has(ti.batchId)); });
+    } else {
+      const target = resolveCategory('Miscellaneous');
+      it.category = target;
+      const clash = db.catalog.find(i=>i.id!==id && i.category===target && normKey(i.name)===normKey(it.name));
+      if(clash) mergeItemBatches(id, clash);
+    }
+  });
+  db.categories = db.categories.filter(c=>c!==pendingDeleteCategory);
+  saveDB(); pendingDeleteCategory=null;
+  document.getElementById('deleteCategoryModal').classList.remove('show');
+  renderManage(); toast('Category deleted');
+}
+function renameLocationRow(btn){
+  const row = btn.closest('.manage-row');
+  const oldName = row.dataset.old;
+  const newName = row.querySelector('.locNewName').value.trim();
+  if(!newName || newName===oldName) return;
+  db.catalog.forEach(i=>i.batches.forEach(b=>{
+    if(b.locTo===oldName) b.locTo=newName;
+    if(b.locFrom===oldName) b.locFrom=newName;
+  }));
+  saveDB(); renderManage(); toast('Location renamed');
+}
+function clearLocationRow(btn){
+  const row = btn.closest('.manage-row');
+  const name = row.dataset.old;
+  if(!confirm(`Remove location "${name}" from all affected batches?`)) return;
+  db.catalog.forEach(i=>i.batches.forEach(b=>{
+    if(b.locTo===name) b.locTo='';
+    if(b.locFrom===name) b.locFrom='';
+  }));
+  saveDB(); renderManage(); toast('Location removed');
+}
+function deleteLocationRow(btn){
+  const row = btn.closest('.manage-row');
+  const name = row.dataset.old;
+  if(!confirm(`Completely delete location "${name}" (remove from all batches and delete from the list)?`)) return;
+  db.catalog.forEach(i=>i.batches.forEach(b=>{
+    if(b.locTo===name) b.locTo='';
+    if(b.locFrom===name) b.locFrom='';
+  }));
+  db.locations = (db.locations||[]).filter(l=>l!==name);
+  saveDB(); renderManage(); toast('Location deleted');
+}
+function wipeCatalog(){
+  const input = prompt('This will permanently delete ALL items. Type "DELETE" to confirm:');
+  if(input!=='DELETE'){ toast('Cancelled'); return; }
+  db.catalog = [];
+  db.trips.forEach(t=>{ t.items = []; });
+  selectedBestand.clear();
+  saveDB(); renderManage(); toast('Inventory completely deleted');
+}
+
+// =================== EXPORT / IMPORT / FILE LINKING ===================
+function exportJSON(){
+  const blob = new Blob([JSON.stringify(db,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `packing_list_full_export_${fileTimestamp()}.json`;
+  a.click();
+}
+function importJSON(evt){
+  const file = evt.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      if(!data.catalog || !data.trips) throw new Error('invalid format');
+      if(!confirm('Import will overwrite the current inventory & all packing lists. Continue?')) return;
+      db = data;
+      if(!db.categories) db.categories = CATEGORIES_DEFAULT.slice();
+      migrateToBatches();
+      if(!db.locations) db.locations = KNOWN_LOCATIONS.slice();
+      db.catalog.forEach(i=>i.batches.forEach(b=>{
+        if(b.locTo && !db.locations.some(l=>normKey(l)===normKey(b.locTo))) db.locations.push(b.locTo);
+        if(b.locFrom && !db.locations.some(l=>normKey(l)===normKey(b.locFrom))) db.locations.push(b.locFrom);
+      }));
+      db.trips.forEach(t=>{
+        t.items.forEach(ti=>{ if(!ti.tags) ti.tags=[]; });
+        if(!t.tasksBefore) t.tasksBefore=[];
+        if(!t.tasksAfter) t.tasksAfter=[];
+      });
+      saveDB();
+      renderCatalog(); renderTripsList(); toast('Import successful');
+    }catch(e){ alert('Import failed: '+e.message); }
+  };
+  reader.readAsText(file);
+  evt.target.value='';
+}
+async function linkFile(){
+  try{
+    fileHandle = await window.showSaveFilePicker({suggestedName:'packing_list.json', types:[{description:'JSON', accept:{'application/json':['.json']}}]});
+    await writeLinkedFile();
+    toast('File linked — changes will be saved to it from now on');
+  }catch(e){ /* user cancelled the picker */ }
+}
+async function writeLinkedFile(){
+  if(!fileHandle) return;
+  try{
+    const w = await fileHandle.createWritable();
+    await w.write(JSON.stringify(db,null,2));
+    await w.close();
+  }catch(e){ console.warn('File write access failed', e); }
+}
+
+// =================== Migrations (historical, run once) ===================
+const MIGRATIONS = [];
+function applyMigrations(){
+  if(!db.appliedMigrations) db.appliedMigrations = [];
+  let changed = false;
+  MIGRATIONS.forEach(m=>{
+    if(db.appliedMigrations.includes(m.id)) return;
+    (m.add||[]).forEach(s=>{
+      const exists = db.catalog.some(i=>i.name===s[0] && i.category===s[1]);
+      if(!exists) db.catalog.push({id:genId(), name:s[0], category:s[1], qty:s[2], locTo:s[3], locFrom:s[4], note:s[5], active: !!s[6]});
+    });
+    (m.update||[]).forEach(u=>{
+      const it = db.catalog.find(i=>i.name===u.match.name && i.category===u.match.category);
+      if(it) Object.assign(it, u.set);
+    });
+    (m.deactivate||[]).forEach(d=>{
+      const it = db.catalog.find(i=>i.name===d.name && i.category===d.category);
+      if(it && it.active){ it.active=false; it.note = (it.note? it.note+' · ':'') + (m.deactivateNote||'reviewed and deactivated'); }
+    });
+    db.appliedMigrations.push(m.id);
+    changed = true;
+  });
+  if(changed) saveDB();
+}
+
+loadDB();
+applyMigrations();
+if('showSaveFilePicker' in window) document.getElementById('linkFileBtn').style.display='';
+renderCatalog();
+renderTripsList();
+</script>
+<script>
+// PWA installability & offline use. Only works over http(s)/localhost,
+// not over file:// — see the README in this folder.
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('service-worker.js').catch(err=>console.warn('Service worker registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>
