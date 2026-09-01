@@ -101,7 +101,9 @@ summary .cnt{color:var(--muted); font-weight:400; font-size:0.74rem; white-space
 .tagpill{display:inline-flex; align-items:center; gap:4px; background:rgba(56,189,248,.15); color:var(--accent);
   border-radius:10px; padding:1px 6px 1px 8px; font-size:0.7rem;}
 .tagpill button{background:none; border:none; color:var(--accent); padding:0; margin:0; font-size:0.85rem; cursor:pointer; line-height:1;}
-.taginput{width:90px; font-size:0.72rem; padding:3px 6px;}
+.taginput{width:120px; font-size:0.72rem; padding:3px 6px;}
+.tagadd{display:inline-flex; gap:4px; align-items:center;}
+.tagconfirm{background:var(--accent2); color:#0b1220; border:none; border-radius:6px; padding:3px 8px; font-size:0.75rem; font-weight:700; cursor:pointer; line-height:1;}
 
 .modal-bg{display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50; align-items:center; justify-content:center; padding:16px; overflow:auto;}
 .modal-bg.show{display:flex;}
@@ -140,7 +142,7 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
 </head>
 <body>
 
-<h1>Packing List<small>local · offline · v1</small></h1>
+<h1>Packing List<small>local · offline · v1</small><small id="linkedFileIndicator" style="color:var(--accent);"></small></h1>
 
 <div class="tabbar">
   <button id="tabBestand" class="active" onclick="showTab('bestand')">Inventory</button>
@@ -1008,7 +1010,11 @@ function renderTripDetail(id){
             <span class="loc">📍 ${locLabel}: ${esc(loc)}${r.item.note?' · '+esc(r.item.note):''}</span>
             <div class="tags">
               ${tags.map(tg=>`<span class="tagpill">${esc(tg)}<button onclick="removeTag('${t.id}','${r.ti.batchId}','${esc(tg)}')">✕</button></span>`).join('')}
-              <input type="text" class="taginput" placeholder="+ Tag" onkeydown="if(event.key==='Enter'){addTag('${t.id}','${r.ti.batchId}',this.value); this.value='';}">
+              <span class="tagadd">
+                <input type="text" class="taginput" id="taginput_${r.ti.batchId}" placeholder="+ Tag(s), comma-separated"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault(); addTag('${t.id}','${r.ti.batchId}',this.value); this.value='';}">
+                <button type="button" class="tagconfirm" title="Add tag(s)" onclick="var el=document.getElementById('taginput_${r.ti.batchId}'); addTag('${t.id}','${r.ti.batchId}',el.value); el.value='';">✓</button>
+              </span>
             </div>
           </div>
           <input type="number" min="0" value="${r.ti.qty}" onchange="updateTripItemQty('${t.id}','${r.ti.batchId}',parseInt(this.value)||0)">
@@ -1046,23 +1052,28 @@ function bulkTripRemove(){
   t.items = t.items.filter(ti=>!selectedTripItems.has(ti.batchId));
   selectedTripItems.clear(); saveDB(); renderTripDetail(currentTripId);
 }
+// Allows entering multiple tags separated by commas, e.g. "Tag1, Tag2, Tag3" -> three separate tags
+function splitTags(raw){
+  return (raw||'').split(',').map(s=>s.trim()).filter(Boolean);
+}
 function bulkTripAddTag(){
-  const tag = prompt('Tag for the selected items:'); if(!tag) return;
+  const raw = prompt('Tag(s) for the selected items (separate multiple with a comma):'); if(!raw) return;
+  const tags = splitTags(raw); if(tags.length===0) return;
   const t = db.trips.find(x=>x.id===currentTripId);
   t.items.forEach(ti=>{
     if(selectedTripItems.has(ti.batchId)){
       ti.tags = ti.tags||[];
-      if(!ti.tags.some(tg=>normKey(tg)===normKey(tag))) ti.tags.push(tag.trim());
+      tags.forEach(tag=>{ if(!ti.tags.some(tg=>normKey(tg)===normKey(tag))) ti.tags.push(tag); });
     }
   });
   saveDB(); renderTripDetail(currentTripId);
 }
 function addTag(tripId, batchId, value){
-  const tag = value.trim(); if(!tag) return;
+  const tags = splitTags(value); if(tags.length===0) return;
   const t = db.trips.find(x=>x.id===tripId);
   const ti = t.items.find(i=>i.batchId===batchId);
   ti.tags = ti.tags||[];
-  if(!ti.tags.some(tg=>normKey(tg)===normKey(tag))) ti.tags.push(tag);
+  tags.forEach(tag=>{ if(!ti.tags.some(tg=>normKey(tg)===normKey(tag))) ti.tags.push(tag); });
   saveDB(); renderTripDetail(tripId);
 }
 function removeTag(tripId, batchId, tag){
@@ -1634,8 +1645,22 @@ async function linkFile(){
   try{
     fileHandle = await window.showSaveFilePicker({suggestedName:'packing_list.json', types:[{description:'JSON', accept:{'application/json':['.json']}}]});
     await writeLinkedFile();
-    toast('File linked — changes will be saved to it from now on');
+    updateLinkedFileUI();
+    toast(`File linked: ${fileHandle.name} — changes will be saved to it automatically from now on`);
   }catch(e){ /* user cancelled the picker */ }
+}
+// Makes it visible whether & to which file the app is currently linked. Browsers only
+// expose the file name for security reasons, never the full path.
+function updateLinkedFileUI(){
+  const btn = document.getElementById('linkFileBtn');
+  const indicator = document.getElementById('linkedFileIndicator');
+  if(fileHandle){
+    if(btn) btn.textContent = `✅ Linked: ${fileHandle.name}`;
+    if(indicator) indicator.textContent = ` · 🔗 ${fileHandle.name}`;
+  } else {
+    if(btn) btn.textContent = '🔗 Link file';
+    if(indicator) indicator.textContent = '';
+  }
 }
 async function writeLinkedFile(){
   if(!fileHandle) return;
@@ -1674,6 +1699,7 @@ function applyMigrations(){
 loadDB();
 applyMigrations();
 if('showSaveFilePicker' in window) document.getElementById('linkFileBtn').style.display='';
+updateLinkedFileUI();
 renderCatalog();
 renderTripsList();
 </script>
