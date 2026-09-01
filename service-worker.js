@@ -1,6 +1,6 @@
 // Bump this version whenever index.html changes content-wise,
 // otherwise already-installed users keep loading the old, cached version.
-const CACHE_NAME = 'packing-list-en-empty-v2';
+const CACHE_NAME = 'packing-list-en-empty-v3';
 const CORE_ASSETS = [
   './',
   './index.html',
