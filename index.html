@@ -170,12 +170,12 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
 <div id="view-bestand" class="view active">
   <div class="toolbar">
     <input type="search" id="bSearch" placeholder="Search…" oninput="renderCatalog()">
-    <select id="bCat" onchange="renderCatalog()"><option value="">All categories</option></select>
-    <select id="bLoc" onchange="renderCatalog()">
+    <select id="bCat" onchange="renderCatalog()" aria-label="Filter by category"><option value="">All categories</option></select>
+    <select id="bLoc" onchange="renderCatalog()" aria-label="Filter by location">
       <option value="">All locations</option>
       <option value="__none__">Incomplete location (destination or origin missing)</option>
     </select>
-    <select id="bStatus" onchange="renderCatalog()">
+    <select id="bStatus" onchange="renderCatalog()" aria-label="Filter by status">
       <option value="active">Active only</option>
       <option value="all">All (active + inactive)</option>
       <option value="inactive">Inactive only</option>
@@ -262,8 +262,8 @@ Cutlery"></textarea>
     <h2>Add items</h2>
     <div class="row-inline" style="margin-bottom:10px;">
       <input type="search" id="pSearch" placeholder="Search inventory…" oninput="renderPicker()" style="flex:1;">
-      <select id="pCat" onchange="renderPicker()"><option value="">All categories</option></select>
-      <select id="pLoc" onchange="renderPicker()"><option value="">All current locations</option></select>
+      <select id="pCat" onchange="renderPicker()" aria-label="Filter by category"><option value="">All categories</option></select>
+      <select id="pLoc" onchange="renderPicker()" aria-label="Filter by current location"><option value="">All current locations</option></select>
     </div>
     <div id="pickerList"></div>
     <p><a class="backlink" onclick="toggleNewItemForm()">+ create new item in inventory</a></p>
@@ -924,12 +924,12 @@ function renderTripDetail(id){
       <div id="tripArtikelSection">
         <div class="toolbar">
           <input type="search" id="dSearch" placeholder="Search…" oninput="renderTripDetail(currentTripId)">
-          <select id="dCat" onchange="renderTripDetail(currentTripId)"></select>
-          <select id="dStatus" onchange="renderTripDetail(currentTripId)">
+          <select id="dCat" onchange="renderTripDetail(currentTripId)" aria-label="Filter by category"></select>
+          <select id="dStatus" onchange="renderTripDetail(currentTripId)" aria-label="Filter by packed status">
             <option value="">All</option><option value="open">Open</option><option value="packed">Packed</option>
           </select>
-          <select id="dTag" onchange="renderTripDetail(currentTripId)"><option value="">All tags</option></select>
-          <select id="dGroup" onchange="renderTripDetail(currentTripId)">
+          <select id="dTag" onchange="renderTripDetail(currentTripId)" aria-label="Filter by tag"><option value="">All tags</option></select>
+          <select id="dGroup" onchange="renderTripDetail(currentTripId)" aria-label="Group items by">
             <option value="category">Group by: Category</option>
             <option value="locTo">Group by: Destination</option>
             <option value="locFrom">Group by: Origin</option>
@@ -1446,7 +1446,7 @@ function renderBulkPreview(catRaw){
     ${bulkAddRows.map((r,idx)=>`<div class="manage-row">
       <span class="grow">${esc(r.name)}</span>
       <input type="number" min="0" value="${r.qty}" style="width:60px;" onchange="bulkAddRows[${idx}].qty=parseInt(this.value)||0">
-      <select id="baAction_${idx}">
+      <select id="baAction_${idx}" aria-label="Action for ${esc(r.name)}">
         <option value="new">Create new in "${esc(catRaw)}"</option>
         ${r.sameCat? `<option value="batch" selected>Add as new batch to "${esc(r.sameCat.name)}" (${totalQty(r.sameCat)}x present)</option>`:''}
         ${r.otherCat? `<option value="batch_other">Add as new batch to existing item in "${esc(r.otherCat.category)}"</option>`:''}
