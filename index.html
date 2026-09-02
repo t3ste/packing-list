@@ -210,6 +210,8 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
       <button onclick="createTrip()">+ New packing list</button>
       <button class="secondary" onclick="document.getElementById('importTripFile').click()">⬆ Import packing list</button>
       <input type="file" id="importTripFile" accept="application/json" style="display:none" onchange="importTripFile(event)">
+      <button class="secondary" onclick="document.getElementById('importTripTextFile').click()">⬆ Import TXT</button>
+      <input type="file" id="importTripTextFile" accept=".txt,text/plain" style="display:none" onchange="importTripText(event)">
     </div>
     <div id="tripsList"></div>
   </div>
@@ -433,12 +435,16 @@ function showTripSubTab(name){
   tripSubTab = name;
   const artSec = document.getElementById('tripArtikelSection');
   const aufSec = document.getElementById('tripAufgabenSection');
+  const txtSec = document.getElementById('tripTextSection');
   if(artSec) artSec.style.display = name==='artikel' ? '' : 'none';
   if(aufSec) aufSec.style.display = name==='aufgaben' ? '' : 'none';
+  if(txtSec) txtSec.style.display = name==='text' ? '' : 'none';
   const bArt = document.getElementById('tripSubArtikel');
   const bAuf = document.getElementById('tripSubAufgaben');
+  const bTxt = document.getElementById('tripSubText');
   if(bArt) bArt.classList.toggle('active', name==='artikel');
   if(bAuf) bAuf.classList.toggle('active', name==='aufgaben');
+  if(bTxt) bTxt.classList.toggle('active', name==='text');
 }
 let pendingDup = null;
 let pendingDeleteCategory = null;
@@ -965,11 +971,13 @@ function renderTripDetail(id){
         <input type="text" id="tName" value="${esc(t.name)}" onchange="updateTrip('name',this.value)" style="font-size:1rem; font-weight:600; flex:1;">
         <button class="small secondary" onclick="openExportModal()">📤 As text</button>
         <button class="small secondary" onclick="exportTripFile()" title="Save/share as an importable file">💾 As file</button>
+        <button class="small secondary" onclick="exportTripText()" title="Save/share as an editable .txt file">📄 As TXT</button>
       </div>
       <div id="tripProgress"></div>
       <div class="tabbar">
         <button id="tripSubArtikel" class="active" onclick="showTripSubTab('artikel')">📦 Items</button>
         <button id="tripSubAufgaben" onclick="showTripSubTab('aufgaben')">✅ Tasks</button>
+        <button id="tripSubText" onclick="showTripSubTab('text')">📝 Text</button>
       </div>
       <div id="tripArtikelSection">
         <div class="toolbar">
@@ -993,10 +1001,18 @@ function renderTripDetail(id){
       </div>
       <div id="tripAufgabenSection" style="display:none;">
         <div id="tripTasksWrap"></div>
+      </div>
+      <div id="tripTextSection" style="display:none;">
+        <div class="toolbar">
+          <button class="small" onclick="refreshTripText(currentTripId)" title="Regenerate text from the current list (discards unapplied edits here)">🔄 Refresh from list</button>
+          <button class="small secondary" onclick="applyTripText(currentTripId)" title="Replace this list's items &amp; tasks with the text above">✅ Apply to list</button>
+        </div>
+        <textarea id="tripTextArea" spellcheck="false" style="width:100%; min-height:340px; font-family:ui-monospace,Consolas,monospace; font-size:0.82rem;"></textarea>
       </div>`;
     fillCategoryFilterSelect(document.getElementById('dCat'));
     tripClosedGroups.clear();
     tripSubTab = 'artikel';
+    document.getElementById('tripTextArea').value = buildTripTxt(t);
   }
   showTripSubTab(tripSubTab);
   renderTripTasks(t);
@@ -1338,6 +1354,32 @@ function exportTripFile(){
   a.download = `packing_list_file_${slugify(t.name)}_${fileTimestamp()}.json`;
   a.click();
 }
+// Matches rows from an imported list (JSON or TXT) against the inventory:
+// reuses matching items/batches, creates missing ones automatically.
+function mergeTripItemRows(rows){
+  let reused=0, created=0;
+  const items = [];
+  (rows||[]).forEach(row=>{
+    if(!row.itemName) return;
+    const category = resolveCategory(row.itemCategory);
+    const locTo = resolveLocation(row.batchLocTo);
+    const locFrom = resolveLocation(row.batchLocFrom);
+    let item = db.catalog.find(i=>normKey(i.name)===normKey(row.itemName) && i.category===category);
+    if(!item){
+      item = {id:genId(), name:row.itemName, category, note:row.itemNote||'', active:true, batches:[]};
+      db.catalog.push(item);
+    }
+    let batch = item.batches.find(b=>normKey(b.locTo)===normKey(locTo) && normKey(b.locFrom)===normKey(locFrom));
+    if(batch){ reused++; }
+    else {
+      batch = {id:genBatchId(), qty:row.batchQty||row.qty||1, locTo, locFrom};
+      item.batches.push(batch);
+      created++;
+    }
+    items.push({batchId:batch.id, qty:row.qty||1, packed:!!row.packed, tags:row.tags||[]});
+  });
+  return {items, reused, created};
+}
 function importTripFile(evt){
   const file = evt.target.files[0]; if(!file) return;
   const reader = new FileReader();
@@ -1348,29 +1390,10 @@ function importTripFile(evt){
       const src = data.trip;
       let name = src.name || 'Imported packing list';
       if(db.trips.some(t=>t.name===name)) name = name+' (Import)';
-      const newTrip = {id:genId(), name, type:src.type||'Miscellaneous', date:src.date||new Date().toISOString().slice(0,10), items:[],
+      const {items, reused, created} = mergeTripItemRows(src.items);
+      const newTrip = {id:genId(), name, type:src.type||'Miscellaneous', date:src.date||new Date().toISOString().slice(0,10), items,
         tasksBefore:(src.tasksBefore||[]).map(x=>({id:genId(), text:x.text, done:!!x.done})),
         tasksAfter:(src.tasksAfter||[]).map(x=>({id:genId(), text:x.text, done:!!x.done}))};
-      let reused=0, created=0;
-      (src.items||[]).forEach(row=>{
-        if(!row.itemName) return;
-        const category = resolveCategory(row.itemCategory);
-        const locTo = resolveLocation(row.batchLocTo);
-        const locFrom = resolveLocation(row.batchLocFrom);
-        let item = db.catalog.find(i=>normKey(i.name)===normKey(row.itemName) && i.category===category);
-        if(!item){
-          item = {id:genId(), name:row.itemName, category, note:row.itemNote||'', active:true, batches:[]};
-          db.catalog.push(item);
-        }
-        let batch = item.batches.find(b=>normKey(b.locTo)===normKey(locTo) && normKey(b.locFrom)===normKey(locFrom));
-        if(batch){ reused++; }
-        else {
-          batch = {id:genBatchId(), qty:row.batchQty||row.qty||1, locTo, locFrom};
-          item.batches.push(batch);
-          created++;
-        }
-        newTrip.items.push({batchId:batch.id, qty:row.qty||1, packed:!!row.packed, tags:row.tags||[]});
-      });
       db.trips.push(newTrip);
       saveDB();
       toast(`Packing list imported (${reused} batch(es) reused, ${created} newly created)`);
@@ -1379,6 +1402,146 @@ function importTripFile(evt){
   };
   reader.readAsText(file);
   evt.target.value='';
+}
+// ---- Packing list as an editable TXT file (round-trip format "#PACKLIST v1") ----
+const TASK_HEADING_BEFORE = 'Tasks before the trip';
+const TASK_HEADING_AFTER = 'Tasks after the trip';
+function buildTripTxt(trip){
+  const rows = trip.items.map(ti=>{ const found=resolveBatch(ti.batchId); return found?{item:found.item, batch:found.batch, ti}:null; }).filter(Boolean);
+  let out = '#PACKLIST v1\n';
+  out += `name: ${trip.name}\n`;
+  out += `type: ${trip.type}\n`;
+  out += `date: ${trip.date}\n\n`;
+  const byCat = {};
+  rows.forEach(r=>{ (byCat[r.item.category]=byCat[r.item.category]||[]).push(r); });
+  const catOrder = db.categories.filter(c=>byCat[c]).concat(Object.keys(byCat).filter(c=>!db.categories.includes(c)));
+  catOrder.forEach(cat=>{
+    out += `## ${cat}\n`;
+    byCat[cat].forEach(r=>{
+      out += `- [${r.ti.packed?'x':' '}] ${r.ti.qty}x ${r.item.name}\n`;
+      if(r.batch.locTo) out += `  to: ${r.batch.locTo}\n`;
+      if(r.batch.locFrom) out += `  from: ${r.batch.locFrom}\n`;
+      if(r.item.note) out += `  note: ${r.item.note}\n`;
+      if(r.ti.tags && r.ti.tags.length) out += `  tags: ${r.ti.tags.join(', ')}\n`;
+    });
+    out += '\n';
+  });
+  const taskSection = (list, label) => {
+    if(!list || !list.length) return '';
+    let s = `## ${label}\n`;
+    list.forEach(x=> s += `- [${x.done?'x':' '}] ${x.text}\n`);
+    return s + '\n';
+  };
+  out += taskSection(trip.tasksBefore, TASK_HEADING_BEFORE);
+  out += taskSection(trip.tasksAfter, TASK_HEADING_AFTER);
+  return out.trimEnd() + '\n';
+}
+function parseTripTxt(text){
+  const lines = String(text||'').replace(/\r\n?/g,'\n').split('\n');
+  if(!lines[0] || lines[0].trim()!=='#PACKLIST v1') throw new Error('This is not a packing list text file (missing "#PACKLIST v1" header)');
+  const result = {name:'', type:'', date:'', items:[], tasksBefore:[], tasksAfter:[]};
+  let section = null;
+  let currentItem = null;
+  for(let i=1;i<lines.length;i++){
+    const raw = lines[i];
+    const trimmed = raw.trim();
+    if(!trimmed || trimmed.startsWith('//')) continue;
+    if(trimmed.startsWith('## ')){
+      const heading = trimmed.slice(3).trim();
+      if(normKey(heading)===normKey(TASK_HEADING_BEFORE)) section = {kind:'tasksBefore'};
+      else if(normKey(heading)===normKey(TASK_HEADING_AFTER)) section = {kind:'tasksAfter'};
+      else section = {kind:'items', category: heading};
+      currentItem = null;
+      continue;
+    }
+    if(!section){
+      const meta = trimmed.match(/^(name|type|date):\s*(.*)$/i);
+      if(meta) result[meta[1].toLowerCase()] = meta[2].trim();
+      continue;
+    }
+    const itemMatch = raw.match(/^-\s*\[( |x|X)\]\s*(.+)$/);
+    if(itemMatch){
+      const checked = itemMatch[1].toLowerCase()==='x';
+      const rest = itemMatch[2].trim();
+      const qtyMatch = rest.match(/^(\d+(?:[.,]\d+)?)\s*x\s+(.+)$/i);
+      let qty = 1, name = rest;
+      if(qtyMatch){ qty = Math.max(1, Math.round(parseFloat(qtyMatch[1].replace(',','.')))); name = qtyMatch[2].trim(); }
+      if(section.kind==='tasksBefore' || section.kind==='tasksAfter'){
+        result[section.kind].push({text:name, done:checked});
+        currentItem = null;
+      } else {
+        currentItem = {itemName:name, itemCategory:section.category, itemNote:'', batchQty:qty, batchLocTo:'', batchLocFrom:'', qty, packed:checked, tags:[]};
+        result.items.push(currentItem);
+      }
+      continue;
+    }
+    const detail = raw.match(/^\s+(to|from|note|tags):\s*(.*)$/i);
+    if(detail && currentItem && section.kind==='items'){
+      const key = detail[1].toLowerCase(); const val = detail[2].trim();
+      if(key==='to') currentItem.batchLocTo = val;
+      else if(key==='from') currentItem.batchLocFrom = val;
+      else if(key==='note') currentItem.itemNote = val;
+      else if(key==='tags') currentItem.tags = splitTags(val);
+    }
+  }
+  if(!result.items.length && !result.tasksBefore.length && !result.tasksAfter.length){
+    throw new Error('No items or tasks were recognized in this file.');
+  }
+  return result;
+}
+function exportTripText(){
+  const t = db.trips.find(x=>x.id===currentTripId); if(!t) return;
+  const blob = new Blob([buildTripTxt(t)], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `packing_list_${slugify(t.name)}_${fileTimestamp()}.txt`;
+  a.click();
+}
+function importTripText(evt){
+  const file = evt.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const parsed = parseTripTxt(reader.result);
+      let name = parsed.name || 'Imported packing list';
+      if(db.trips.some(t=>t.name===name)) name = name+' (Import)';
+      const {items, reused, created} = mergeTripItemRows(parsed.items);
+      const newTrip = {id:genId(), name, type:parsed.type||'Miscellaneous', date:parsed.date||new Date().toISOString().slice(0,10), items,
+        tasksBefore: parsed.tasksBefore.map(x=>({id:genId(), text:x.text, done:!!x.done})),
+        tasksAfter: parsed.tasksAfter.map(x=>({id:genId(), text:x.text, done:!!x.done}))};
+      db.trips.push(newTrip);
+      saveDB();
+      toast(`Packing list imported (${reused} batch(es) reused, ${created} newly created)`);
+      showTab('trips'); openTrip(newTrip.id);
+    }catch(e){ alert('Import failed: '+e.message); }
+  };
+  reader.readAsText(file);
+  evt.target.value='';
+}
+function refreshTripText(tripId){
+  const t = db.trips.find(x=>x.id===tripId); if(!t) return;
+  const el = document.getElementById('tripTextArea');
+  if(el) el.value = buildTripTxt(t);
+}
+function applyTripText(tripId){
+  const t = db.trips.find(x=>x.id===tripId); if(!t) return;
+  const el = document.getElementById('tripTextArea'); if(!el) return;
+  if(!confirm("Replace this list's items & tasks with the text above? This cannot be undone.")) return;
+  try{
+    const parsed = parseTripTxt(el.value);
+    const {items, reused, created} = mergeTripItemRows(parsed.items);
+    t.items = items;
+    t.tasksBefore = parsed.tasksBefore.map(x=>({id:genId(), text:x.text, done:!!x.done}));
+    t.tasksAfter = parsed.tasksAfter.map(x=>({id:genId(), text:x.text, done:!!x.done}));
+    if(parsed.name) t.name = parsed.name;
+    if(parsed.type) t.type = parsed.type;
+    if(parsed.date) t.date = parsed.date;
+    saveDB();
+    toast(`List updated from text (${reused} batch(es) reused, ${created} newly created)`);
+    document.getElementById('tripDetailView').dataset.built=''; // forces the detail view (incl. text field) to rebuild
+    renderTripDetail(tripId);
+    showTripSubTab('text');
+  }catch(e){ alert('Could not apply text: '+e.message); }
 }
 
 // ---- Picker (add items to packing list) ----
