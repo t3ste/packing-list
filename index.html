@@ -88,6 +88,9 @@ summary .cnt{color:var(--muted); font-weight:400; font-size:0.74rem; white-space
 .bcard:first-child{border-top:none;}
 .bcard.inactive{opacity:.5;}
 .bcard .selcol{padding-top:6px;}
+.bcard.compact{align-items:center; padding:7px 6px;}
+.bcard.compact .selcol{padding-top:0;}
+.bcard.compact input.bname{flex:1; width:auto; font-weight:500;}
 .bcard .bbody{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px;}
 .bcard .bname{font-weight:600; font-size:0.92rem; width:100%;}
 .bcard .bfields{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:6px;}
@@ -154,6 +157,7 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
   .selectbar{position:static;}
   .bcard{flex-direction:column;}
   .bcard .selcol{padding-top:0;}
+  .bcard.compact{flex-direction:row;}
   h1{font-size:1.05rem;}
 }
 </style>
@@ -162,7 +166,7 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
 <body>
 
 <div class="topbar">
-  <h1>Packing List<small>local · offline · <span id="appVersion">v3</span></small><small id="linkedFileIndicator" style="color:var(--accent);"></small></h1>
+  <h1>Packing List<small>local · offline · <span id="appVersion">v3</span> · 📦 <span id="cacheTimestamp"></span> · 💾 <span id="saveTimestamp"></span></small><small id="linkedFileIndicator" style="color:var(--accent);"></small></h1>
   <div class="menuWrap">
     <button class="menuToggle" id="menuToggleBtn" onclick="toggleMainMenu()" aria-label="Menu" title="Menu">☰</button>
     <div class="mainMenu" id="mainMenu">
@@ -198,6 +202,7 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
       <option value="inactive">Inactive only</option>
     </select>
     <button class="ghost small" onclick="toggleAllBestandGroups()" id="bToggleAllBtn">Collapse all</button>
+    <button class="ghost small" onclick="toggleBestandView()" id="bViewToggleBtn">🔎 Simplified view</button>
     <button onclick="openNewItemModal()">+ New item</button>
   </div>
   <div id="bSelectBar"></div>
@@ -208,9 +213,9 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
   <div id="tripsListView">
     <div class="toolbar">
       <button onclick="createTrip()">+ New packing list</button>
-      <button class="secondary" onclick="document.getElementById('importTripFile').click()">⬆ Import packing list</button>
+      <button class="secondary" onclick="document.getElementById('importTripFile').click()">⬆ Import list from JSON</button>
       <input type="file" id="importTripFile" accept="application/json" style="display:none" onchange="importTripFile(event)">
-      <button class="secondary" onclick="document.getElementById('importTripTextFile').click()">⬆ Import TXT</button>
+      <button class="secondary" onclick="document.getElementById('importTripTextFile').click()">⬆ Import list from TXT</button>
       <input type="file" id="importTripTextFile" accept=".txt,text/plain" style="display:none" onchange="importTripText(event)">
     </div>
     <div id="tripsList"></div>
@@ -428,6 +433,7 @@ let currentTripId = null;
 let pickerTripId = null;
 let pickerSelections = {};
 let selectedBestand = new Set();
+let bestandCompactView = (localStorage.getItem('bestand_view_mode')==='compact');
 let selectedTripItems = new Set();
 let tripClosedGroups = new Set();
 let tripSubTab = 'artikel';
@@ -510,7 +516,31 @@ function migrateToBatches(){
 }
 function saveDB(){
   localStorage.setItem('packliste_v3_db', JSON.stringify(db));
+  localStorage.setItem('packliste_v3_saved_at', new Date().toISOString());
+  updateSaveTimestampUI();
   if(fileHandle) writeLinkedFile();
+}
+// Short, readable timestamp format for the header: time only if today,
+// otherwise date + time too. The full timestamp is available as a tooltip.
+function formatShortTimestamp(iso){
+  if(!iso) return '–';
+  const d = new Date(iso);
+  if(isNaN(d)) return '–';
+  const now = new Date();
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  if(d.toDateString()===now.toDateString()) return `${hh}:${mm}`;
+  const yyyy = d.getFullYear();
+  const mo = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${yyyy}-${mo}-${dd} ${hh}:${mm}`;
+}
+function updateSaveTimestampUI(){
+  const el = document.getElementById('saveTimestamp');
+  if(!el) return;
+  const iso = localStorage.getItem('packliste_v3_saved_at');
+  el.textContent = formatShortTimestamp(iso);
+  el.title = iso ? ('Last saved: '+new Date(iso).toLocaleString()) : '';
 }
 function genId(){ return 'c'+(db.nextId++); }
 function genBatchId(){ return 'b'+(db.nextId++); }
@@ -613,6 +643,16 @@ function toggleAllBestandGroups(){
   else details.forEach(d=>bestandClosedGroups.delete(d.dataset.key));
   renderCatalog();
 }
+function toggleBestandView(){
+  bestandCompactView = !bestandCompactView;
+  try{ localStorage.setItem('bestand_view_mode', bestandCompactView?'compact':'expanded'); }catch(e){}
+  updateBestandViewBtn();
+  renderCatalog();
+}
+function updateBestandViewBtn(){
+  const btn = document.getElementById('bViewToggleBtn');
+  if(btn) btn.textContent = bestandCompactView ? '🔎 Expanded view' : '🔎 Simplified view';
+}
 function renderCatalog(){
   renderCategoryDatalist(); renderLocationDatalist();
   const search = document.getElementById('bSearch').value.trim().toLowerCase();
@@ -653,7 +693,10 @@ function renderCatalog(){
     const isOpen = !bestandClosedGroups.has(cat);
     return `<details ${isOpen?'open':''} data-key="${esc(cat)}" data-scope="bestand" ontoggle="onDetailsToggle(this)" style="border-left:4px solid ${c};">
       <summary style="color:${c};">${esc(cat)} <span class="cnt">${st.active} active · ${st.inactive} inactive</span></summary>
-      ${list.map(i=>`<div class="bcard ${i.active?'':'inactive'}">
+      ${list.map(i=> bestandCompactView ? `<div class="bcard compact ${i.active?'':'inactive'}">
+        <div class="selcol"><input type="checkbox" ${selectedBestand.has(i.id)?'checked':''} onchange="toggleSelectBestand('${i.id}',this.checked)"></div>
+        <input type="text" class="bname" value="${esc(i.name)}" onchange="updateItem('${i.id}','name',this.value)">
+      </div>` : `<div class="bcard ${i.active?'':'inactive'}">
         <div class="selcol"><input type="checkbox" ${selectedBestand.has(i.id)?'checked':''} onchange="toggleSelectBestand('${i.id}',this.checked)"></div>
         <div class="bbody">
           <input type="text" class="bname" value="${esc(i.name)}" onchange="updateItem('${i.id}','name',this.value)">
@@ -967,11 +1010,13 @@ function renderTripDetail(id){
     view.dataset.built = id;
     view.innerHTML = `
       <a class="backlink" onclick="backToTrips()">← Back to packing lists</a>
-      <div class="row-inline" style="margin:8px 0;">
-        <input type="text" id="tName" value="${esc(t.name)}" onchange="updateTrip('name',this.value)" style="font-size:1rem; font-weight:600; flex:1;">
-        <button class="small secondary" onclick="openExportModal()">📤 As text</button>
-        <button class="small secondary" onclick="exportTripFile()" title="Save/share as an importable file">💾 As file</button>
-        <button class="small secondary" onclick="exportTripText()" title="Save/share as an editable .txt file">📄 As TXT</button>
+      <div style="margin:8px 0;">
+        <input type="text" id="tName" value="${esc(t.name)}" onchange="updateTrip('name',this.value)" style="font-size:1rem; font-weight:600; width:100%; margin-bottom:8px;">
+        <div class="row-inline">
+        <button class="small secondary" onclick="openExportModal()">📤 Share list</button>
+        <button class="small secondary" onclick="exportTripFile()" title="Save/share as an importable file">⬇ Export list to JSON</button>
+        <button class="small secondary" onclick="exportTripText()" title="Save/share as an editable .txt file">⬇ Export list to TXT</button>
+        </div>
       </div>
       <div id="tripProgress"></div>
       <div class="tabbar">
@@ -2066,6 +2111,8 @@ if('showSaveFilePicker' in window) document.getElementById('linkFileBtn').style.
 updateLinkedFileUI();
 restoreLinkedFile();
 updateThemeMenuLabel();
+updateBestandViewBtn();
+updateSaveTimestampUI();
 renderCatalog();
 renderTripsList();
 </script>
@@ -2086,6 +2133,9 @@ if('serviceWorker' in navigator){
     const m = text.match(/CACHE_NAME\s*=\s*'[^']*-v(\d+)'/);
     const el = document.getElementById('appVersion');
     if(m && el) el.textContent = 'v'+m[1];
+    const b = text.match(/CACHE_BUILT\s*=\s*'([^']*)'/);
+    const cacheEl = document.getElementById('cacheTimestamp');
+    if(b && cacheEl){ cacheEl.textContent = b[1]; cacheEl.title = 'App last updated: '+b[1]; }
   }catch(e){ /* offline — display stays whatever is hardcoded in the HTML */ }
 })();
 </script>
