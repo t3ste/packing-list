@@ -552,6 +552,12 @@ function resolveBatch(batchId){
   return null;
 }
 function totalQty(item){ return item.batches.reduce((s,b)=>s+b.qty,0); }
+// Which packing lists currently use this item (any of its batches)? Used to warn
+// before deleting an item that's still referenced somewhere.
+function tripsUsingItem(item){
+  const batchIds = new Set(item.batches.map(b=>b.id));
+  return db.trips.filter(t=>t.items.some(ti=>batchIds.has(ti.batchId)));
+}
 
 function toast(msg){
   const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
@@ -693,13 +699,18 @@ function renderCatalog(){
     const isOpen = !bestandClosedGroups.has(cat);
     return `<details ${isOpen?'open':''} data-key="${esc(cat)}" data-scope="bestand" ontoggle="onDetailsToggle(this)" style="border-left:4px solid ${c};">
       <summary style="color:${c};">${esc(cat)} <span class="cnt">${st.active} active · ${st.inactive} inactive</span></summary>
-      ${list.map(i=> bestandCompactView ? `<div class="bcard compact ${i.active?'':'inactive'}">
+      ${list.map(i=>{
+        const usedIn = tripsUsingItem(i);
+        const usageBadge = usedIn.length ? `<span class="pill" title="${esc('Used in: '+usedIn.map(t=>t.name).join(', '))}">📋 ${usedIn.length}</span>` : '';
+        return bestandCompactView ? `<div class="bcard compact ${i.active?'':'inactive'}">
         <div class="selcol"><input type="checkbox" ${selectedBestand.has(i.id)?'checked':''} onchange="toggleSelectBestand('${i.id}',this.checked)"></div>
         <input type="text" class="bname" value="${esc(i.name)}" onchange="updateItem('${i.id}','name',this.value)">
+        ${usageBadge}
       </div>` : `<div class="bcard ${i.active?'':'inactive'}">
         <div class="selcol"><input type="checkbox" ${selectedBestand.has(i.id)?'checked':''} onchange="toggleSelectBestand('${i.id}',this.checked)"></div>
         <div class="bbody">
           <input type="text" class="bname" value="${esc(i.name)}" onchange="updateItem('${i.id}','name',this.value)">
+          ${usageBadge}
           <div><label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;">Category</label>
           <input type="text" list="categoryOptions" value="${esc(i.category)}" onchange="updateItem('${i.id}','category',this.value)"></div>
           <div class="batches">
@@ -719,7 +730,8 @@ function renderCatalog(){
             <button class="ghost small" onclick="deleteItem('${i.id}')">✕ Delete item</button>
           </div>
         </div>
-      </div>`).join('')}
+      </div>`;
+      }).join('')}
       </details>`;
   }).join('');
 }
@@ -747,7 +759,18 @@ function bulkSetActive(active){
   saveDB(); renderCatalog(); toast('Status updated');
 }
 function bulkDelete(){
-  if(!confirm(`Really delete ${selectedBestand.size} item(s)? Their batches will also be removed from packing lists.`)) return;
+  const affectedTrips = new Map();
+  selectedBestand.forEach(id=>{
+    const item = db.catalog.find(i=>i.id===id); if(!item) return;
+    tripsUsingItem(item).forEach(t=>affectedTrips.set(t.id, t.name));
+  });
+  let msg = `Really delete ${selectedBestand.size} item(s)?`;
+  if(affectedTrips.size){
+    msg += `\n\nSome of them are currently used in ${affectedTrips.size} packing list${affectedTrips.size>1?'s':''}:\n- ${[...affectedTrips.values()].join('\n- ')}\n\nThey will also be removed from ${affectedTrips.size>1?'those lists':'that list'}.`;
+  } else {
+    msg += ' None of them are currently used in any packing list.';
+  }
+  if(!confirm(msg)) return;
   selectedBestand.forEach(id=>{
     const item = db.catalog.find(i=>i.id===id); if(!item) return;
     const batchIds = new Set(item.batches.map(b=>b.id));
@@ -820,8 +843,15 @@ function removeBatch(itemId, batchId){
   saveDB(); renderCatalog();
 }
 function deleteItem(id){
-  if(!confirm('Really delete this item from the inventory? All its batches will also be removed from existing packing lists.')) return;
   const item = db.catalog.find(i=>i.id===id); if(!item) return;
+  const usedIn = tripsUsingItem(item);
+  let msg = 'Really delete this item from the inventory?';
+  if(usedIn.length){
+    msg += `\n\nIt is currently used in ${usedIn.length} packing list${usedIn.length>1?'s':''}:\n- ${usedIn.map(t=>t.name).join('\n- ')}\n\nIt will also be removed from ${usedIn.length>1?'those lists':'that list'}.`;
+  } else {
+    msg += ' It is not currently used in any packing list.';
+  }
+  if(!confirm(msg)) return;
   const batchIds = new Set(item.batches.map(b=>b.id));
   db.catalog = db.catalog.filter(i=>i.id!==id);
   db.trips.forEach(t=>{ t.items = t.items.filter(ti=>!batchIds.has(ti.batchId)); });
