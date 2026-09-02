@@ -211,6 +211,10 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
     <button class="ghost small" onclick="toggleBestandView()" id="bViewToggleBtn">🔎 Simplified view</button>
     <button onclick="openNewItemModal()">+ New item</button>
   </div>
+  <div class="meta" style="color:var(--muted); font-size:0.82rem; margin:-4px 0 8px; display:flex; align-items:center; gap:8px;">
+    <span id="bStatsText"></span>
+    <button class="ghost small" onclick="openStatsModal()" title="More statistics">📊 Stats</button>
+  </div>
   <div id="bSelectBar"></div>
   <div id="catalogList"></div>
 </div>
@@ -285,6 +289,17 @@ Cutlery"></textarea>
 <div id="toast"></div>
 <datalist id="categoryOptions"></datalist>
 <datalist id="locationOptions"></datalist>
+
+<!-- Inventory statistics -->
+<div class="modal-bg" id="statsModal">
+  <div class="modal">
+    <h2>📊 Inventory statistics</h2>
+    <ul class="help-list" id="statsList"></ul>
+    <div class="row-inline" style="justify-content:flex-end; margin-top:12px;">
+      <button onclick="closeStatsModal()">Close</button>
+    </div>
+  </div>
+</div>
 
 <!-- Item picker (packing list: add items) -->
 <div class="modal-bg" id="pickerModal">
@@ -564,6 +579,29 @@ function tripsUsingItem(item){
   const batchIds = new Set(item.batches.map(b=>b.id));
   return db.trips.filter(t=>t.items.some(ti=>batchIds.has(ti.batchId)));
 }
+function computeInventoryStats(){
+  const totalItems = db.catalog.length;
+  const active = db.catalog.filter(i=>i.active).length;
+  const inactive = totalItems - active;
+  const totalBatches = db.catalog.reduce((s,i)=>s+i.batches.length,0);
+  const totalUnits = db.catalog.reduce((s,i)=>s+totalQty(i),0);
+  const categoriesInUse = new Set(db.catalog.map(i=>i.category)).size;
+  const locationsInUse = new Set(db.catalog.flatMap(i=>i.batches.flatMap(b=>[b.locTo,b.locFrom].filter(Boolean)))).size;
+  const usedItems = db.catalog.filter(i=>tripsUsingItem(i).length>0).length;
+  return {totalItems, active, inactive, totalBatches, totalUnits, categoriesInUse, locationsInUse, usedItems, unusedItems: totalItems-usedItems, totalTrips: db.trips.length};
+}
+function openStatsModal(){
+  const s = computeInventoryStats();
+  document.getElementById('statsList').innerHTML = `
+    <li><b>${s.totalItems}</b> items total — ${s.active} active · ${s.inactive} inactive</li>
+    <li><b>${s.totalBatches}</b> batch(es), <b>${s.totalUnits}</b> unit(s) total</li>
+    <li><b>${s.categoriesInUse}</b> categories in use, <b>${s.locationsInUse}</b> locations in use</li>
+    <li><b>${s.usedItems}</b> item(s) used in at least one packing list, <b>${s.unusedItems}</b> not used in any</li>
+    <li><b>${s.totalTrips}</b> packing list(s) total</li>
+  `;
+  document.getElementById('statsModal').classList.add('show');
+}
+function closeStatsModal(){ document.getElementById('statsModal').classList.remove('show'); }
 
 function toast(msg){
   const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
@@ -693,6 +731,9 @@ function renderCatalog(){
 
   const byCat = {};
   items.forEach(i=>{ (byCat[i.category]=byCat[i.category]||[]).push(i); });
+
+  const statsText = document.getElementById('bStatsText');
+  if(statsText){ const s = computeInventoryStats(); statsText.textContent = `${s.active} active · ${s.inactive} inactive`; }
 
   renderSelectBar();
   const wrap = document.getElementById('catalogList');
@@ -1182,7 +1223,8 @@ function renderTripDetail(id){
               </span>
             </div>
           </div>
-          <input type="number" min="0" value="${r.ti.qty}" onchange="updateTripItemQty('${t.id}','${r.ti.batchId}',parseInt(this.value)||0)">
+          <input type="number" min="0" value="${r.ti.qty}" id="tiQtyInput_${r.ti.batchId}" oninput="updateTripItemQtyIndicator('${r.ti.batchId}', ${r.batch.qty})" onchange="updateTripItemQty('${t.id}','${r.ti.batchId}',parseInt(this.value)||0)">
+          <span id="tiQtyInd_${r.ti.batchId}" style="font-size:0.72rem; color:${r.ti.qty > r.batch.qty ? 'var(--danger)' : 'var(--accent2)'};" title="Available in inventory: ${r.batch.qty}">/${r.batch.qty}</span>
           <button class="x" onclick="removeTripItem('${t.id}','${r.ti.batchId}')" title="remove">✕</button>
         </div>`;
       }).join('')}</div>
@@ -1256,6 +1298,13 @@ function toggleTripItem(tripId, batchId, packed){
   const t = db.trips.find(x=>x.id===tripId);
   const ti = t.items.find(i=>i.batchId===batchId);
   ti.packed = packed; saveDB(); renderTripDetail(tripId);
+}
+function updateTripItemQtyIndicator(batchId, available){
+  const input = document.getElementById('tiQtyInput_'+batchId);
+  const ind = document.getElementById('tiQtyInd_'+batchId);
+  if(!input || !ind) return;
+  const chosen = parseInt(input.value)||0;
+  ind.style.color = chosen > available ? 'var(--danger)' : 'var(--accent2)';
 }
 function updateTripItemQty(tripId, batchId, qty){
   const t = db.trips.find(x=>x.id===tripId);
@@ -1685,9 +1734,17 @@ function renderPicker(){
     return `${head}<div class="picker-item">
       <input type="checkbox" ${sel?'checked':''} onchange="pickerToggle('${p.batch.id}',this.checked)">
       <span class="n">${esc(p.item.name)}${cl?' <span class="loc" style="color:var(--muted)">— currently: '+esc(cl)+(showArrow?' → '+esc(p.batch.locTo):'')+'</span>':''}</span>
-      <input type="number" min="1" value="${sel?sel.qty:p.batch.qty}" onchange="pickerQty('${p.batch.id}',parseInt(this.value)||1)">
+      <input type="number" min="1" value="${sel?sel.qty:p.batch.qty}" id="pQtyInput_${p.batch.id}" oninput="updatePickerQtyIndicator('${p.batch.id}', ${p.batch.qty})" onchange="pickerQty('${p.batch.id}',parseInt(this.value)||1)">
+      <span id="pQtyInd_${p.batch.id}" style="font-size:0.72rem; color:${(sel?sel.qty:p.batch.qty) > p.batch.qty ? 'var(--danger)' : 'var(--accent2)'};" title="Available in inventory: ${p.batch.qty}">/${p.batch.qty}</span>
     </div>`;
   }).join('');
+}
+function updatePickerQtyIndicator(batchId, available){
+  const input = document.getElementById('pQtyInput_'+batchId);
+  const ind = document.getElementById('pQtyInd_'+batchId);
+  if(!input || !ind) return;
+  const chosen = parseInt(input.value)||0;
+  ind.style.color = chosen > available ? 'var(--danger)' : 'var(--accent2)';
 }
 function pickerToggle(batchId, checked){
   if(checked){
