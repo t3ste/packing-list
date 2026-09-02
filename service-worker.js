@@ -1,6 +1,6 @@
 // Bump this version whenever index.html changes content-wise,
 // otherwise already-installed users keep loading the old, cached version.
-const CACHE_NAME = 'packing-list-en-empty-v11';
+const CACHE_NAME = 'packing-list-en-empty-v12';
 const CACHE_BUILT = '2026-09-02';
 const CORE_ASSETS = [
   './',

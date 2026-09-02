@@ -12,6 +12,7 @@
 <!-- iOS: separate set of meta tags, since Safari only partially supports the web app manifest -->
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Packing List">
 <style>
@@ -200,6 +201,11 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
       <option value="active">Active only</option>
       <option value="all">All (active + inactive)</option>
       <option value="inactive">Inactive only</option>
+    </select>
+    <select id="bUsage" onchange="renderCatalog()" aria-label="Filter by list usage">
+      <option value="">All items</option>
+      <option value="used">Used in a list</option>
+      <option value="unused">Not used in any list</option>
     </select>
     <button class="ghost small" onclick="toggleAllBestandGroups()" id="bToggleAllBtn">Collapse all</button>
     <button class="ghost small" onclick="toggleBestandView()" id="bViewToggleBtn">🔎 Simplified view</button>
@@ -671,6 +677,7 @@ function renderCatalog(){
   locSel.value = curLoc;
   const locF = locSel.value;
   const statusF = document.getElementById('bStatus').value;
+  const usageF = document.getElementById('bUsage').value;
 
   let items = db.catalog.filter(i=>{
     if(statusF==='active' && !i.active) return false;
@@ -678,6 +685,8 @@ function renderCatalog(){
     if(catF && i.category!==catF) return false;
     if(locF==='__none__' && !i.batches.some(b=>!b.locTo || !b.locFrom)) return false;
     else if(locF && locF!=='__none__' && !i.batches.some(b=>b.locTo===locF || b.locFrom===locF)) return false;
+    if(usageF==='used' && tripsUsingItem(i).length===0) return false;
+    if(usageF==='unused' && tripsUsingItem(i).length>0) return false;
     if(search && !(i.name.toLowerCase().includes(search) || (i.note||'').toLowerCase().includes(search))) return false;
     return true;
   });
@@ -838,6 +847,11 @@ function updateBatch(itemId, batchId, field, value){
 function removeBatch(itemId, batchId){
   const item = db.catalog.find(i=>i.id===itemId); if(!item) return;
   if(item.batches.length<=1){ toast('An item needs at least one batch — delete the whole item instead'); return; }
+  const usedIn = db.trips.filter(t=>t.items.some(ti=>ti.batchId===batchId));
+  if(usedIn.length){
+    const msg = `This batch of "${item.name}" is currently used in ${usedIn.length} packing list${usedIn.length>1?'s':''}:\n- ${usedIn.map(t=>t.name).join('\n- ')}\n\nRemoving it will also remove "${item.name}" from ${usedIn.length>1?'those lists':'that list'}. Continue?`;
+    if(!confirm(msg)) return;
+  }
   item.batches = item.batches.filter(b=>b.id!==batchId);
   db.trips.forEach(t=>{ t.items = t.items.filter(ti=>ti.batchId!==batchId); });
   saveDB(); renderCatalog();
