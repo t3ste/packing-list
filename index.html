@@ -389,11 +389,24 @@ Cutlery"></textarea>
       <li><b>Bulk Add</b>: add several items to one category at once.</li>
       <li><b>Manage</b>: rename/delete categories &amp; locations, reset inventory.</li>
       <li><b>☰ menu</b>: Export/Import as a backup file · "Link" saves changes automatically to a local file — stays linked across reloads (may need one click to confirm).</li>
+      <li>Header: <b>🔗 filename</b> = actively linked, <b>🔗⏳ filename</b> = link needs one click to confirm (a prompt appears automatically for this).</li>
       <li>All data stays in this browser only until you export it.</li>
       <li>Tap category/group headings to collapse/expand them.</li>
     </ul>
     <div class="row-inline" style="justify-content:flex-end; margin-top:12px;">
       <button onclick="closeHelpModal()">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- Prompt: file link needs to be confirmed -->
+<div class="modal-bg" id="reconnectModal">
+  <div class="modal">
+    <h2>🔗 Resume file link</h2>
+    <p>The link to <b id="reconnectFileName"></b> needs to be confirmed once so changes are saved to it automatically again.</p>
+    <div class="row-inline" style="justify-content:flex-end; margin-top:12px;">
+      <button class="ghost" onclick="closeReconnectModal()">Later</button>
+      <button onclick="reconnectLinkedFile(); closeReconnectModal();">🔗 Link now</button>
     </div>
   </div>
 </div>
@@ -1782,6 +1795,7 @@ async function restoreLinkedFile(){
       toast(`File re-linked: ${fileHandle.name}`);
     } else {
       pendingHandle = handle;
+      openReconnectModal(handle.name);
     }
   }catch(e){ await clearLinkedHandle(); return; }
   updateLinkedFileUI();
@@ -1803,10 +1817,21 @@ async function reconnectLinkedFile(){
     }
   }catch(e){ pendingHandle = null; updateLinkedFileUI(); }
 }
+// Warns before leaving/reloading the page while a file is actively linked
+// (browsers always show their own fixed text here, it can't be customized).
+window.addEventListener('beforeunload', (e)=>{
+  if(fileHandle){ e.preventDefault(); e.returnValue = ''; }
+});
 function toggleMainMenu(){ document.getElementById('mainMenu').classList.toggle('show'); }
 function closeMainMenu(){ document.getElementById('mainMenu').classList.remove('show'); }
 function openHelpModal(){ document.getElementById('helpModal').classList.add('show'); }
 function closeHelpModal(){ document.getElementById('helpModal').classList.remove('show'); }
+function openReconnectModal(name){
+  const el = document.getElementById('reconnectFileName');
+  if(el) el.textContent = name;
+  document.getElementById('reconnectModal').classList.add('show');
+}
+function closeReconnectModal(){ document.getElementById('reconnectModal').classList.remove('show'); }
 function applyTheme(theme){
   if(theme==='light') document.documentElement.setAttribute('data-theme','light');
   else document.documentElement.removeAttribute('data-theme');
