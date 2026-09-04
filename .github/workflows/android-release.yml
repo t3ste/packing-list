@@ -1,0 +1,71 @@
+name: Build & release Android APK
+
+# Builds the Android (Trusted Web Activity) wrapper from android/ and attaches
+# the signed APK to a GitHub Release. The Android project itself is generated
+# ahead of time by `bubblewrap build` (see android/README.md) and committed —
+# this workflow only compiles and signs it, it does not regenerate it.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to create/update (e.g. android-v2)"
+        required: true
+        default: "android-v1"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Decode signing key
+        working-directory: android
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android.keystore
+
+      - name: Build release APK
+        working-directory: android
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Align and sign APK
+        working-directory: android
+        env:
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          BUILD_TOOLS="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          "$BUILD_TOOLS/zipalign" -v -p 4 \
+            app/build/outputs/apk/release/app-release-unsigned.apk \
+            app-release-unsigned-aligned.apk
+          "$BUILD_TOOLS/apksigner" sign \
+            --ks android.keystore --ks-pass "pass:$KS_PASS" \
+            --key-pass "pass:$KEY_PASS" --ks-key-alias "$KEY_ALIAS" \
+            --out packing-list.apk app-release-unsigned-aligned.apk
+
+      - name: Clean up signing key
+        if: always()
+        working-directory: android
+        run: rm -f android.keystore
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ inputs.tag }}" android/packing-list.apk \
+            --title "Packing List — Android (${{ inputs.tag }})" \
+            --notes "Automated build from commit ${{ github.sha }}." \
+            --prerelease \
+            || gh release upload "${{ inputs.tag }}" android/packing-list.apk --clobber
