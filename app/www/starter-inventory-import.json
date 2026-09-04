@@ -1,0 +1,619 @@
+{
+  "nextId": 79,
+  "catalog": [
+    {
+      "id": "c2",
+      "name": "Camping table",
+      "category": "Furniture",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b1",
+          "qty": 1,
+          "locTo": "Roof box",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c4",
+      "name": "Camping chair",
+      "category": "Furniture",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b3",
+          "qty": 4,
+          "locTo": "Roof box",
+          "locFrom": "Garage"
+        }
+      ]
+    },
+    {
+      "id": "c6",
+      "name": "Stool",
+      "category": "Furniture",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b5",
+          "qty": 2,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c8",
+      "name": "Air mattress",
+      "category": "Sleeping",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b7",
+          "qty": 2,
+          "locTo": "Roof box",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c10",
+      "name": "Sleeping bag",
+      "category": "Sleeping",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b9",
+          "qty": 2,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c12",
+      "name": "Pillow",
+      "category": "Sleeping",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b11",
+          "qty": 2,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c14",
+      "name": "Tent",
+      "category": "Camping",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b13",
+          "qty": 1,
+          "locTo": "Roof box",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c16",
+      "name": "Tent pegs",
+      "category": "Camping",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b15",
+          "qty": 20,
+          "locTo": "Toolbox",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c18",
+      "name": "Camping mat",
+      "category": "Camping",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b17",
+          "qty": 1,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c20",
+      "name": "Camping dishes",
+      "category": "Kitchen",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b19",
+          "qty": 1,
+          "locTo": "Kitchen cabinet",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c22",
+      "name": "Camping stove",
+      "category": "Kitchen",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b21",
+          "qty": 1,
+          "locTo": "Kitchen cabinet",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c24",
+      "name": "Cooler box",
+      "category": "Kitchen",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b23",
+          "qty": 1,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c26",
+      "name": "Power bank",
+      "category": "Electronics",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b25",
+          "qty": 1,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c28",
+      "name": "Flashlight",
+      "category": "Electronics",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b27",
+          "qty": 2,
+          "locTo": "Glove compartment",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c30",
+      "name": "Charging cable",
+      "category": "Electronics",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b29",
+          "qty": 3,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c32",
+      "name": "Jumper cables",
+      "category": "Vehicle Technology",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b31",
+          "qty": 1,
+          "locTo": "Toolbox",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c34",
+      "name": "Spare fuses",
+      "category": "Vehicle Technology",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b33",
+          "qty": 5,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c36",
+      "name": "Engine oil",
+      "category": "Vehicle Technology",
+      "note": "Check oil level before long trips",
+      "active": true,
+      "batches": [
+        {
+          "id": "b35",
+          "qty": 1,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c38",
+      "name": "Vehicle registration",
+      "category": "Vehicle Documents",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b37",
+          "qty": 1,
+          "locTo": "Glove compartment",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c40",
+      "name": "Proof of insurance",
+      "category": "Vehicle Documents",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b39",
+          "qty": 1,
+          "locTo": "Glove compartment",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c42",
+      "name": "Tool set",
+      "category": "Tools",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b41",
+          "qty": 1,
+          "locTo": "Toolbox",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c44",
+      "name": "Duct tape",
+      "category": "Tools",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b43",
+          "qty": 1,
+          "locTo": "Toolbox",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c46",
+      "name": "Warning triangle",
+      "category": "Safety",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b45",
+          "qty": 1,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c48",
+      "name": "First aid kit",
+      "category": "Safety",
+      "note": "Check expiry date regularly",
+      "active": true,
+      "batches": [
+        {
+          "id": "b47",
+          "qty": 1,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c50",
+      "name": "Fire extinguisher",
+      "category": "Safety",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b49",
+          "qty": 1,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c52",
+      "name": "Board game",
+      "category": "Leisure",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b51",
+          "qty": 1,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c54",
+      "name": "Books",
+      "category": "Leisure",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b53",
+          "qty": 2,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c56",
+      "name": "Towel",
+      "category": "Hygiene",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b55",
+          "qty": 2,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c58",
+      "name": "Toiletries",
+      "category": "Hygiene",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b57",
+          "qty": 1,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c60",
+      "name": "Sunscreen",
+      "category": "Hygiene",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b59",
+          "qty": 1,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c62",
+      "name": "Rain jacket",
+      "category": "Clothing",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b61",
+          "qty": 1,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c64",
+      "name": "Change of clothes",
+      "category": "Clothing",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b63",
+          "qty": 1,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c66",
+      "name": "Drinking water",
+      "category": "Food & Drink",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b65",
+          "qty": 6,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c68",
+      "name": "Snacks",
+      "category": "Food & Drink",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b67",
+          "qty": 1,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c70",
+      "name": "Coffee",
+      "category": "Food & Drink",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b69",
+          "qty": 1,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c72",
+      "name": "Travel documents",
+      "category": "Documents",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b71",
+          "qty": 1,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c74",
+      "name": "Emergency contacts",
+      "category": "Documents",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b73",
+          "qty": 1,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c76",
+      "name": "Umbrella",
+      "category": "Miscellaneous",
+      "note": "",
+      "active": true,
+      "batches": [
+        {
+          "id": "b75",
+          "qty": 1,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    },
+    {
+      "id": "c78",
+      "name": "Old sun shade",
+      "category": "Miscellaneous",
+      "note": "Check for damage, replace if needed",
+      "active": false,
+      "batches": [
+        {
+          "id": "b77",
+          "qty": 1,
+          "locTo": "",
+          "locFrom": ""
+        }
+      ]
+    }
+  ],
+  "trips": [],
+  "categories": [
+    "Furniture",
+    "Sleeping",
+    "Camping",
+    "Kitchen",
+    "Electronics",
+    "Vehicle Technology",
+    "Vehicle Documents",
+    "Tools",
+    "Safety",
+    "Leisure",
+    "Hygiene",
+    "Clothing",
+    "Food & Drink",
+    "Documents",
+    "Miscellaneous"
+  ],
+  "locations": [
+    "Roof box",
+    "Trunk",
+    "Kitchen cabinet",
+    "Toolbox",
+    "Glove compartment",
+    "Basement",
+    "Garage"
+  ],
+  "appliedMigrations": [],
+  "schemaBatches": true
+}

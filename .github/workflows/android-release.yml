@@ -1,16 +1,16 @@
 name: Build & release Android APK
 
-# Builds the Android (Trusted Web Activity) wrapper from android/ and attaches
-# the signed APK to a GitHub Release. The Android project itself is generated
-# ahead of time by `bubblewrap build` (see android/README.md) and committed —
-# this workflow only compiles and signs it, it does not regenerate it.
+# Builds the Android app from app/ (a Capacitor project bundling the web app's
+# own HTML/CSS/JS as native assets — no Chrome/browser dependency at runtime,
+# unlike the earlier Trusted Web Activity approach) and attaches the signed
+# APK to a GitHub Release.
 on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag to create/update (e.g. android-v2)"
+        description: "Release tag to create/update (e.g. android-v3)"
         required: true
-        default: "android-v1"
+        default: "android-v2"
 
 permissions:
   contents: write
@@ -28,19 +28,31 @@ jobs:
 
       - uses: android-actions/setup-android@v3
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Capacitor dependencies
+        working-directory: app
+        run: npm install
+
+      - name: Sync web assets into the native project
+        working-directory: app
+        run: npx cap sync android
+
       - name: Decode signing key
-        working-directory: android
+        working-directory: app/android
         run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android.keystore
 
       - name: Build release APK
-        working-directory: android
+        working-directory: app/android
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
 
       - name: Align and sign APK
-        working-directory: android
+        working-directory: app/android
         env:
           KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
@@ -57,15 +69,15 @@ jobs:
 
       - name: Clean up signing key
         if: always()
-        working-directory: android
+        working-directory: app/android
         run: rm -f android.keystore
 
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ inputs.tag }}" android/packing-list.apk \
+          gh release create "${{ inputs.tag }}" app/android/packing-list.apk \
             --title "Packing List — Android (${{ inputs.tag }})" \
             --notes "Automated build from commit ${{ github.sha }}." \
             --prerelease \
-            || gh release upload "${{ inputs.tag }}" android/packing-list.apk --clobber
+            || gh release upload "${{ inputs.tag }}" app/android/packing-list.apk --clobber
