@@ -1,0 +1,17 @@
+# Signing key — NEVER commit. Back this up somewhere safe outside git;
+# losing it means future app updates can no longer be signed to match
+# what users already installed.
+android.keystore
+*.keystore
+*.jks
+
+# Local machine config (absolute SDK path) — regenerate per machine.
+local.properties
+
+# Gradle/Android build outputs — regenerated from source on every build.
+build/
+app/build/
+.gradle/
+*.apk
+*.apk.idsig
+*.aab

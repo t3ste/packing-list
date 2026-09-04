@@ -1,0 +1,49 @@
+{
+  "packageId": "com.t3ste.packinglist",
+  "host": "t3ste.github.io",
+  "name": "Packing List",
+  "launcherName": "Packing List",
+  "display": "standalone",
+  "themeColor": "#0F172A",
+  "themeColorDark": "#0F172A",
+  "navigationColor": "#0F172A",
+  "navigationColorDark": "#0F172A",
+  "navigationDividerColor": "#334155",
+  "navigationDividerColorDark": "#334155",
+  "backgroundColor": "#0F172A",
+  "enableNotifications": false,
+  "startUrl": "/packing-list/index.html",
+  "iconUrl": "https://t3ste.github.io/packing-list/icons/icon-512.png",
+  "maskableIconUrl": "https://t3ste.github.io/packing-list/icons/icon-maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "upload"
+  },
+  "appVersionName": "2",
+  "appVersionCode": 2,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://t3ste.github.io/packing-list/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://t3ste.github.io/packing-list/",
+  "minSdkVersion": 21,
+  "orientation": "any",
+  "fingerprints": [
+    {
+      "name": "Upload key (bubblewrap)",
+      "value": "C7:E5:B8:06:BE:BB:CA:1B:E1:19:69:07:18:4E:4C:F3:7A:4C:1A:EB:5F:80:8F:01:49:89:15:9B:5D:2D:06:EE"
+    }
+  ],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "displayOverride": [],
+  "appVersion": "2"
+}
