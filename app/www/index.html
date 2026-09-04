@@ -1397,7 +1397,7 @@ function taskSectionText(list, label){
 }
 function openExportModal(){ document.getElementById('exportModal').classList.add('show'); }
 function closeExportModal(){ document.getElementById('exportModal').classList.remove('show'); }
-function doExport(action){
+async function doExport(action){
   const t = db.trips.find(x=>x.id===currentTripId); if(!t) return;
   const mode = document.querySelector('input[name=exportMode]:checked').value;
   const groupBy = document.querySelector('input[name=exportGroup]:checked').value;
@@ -1410,13 +1410,19 @@ function doExport(action){
   if(action==='copy'){
     navigator.clipboard?.writeText(text).then(()=>toast('Copied to clipboard')).catch(()=>{ prompt('Copy failed — select manually:', text); });
   } else if(action==='txt'){
-    const blob = new Blob([text], {type:'text/plain'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `${mode==='pack'?'packing-list':'unpacking-list'}_${GROUP_LABEL_FOR_FILENAME[groupBy]||groupBy}_${slugify(t.name)}_${fileTimestamp()}.txt`;
-    a.click();
+    const filename = `${mode==='pack'?'packing-list':'unpacking-list'}_${GROUP_LABEL_FOR_FILENAME[groupBy]||groupBy}_${slugify(t.name)}_${fileTimestamp()}.txt`;
+    if(isNative){ await nativeSaveOrShareText(filename, text, 'text/plain'); }
+    else{
+      const blob = new Blob([text], {type:'text/plain'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+    }
   } else if(action==='share'){
-    if(navigator.share){ navigator.share({title:t.name, text}).catch(()=>{}); }
+    const share = isNative ? nativeSharePlugin() : null;
+    if(share){ share.share({title:t.name, text}).catch(()=>{}); }
+    else if(navigator.share){ navigator.share({title:t.name, text}).catch(()=>{}); }
     else { navigator.clipboard?.writeText(text).then(()=>toast('Sharing not available — copied to clipboard')); }
   }
   closeExportModal();
@@ -1451,19 +1457,8 @@ function buildTripHtml(trip, mode, opts){
   bodyHtml += taskHtml(trip.tasksAfter, 'After the trip');
   return {title, bodyHtml};
 }
-function openPrintView(){
-  const t = db.trips.find(x=>x.id===currentTripId); if(!t) return;
-  const mode = document.querySelector('input[name=exportMode]:checked').value;
-  const groupBy = document.querySelector('input[name=exportGroup]:checked').value;
-  const opts = {
-    groupBy,
-    includeNote: document.getElementById('exportIncNote').checked,
-    includeTags: document.getElementById('exportIncTags').checked
-  };
-  const {title, bodyHtml} = buildTripHtml(t, mode, opts);
-  const win = window.open('', '_blank');
-  if(!win){ toast('Popup blocked — please allow popups for this site'); return; }
-  win.document.write(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${esc(title)}</title>
+function buildPrintViewHtml(title, bodyHtml){
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${esc(title)}</title>
 <style>
   body{font-family:Arial,Helvetica,sans-serif; color:#111; padding:24px; max-width:720px; margin:0 auto;}
   h1{font-size:1.35rem; margin-bottom:4px;}
@@ -1474,21 +1469,51 @@ function openPrintView(){
   .pbox{display:inline-block; width:20px; font-size:1.05rem;}
   .pnote{color:#555; font-style:italic;}
   .ptags{color:#1d4ed8;}
-  .printbar{margin-bottom:16px;}
+  .printbar{margin-bottom:16px; display:flex; gap:8px;}
   .printbar button{font-size:0.95rem; padding:8px 14px; cursor:pointer;}
   @media print{ .printbar{display:none;} body{padding:0;} }
 </style></head><body>
-<div class="printbar"><button onclick="window.print()">🖨 Print / Save as PDF</button></div>
+<div class="printbar"><button onclick="window.print()">🖨 Print / Save as PDF</button><button onclick="window.close()">✕ Close</button></div>
 <h1>${esc(title)}</h1>
 ${bodyHtml}
-</body></html>`);
+</body></html>`;
+}
+async function openPrintView(){
+  const t = db.trips.find(x=>x.id===currentTripId); if(!t) return;
+  const mode = document.querySelector('input[name=exportMode]:checked').value;
+  const groupBy = document.querySelector('input[name=exportGroup]:checked').value;
+  const opts = {
+    groupBy,
+    includeNote: document.getElementById('exportIncNote').checked,
+    includeTags: document.getElementById('exportIncTags').checked
+  };
+  const {title, bodyHtml} = buildTripHtml(t, mode, opts);
+  const html = buildPrintViewHtml(title, bodyHtml);
+  if(isNative){
+    // window.open()/window.print() don't work inside an embedded WebView — it
+    // either does nothing or kicks the user out to an external Chrome window
+    // with no way back. Capacitor's Browser plugin opens an in-app Chrome
+    // Custom Tab instead: it has its own close button and real print support.
+    const browser = nativeBrowserPlugin();
+    if(browser){
+      const b64 = btoa(unescape(encodeURIComponent(html)));
+      await browser.open({url: 'data:text/html;base64,'+b64});
+    } else {
+      toast('Print preview is not available on this device.');
+    }
+    closeExportModal();
+    return;
+  }
+  const win = window.open('', '_blank');
+  if(!win){ toast('Popup blocked — please allow popups for this site'); return; }
+  win.document.write(html);
   win.document.close();
   closeExportModal();
 }
 
 // ---- Packing list as a standalone, importable file (save/load) ----
 // (independent of the text-export options above: contains all raw data, no formatted text)
-function exportTripFile(){
+async function exportTripFile(){
   const t = db.trips.find(x=>x.id===currentTripId); if(!t) return;
   const rows = t.items.map(ti=>{
     const found = resolveBatch(ti.batchId); if(!found) return null;
@@ -1504,10 +1529,13 @@ function exportTripFile(){
       tasksBefore:(t.tasksBefore||[]).map(x=>({text:x.text, done:x.done})),
       tasksAfter:(t.tasksAfter||[]).map(x=>({text:x.text, done:x.done}))}
   };
-  const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+  const filename = `packing_list_file_${slugify(t.name)}_${fileTimestamp()}.json`;
+  const content = JSON.stringify(payload,null,2);
+  if(isNative){ await nativeSaveOrShareText(filename, content, 'application/json'); return; }
+  const blob = new Blob([content], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `packing_list_file_${slugify(t.name)}_${fileTimestamp()}.json`;
+  a.download = filename;
   a.click();
 }
 // Matches rows from an imported list (JSON or TXT) against the inventory:
@@ -1645,12 +1673,15 @@ function parseTripTxt(text){
   }
   return result;
 }
-function exportTripText(){
+async function exportTripText(){
   const t = db.trips.find(x=>x.id===currentTripId); if(!t) return;
-  const blob = new Blob([buildTripTxt(t)], {type:'text/plain'});
+  const filename = `packing_list_${slugify(t.name)}_${fileTimestamp()}.txt`;
+  const content = buildTripTxt(t);
+  if(isNative){ await nativeSaveOrShareText(filename, content, 'text/plain'); return; }
+  const blob = new Blob([content], {type:'text/plain'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `packing_list_${slugify(t.name)}_${fileTimestamp()}.txt`;
+  a.download = filename;
   a.click();
 }
 function importTripText(evt){
@@ -1993,11 +2024,14 @@ function wipeCatalog(){
 }
 
 // =================== EXPORT / IMPORT / FILE LINKING ===================
-function exportJSON(){
-  const blob = new Blob([JSON.stringify(db,null,2)], {type:'application/json'});
+async function exportJSON(){
+  const filename = `packing_list_full_export_${fileTimestamp()}.json`;
+  const content = JSON.stringify(db,null,2);
+  if(isNative){ await nativeSaveOrShareText(filename, content, 'application/json'); return; }
+  const blob = new Blob([content], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `packing_list_full_export_${fileTimestamp()}.json`;
+  a.download = filename;
   a.click();
 }
 function importJSON(evt){
@@ -2057,6 +2091,33 @@ function nativeFileLinkPlugin(){
 }
 function nativeFilesystemPlugin(){
   return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Filesystem;
+}
+function nativeSharePlugin(){
+  return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share;
+}
+function nativeBrowserPlugin(){
+  return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+}
+// Downloads (Blob + <a download>) and window.open()/navigator.share() don't work
+// reliably inside an embedded WebView the way they do in a real browser tab —
+// downloads silently do nothing, window.open() gets kicked out to an external
+// browser instead of staying in the app, and navigator.share() usually isn't
+// implemented at all. These native-only replacements use Capacitor's Filesystem
+// + Share plugins, which map onto Android's real share/save sheet.
+async function nativeSaveOrShareText(filename, content, mimeType){
+  const fs = nativeFilesystemPlugin();
+  const share = nativeSharePlugin();
+  if(!fs || !share) return false;
+  try{
+    await fs.writeFile({path: filename, directory: 'CACHE', data: content, encoding: 'utf8'});
+    const uriResult = await fs.getUri({path: filename, directory: 'CACHE'});
+    await share.share({title: filename, url: uriResult.uri, dialogTitle: 'Save or share'});
+    return true;
+  }catch(e){
+    if(e && e.message === 'Share canceled') return true; // user just dismissed the sheet
+    console.warn('Native save/share failed', e);
+    return false;
+  }
 }
 async function writeInternalFile(){
   const fs = nativeFilesystemPlugin();
