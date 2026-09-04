@@ -1490,14 +1490,15 @@ async function openPrintView(){
   const {title, bodyHtml} = buildTripHtml(t, mode, opts);
   const html = buildPrintViewHtml(title, bodyHtml);
   if(isNative){
-    // window.open()/window.print() don't work inside an embedded WebView — it
-    // either does nothing or kicks the user out to an external Chrome window
-    // with no way back. Capacitor's Browser plugin opens an in-app Chrome
-    // Custom Tab instead: it has its own close button and real print support.
-    const browser = nativeBrowserPlugin();
-    if(browser){
-      const b64 = btoa(unescape(encodeURIComponent(html)));
-      await browser.open({url: 'data:text/html;base64,'+b64});
+    // window.open()/window.print() don't do anything useful inside an embedded
+    // WebView (only real Chrome wires window.print() to a print dialog), and
+    // Chrome Custom Tabs can't load data: URLs at all — routing there just
+    // silently failed. This calls straight into Android's own Print framework
+    // instead, via a small native plugin — no separate tab/activity involved.
+    const printer = nativePrintPlugin();
+    if(printer){
+      try{ await printer.printHtml({html, jobName: title}); }
+      catch(e){ toast('Could not open the print dialog.'); }
     } else {
       toast('Print preview is not available on this device.');
     }
@@ -2095,8 +2096,8 @@ function nativeFilesystemPlugin(){
 function nativeSharePlugin(){
   return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share;
 }
-function nativeBrowserPlugin(){
-  return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+function nativePrintPlugin(){
+  return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.NativePrint;
 }
 // Downloads (Blob + <a download>) and window.open()/navigator.share() don't work
 // reliably inside an embedded WebView the way they do in a real browser tab —
