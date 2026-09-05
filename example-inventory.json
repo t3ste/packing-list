@@ -1,0 +1,259 @@
+{
+  "nextId": 48,
+  "catalog": [
+    {
+      "id": "c1",
+      "name": "Tent",
+      "category": "Camping",
+      "note": "4-person, waterproof up to 3000mm",
+      "active": true,
+      "batches": [
+        { "id": "b2", "qty": 1, "locTo": "Car trunk", "locFrom": "Garage" }
+      ]
+    },
+    {
+      "id": "c3",
+      "name": "Sleeping bag",
+      "category": "Camping",
+      "note": "Comfort rated to 5°C",
+      "active": true,
+      "batches": [
+        { "id": "b4", "qty": 2, "locTo": "Car trunk", "locFrom": "Basement" }
+      ]
+    },
+    {
+      "id": "c5",
+      "name": "Camping chair",
+      "category": "Camping",
+      "note": "",
+      "active": true,
+      "batches": [
+        { "id": "b6", "qty": 3, "locTo": "Car trunk", "locFrom": "Garage" },
+        { "id": "b7", "qty": 1, "locTo": "Car trunk", "locFrom": "Basement" }
+      ]
+    },
+    {
+      "id": "c8",
+      "name": "Headlamp",
+      "category": "Camping",
+      "note": "Check batteries before each trip",
+      "active": true,
+      "batches": [
+        { "id": "b9", "qty": 2, "locTo": "Backpack", "locFrom": "Garage" }
+      ]
+    },
+    {
+      "id": "c10",
+      "name": "Cooking stove",
+      "category": "Kitchen",
+      "note": "Needs a gas canister — pack separately",
+      "active": true,
+      "batches": [
+        { "id": "b11", "qty": 1, "locTo": "Car trunk", "locFrom": "Kitchen cabinet" }
+      ]
+    },
+    {
+      "id": "c12",
+      "name": "Gas canister",
+      "category": "Kitchen",
+      "note": "",
+      "active": true,
+      "batches": [
+        { "id": "b13", "qty": 2, "locTo": "Car trunk", "locFrom": "Garage" }
+      ]
+    },
+    {
+      "id": "c14",
+      "name": "Cooking pot set",
+      "category": "Kitchen",
+      "note": "",
+      "active": true,
+      "batches": [
+        { "id": "b15", "qty": 1, "locTo": "Car trunk", "locFrom": "Kitchen cabinet" }
+      ]
+    },
+    {
+      "id": "c16",
+      "name": "Cutlery set",
+      "category": "Kitchen",
+      "note": "",
+      "active": true,
+      "batches": [
+        { "id": "b17", "qty": 4, "locTo": "Car trunk", "locFrom": "Kitchen cabinet" }
+      ]
+    },
+    {
+      "id": "c18",
+      "name": "Water container",
+      "category": "Kitchen",
+      "note": "10 L each",
+      "active": true,
+      "batches": [
+        { "id": "b19", "qty": 2, "locTo": "Car trunk", "locFrom": "Garage" }
+      ]
+    },
+    {
+      "id": "c20",
+      "name": "Power bank",
+      "category": "Electronics",
+      "note": "",
+      "active": true,
+      "batches": [
+        { "id": "b21", "qty": 1, "locTo": "Backpack", "locFrom": "Home office" }
+      ]
+    },
+    {
+      "id": "c22",
+      "name": "Flashlight",
+      "category": "Electronics",
+      "note": "",
+      "active": true,
+      "batches": [
+        { "id": "b23", "qty": 1, "locTo": "Backpack", "locFrom": "Garage" }
+      ]
+    },
+    {
+      "id": "c24",
+      "name": "Multi-tool",
+      "category": "Tools",
+      "note": "",
+      "active": true,
+      "batches": [
+        { "id": "b25", "qty": 1, "locTo": "Backpack", "locFrom": "Garage" }
+      ]
+    },
+    {
+      "id": "c26",
+      "name": "Duct tape",
+      "category": "Tools",
+      "note": "",
+      "active": true,
+      "batches": [
+        { "id": "b27", "qty": 1, "locTo": "Car trunk", "locFrom": "Garage" }
+      ]
+    },
+    {
+      "id": "c28",
+      "name": "First aid kit",
+      "category": "Safety",
+      "note": "Check expiry dates once a year",
+      "active": true,
+      "batches": [
+        { "id": "b29", "qty": 1, "locTo": "Car trunk", "locFrom": "Bathroom shelf" }
+      ]
+    },
+    {
+      "id": "c30",
+      "name": "Fire extinguisher",
+      "category": "Safety",
+      "note": "",
+      "active": true,
+      "batches": [
+        { "id": "b31", "qty": 1, "locTo": "Car trunk", "locFrom": "Garage" }
+      ]
+    },
+    {
+      "id": "c32",
+      "name": "Warning triangle",
+      "category": "Safety",
+      "note": "",
+      "active": true,
+      "batches": [
+        { "id": "b33", "qty": 1, "locTo": "Car trunk", "locFrom": "Garage" }
+      ]
+    },
+    {
+      "id": "c34",
+      "name": "Rain jacket",
+      "category": "Clothing",
+      "note": "",
+      "active": true,
+      "batches": [
+        { "id": "b35", "qty": 2, "locTo": "Backpack", "locFrom": "Closet" }
+      ]
+    },
+    {
+      "id": "c36",
+      "name": "Hiking boots",
+      "category": "Clothing",
+      "note": "",
+      "active": true,
+      "batches": [
+        { "id": "b37", "qty": 2, "locTo": "Car trunk", "locFrom": "Closet" }
+      ]
+    },
+    {
+      "id": "c38",
+      "name": "Passport",
+      "category": "Documents",
+      "note": "Check expiry date before international trips",
+      "active": true,
+      "batches": [
+        { "id": "b39", "qty": 2, "locTo": "Backpack", "locFrom": "Home office" }
+      ]
+    },
+    {
+      "id": "c40",
+      "name": "Travel insurance documents",
+      "category": "Documents",
+      "note": "",
+      "active": true,
+      "batches": [
+        { "id": "b41", "qty": 1, "locTo": "Backpack", "locFrom": "Home office" }
+      ]
+    },
+    {
+      "id": "c42",
+      "name": "Sunscreen",
+      "category": "Hygiene",
+      "note": "",
+      "active": true,
+      "batches": [
+        { "id": "b43", "qty": 1, "locTo": "Backpack", "locFrom": "Bathroom shelf" }
+      ]
+    },
+    {
+      "id": "c44",
+      "name": "Toiletries bag",
+      "category": "Hygiene",
+      "note": "",
+      "active": true,
+      "batches": [
+        { "id": "b45", "qty": 1, "locTo": "Backpack", "locFrom": "Bathroom shelf" }
+      ]
+    },
+    {
+      "id": "c46",
+      "name": "Beach umbrella",
+      "category": "Camping",
+      "note": "Summer only — currently stored away",
+      "active": false,
+      "batches": [
+        { "id": "b47", "qty": 1, "locTo": "", "locFrom": "Garage" }
+      ]
+    }
+  ],
+  "trips": [],
+  "categories": [
+    "Camping",
+    "Kitchen",
+    "Electronics",
+    "Tools",
+    "Safety",
+    "Clothing",
+    "Documents",
+    "Hygiene"
+  ],
+  "locations": [
+    "Garage",
+    "Basement",
+    "Car trunk",
+    "Kitchen cabinet",
+    "Backpack",
+    "Bathroom shelf",
+    "Closet",
+    "Home office"
+  ],
+  "appliedMigrations": [],
+  "schemaBatches": true
+}
