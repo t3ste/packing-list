@@ -135,7 +135,7 @@ The ☰ menu's **Import** replaces your entire inventory and lists, so only use 
 
 ## License
 
-No license has been chosen for this project yet — all rights reserved by default. Get in touch via GitHub issues if you'd like to use or adapt this beyond personal use.
+[GNU GPLv3](LICENSE). You're free to use, modify, and redistribute this app — including commercially — as long as any distributed version (modified or not) stays under the same license and keeps its source available.
 
 ## Feedback & issues
 
