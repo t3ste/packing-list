@@ -26,7 +26,8 @@ Runs as a website, an installable Progressive Web App (desktop and iOS), or a st
 - Active/inactive flag for things you own but aren't currently using (skip them without deleting).
 - Simplified view (name only, one line per item) or expanded view (full detail) — toggle any time.
 - Usage badge on every item shows at a glance whether it's currently used in a packing list, and in how many.
-- Filter by category, current location, active status, or list usage.
+- **Average usefulness rating** (★ badge): once you've rated items after a trip (see *Packing lists* below), each catalog item shows its average rating across the packing lists you've chosen to count toward it — a quick "was this actually worth bringing?" view over time.
+- Filter by category, current location, active status, list usage, or rating (including "not yet rated").
 - Bulk add: create several items in one category in one pass.
 
 <p align="center">
@@ -41,6 +42,7 @@ Runs as a website, an installable Progressive Web App (desktop and iOS), or a st
 - Group the view by category, destination, origin, or current location.
 - Tasks-before-the-trip and tasks-after-the-trip checklists, separate from the item list.
 - Tags on individual list items for your own cross-cutting labels.
+- **Rate items after the trip** with a simple 3-star control (★ not used/superfluous, ★★ nice to have but there are alternatives, ★★★ essential) — feeds into the inventory's average rating. Each list has an "include in inventory average" toggle, so e.g. a past winter trip's ratings don't skew a summer trip's review.
 
 <p align="center">
   <img src="screenshots/list-tasks.png" width="220">
@@ -128,8 +130,9 @@ The app starts empty by design. Either build your inventory up yourself (Invento
 | [`starter-inventory-import.json`](starter-inventory-import.json) | A broad starting point: ~40 generic, everyday items across 15 categories | ☰ menu → **Import** |
 | [`example-inventory.json`](example-inventory.json) | A smaller, curated set (23 items across 8 categories) demonstrating batches, notes, locations, and an inactive item — used for the screenshots above | ☰ menu → **Import** |
 | [`example-packing-list.json`](example-packing-list.json) | A matching sample packing list (12 items, some already packed, with tags and before/after-trip tasks) | Lists tab → **Import list from JSON** (import the example inventory above *first*, so items match up instead of being duplicated) |
+| [`example-packing-list-rated.json`](example-packing-list-rated.json) | The same 12 items, but already star-rated as if the trip were over — shows how the ★ average badge and rating filter look in the Inventory once you have real data | Lists tab → **Import list from JSON** (also needs the example inventory imported *first*) |
 
-⚠️ **Import order matters:** import `example-inventory.json` first, *then* `example-packing-list.json`. Importing the list before its matching inventory exists (or against a different inventory) doesn't fail — it just recreates every item as a new one instead of reusing what's already there, leaving you with duplicates.
+⚠️ **Import order matters:** import `example-inventory.json` first, *then* either `example-packing-list.json` or `example-packing-list-rated.json` (or both, one after the other — each becomes its own list). Importing a list before its matching inventory exists (or against a different inventory) doesn't fail — it just recreates every item as a new one instead of reusing what's already there, leaving you with duplicates.
 
 The ☰ menu's **Import** replaces your entire inventory and lists, so only use it when you actually want to start over from one of these files.
 

@@ -1,0 +1,33 @@
+{
+  "fileType": "packliste-trip",
+  "version": 1,
+  "exportedAt": "2026-09-19T18:00:00.000Z",
+  "trip": {
+    "name": "Weekend Camping Trip (rated after the fact)",
+    "type": "Vacation",
+    "date": "2026-09-12",
+    "includeInAverage": true,
+    "items": [
+      { "itemName": "Tent", "itemCategory": "Camping", "itemNote": "4-person, waterproof up to 3000mm", "batchQty": 1, "batchLocTo": "Car trunk", "batchLocFrom": "Garage", "qty": 1, "packed": true, "tags": ["essential"], "rating": 3 },
+      { "itemName": "Sleeping bag", "itemCategory": "Camping", "itemNote": "Comfort rated to 5°C", "batchQty": 2, "batchLocTo": "Car trunk", "batchLocFrom": "Basement", "qty": 2, "packed": true, "tags": ["essential"], "rating": 3 },
+      { "itemName": "Camping chair", "itemCategory": "Camping", "itemNote": "", "batchQty": 3, "batchLocTo": "Car trunk", "batchLocFrom": "Garage", "qty": 3, "packed": false, "tags": [], "rating": 0 },
+      { "itemName": "Headlamp", "itemCategory": "Camping", "itemNote": "Check batteries before each trip", "batchQty": 2, "batchLocTo": "Backpack", "batchLocFrom": "Garage", "qty": 2, "packed": true, "tags": ["check batteries"], "rating": 2 },
+      { "itemName": "Cooking stove", "itemCategory": "Kitchen", "itemNote": "Needs a gas canister — pack separately", "batchQty": 1, "batchLocTo": "Car trunk", "batchLocFrom": "Kitchen cabinet", "qty": 1, "packed": false, "tags": ["essential"], "rating": 0 },
+      { "itemName": "Gas canister", "itemCategory": "Kitchen", "itemNote": "", "batchQty": 2, "batchLocTo": "Car trunk", "batchLocFrom": "Garage", "qty": 1, "packed": false, "tags": [], "rating": 0 },
+      { "itemName": "Cooking pot set", "itemCategory": "Kitchen", "itemNote": "", "batchQty": 1, "batchLocTo": "Car trunk", "batchLocFrom": "Kitchen cabinet", "qty": 1, "packed": true, "tags": [], "rating": 3 },
+      { "itemName": "Water container", "itemCategory": "Kitchen", "itemNote": "10 L each", "batchQty": 2, "batchLocTo": "Car trunk", "batchLocFrom": "Garage", "qty": 2, "packed": false, "tags": ["fill before departure"], "rating": 0 },
+      { "itemName": "First aid kit", "itemCategory": "Safety", "itemNote": "Check expiry dates once a year", "batchQty": 1, "batchLocTo": "Car trunk", "batchLocFrom": "Bathroom shelf", "qty": 1, "packed": true, "tags": ["essential"], "rating": 1 },
+      { "itemName": "Rain jacket", "itemCategory": "Clothing", "itemNote": "", "batchQty": 2, "batchLocTo": "Backpack", "batchLocFrom": "Closet", "qty": 2, "packed": false, "tags": [], "rating": 0 },
+      { "itemName": "Passport", "itemCategory": "Documents", "itemNote": "Check expiry date before international trips", "batchQty": 2, "batchLocTo": "Backpack", "batchLocFrom": "Home office", "qty": 2, "packed": false, "tags": ["check expiry"], "rating": 0 },
+      { "itemName": "Sunscreen", "itemCategory": "Hygiene", "itemNote": "", "batchQty": 1, "batchLocTo": "Backpack", "batchLocFrom": "Bathroom shelf", "qty": 1, "packed": true, "tags": [], "rating": 2 }
+    ],
+    "tasksBefore": [
+      { "text": "Check tire pressure", "done": false },
+      { "text": "Charge power bank", "done": true }
+    ],
+    "tasksAfter": [
+      { "text": "Air out the tent before storing", "done": false },
+      { "text": "Restock the first aid kit if used", "done": false }
+    ]
+  }
+}

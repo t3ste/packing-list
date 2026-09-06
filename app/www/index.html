@@ -122,6 +122,9 @@ summary .cnt{color:var(--muted); font-weight:400; font-size:0.74rem; white-space
 .itemrow .tags{display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;}
 .itemrow input[type=number]{width:52px;}
 .itemrow .x{color:var(--danger); background:none; border:none; font-size:1rem; cursor:pointer; padding:2px 6px;}
+.starrow{display:flex; gap:2px; margin-top:4px;}
+.starrow .star{cursor:pointer; font-size:1rem; color:var(--border); line-height:1; user-select:none;}
+.starrow .star.on{color:var(--warn);}
 .tagpill{display:inline-flex; align-items:center; gap:4px; background:var(--accent-soft-15); color:var(--accent);
   border-radius:10px; padding:1px 6px 1px 8px; font-size:0.7rem;}
 .tagpill button{background:none; border:none; color:var(--accent); padding:0; margin:0; font-size:0.85rem; cursor:pointer; line-height:1;}
@@ -167,7 +170,7 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
 <body>
 
 <div class="topbar">
-  <h1>Packing List<small>local · offline · <span id="appVersion">v1</span> · 💾 <span id="saveTimestamp"></span></small><small id="linkedFileIndicator" style="color:var(--accent);"></small></h1>
+  <h1>Packing List <span class="pill" id="appVersionBadge" title="App version"></span><small>local · offline · <span id="appVersion">v1</span> · 💾 <span id="saveTimestamp"></span></small><small id="linkedFileIndicator" style="color:var(--accent);"></small></h1>
   <div class="menuWrap">
     <button class="menuToggle" id="menuToggleBtn" onclick="toggleMainMenu()" aria-label="Menu" title="Menu">☰</button>
     <div class="mainMenu" id="mainMenu">
@@ -206,6 +209,13 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
       <option value="">All items</option>
       <option value="used">Used in a list</option>
       <option value="unused">Not used in any list</option>
+    </select>
+    <select id="bRating" onchange="renderCatalog()" aria-label="Filter by rating">
+      <option value="">All ratings</option>
+      <option value="__none__">Not yet rated</option>
+      <option value="1">★ (rounds to 1)</option>
+      <option value="2">★★ (rounds to 2)</option>
+      <option value="3">★★★ (rounds to 3)</option>
     </select>
     <button class="ghost small" onclick="toggleAllBestandGroups()" id="bToggleAllBtn">Collapse all</button>
     <button class="ghost small" onclick="toggleBestandView()" id="bViewToggleBtn">🔎 Simplified view</button>
@@ -420,6 +430,7 @@ Cutlery"></textarea>
       <li>Header: <b>🔗 filename</b> = actively linked, <b>🔗⏳ filename</b> = link needs one click to confirm (a prompt appears automatically for this).</li>
       <li>All data stays in this browser only until you export it.</li>
       <li>Tap category/group headings to collapse/expand them.</li>
+      <li>App version: <b id="helpVersionText"></b></li>
     </ul>
     <div class="row-inline" style="justify-content:flex-end; margin-top:12px;">
       <button onclick="closeHelpModal()">Got it</button>
@@ -453,6 +464,9 @@ Cutlery"></textarea>
 </div>
 
 <script>
+// App release version — shown in the header and the Help screen, and used as
+// the identifier for the matching GitHub release. Bump on every feature release.
+const APP_VERSION = '1.1.0';
 const CATEGORIES_DEFAULT = [];
 const KNOWN_LOCATIONS = [];
 
@@ -514,9 +528,10 @@ function loadDB(){
       if(b.locFrom && !db.locations.some(l=>normKey(l)===normKey(b.locFrom))) db.locations.push(b.locFrom);
     }));
     db.trips.forEach(t=>{
-      t.items.forEach(ti=>{ if(!ti.tags) ti.tags=[]; });
+      t.items.forEach(ti=>{ if(!ti.tags) ti.tags=[]; if(ti.rating==null) ti.rating=0; });
       if(!t.tasksBefore) t.tasksBefore=[];
       if(!t.tasksAfter) t.tasksAfter=[];
+      if(t.includeInAverage==null) t.includeInAverage=true;
     });
     if(!db.appliedMigrations) db.appliedMigrations=[];
     return;
@@ -596,6 +611,21 @@ function totalQty(item){ return item.batches.reduce((s,b)=>s+b.qty,0); }
 function tripsUsingItem(item){
   const batchIds = new Set(item.batches.map(b=>b.id));
   return db.trips.filter(t=>t.items.some(ti=>batchIds.has(ti.batchId)));
+}
+// Average post-trip usefulness rating for this item's batches, considering only
+// trips flagged to count toward the inventory average, and only rated (1-3) entries.
+// Returns null when there is no rated data yet (distinct from an average of 0).
+function avgRatingFor(item){
+  const batchIds = new Set(item.batches.map(b=>b.id));
+  const ratings = [];
+  db.trips.forEach(t=>{
+    if(t.includeInAverage===false) return;
+    t.items.forEach(ti=>{
+      if(batchIds.has(ti.batchId) && ti.rating>0) ratings.push(ti.rating);
+    });
+  });
+  if(!ratings.length) return null;
+  return ratings.reduce((s,r)=>s+r,0)/ratings.length;
 }
 function computeInventoryStats(){
   const totalItems = db.catalog.length;
@@ -734,6 +764,7 @@ function renderCatalog(){
   const locF = locSel.value;
   const statusF = document.getElementById('bStatus').value;
   const usageF = document.getElementById('bUsage').value;
+  const ratingF = document.getElementById('bRating').value;
 
   let items = db.catalog.filter(i=>{
     if(statusF==='active' && !i.active) return false;
@@ -743,6 +774,11 @@ function renderCatalog(){
     else if(locF && locF!=='__none__' && !i.batches.some(b=>b.locTo===locF || b.locFrom===locF)) return false;
     if(usageF==='used' && tripsUsingItem(i).length===0) return false;
     if(usageF==='unused' && tripsUsingItem(i).length>0) return false;
+    if(ratingF){
+      const avg = avgRatingFor(i);
+      if(ratingF==='__none__' && avg!=null) return false;
+      else if(ratingF!=='__none__' && Math.round(avg||0)!==parseInt(ratingF)) return false;
+    }
     if(search && !(i.name.toLowerCase().includes(search) || (i.note||'').toLowerCase().includes(search))) return false;
     return true;
   });
@@ -770,15 +806,17 @@ function renderCatalog(){
       ${list.map(i=>{
         const usedIn = tripsUsingItem(i);
         const usageBadge = usedIn.length ? `<span class="pill" title="${esc('Used in: '+usedIn.map(t=>t.name).join(', '))}">📋 ${usedIn.length}</span>` : '';
+        const avgRating = avgRatingFor(i);
+        const ratingBadge = avgRating==null ? '' : `<span class="pill warn" title="Average usefulness rating across included lists">★ ${avgRating.toFixed(1)}</span>`;
         return bestandCompactView ? `<div class="bcard compact ${i.active?'':'inactive'}">
         <div class="selcol"><input type="checkbox" ${selectedBestand.has(i.id)?'checked':''} onchange="toggleSelectBestand('${i.id}',this.checked)"></div>
         <input type="text" class="bname" value="${esc(i.name)}" onchange="updateItem('${i.id}','name',this.value)">
-        ${usageBadge}
+        ${usageBadge}${ratingBadge}
       </div>` : `<div class="bcard ${i.active?'':'inactive'}">
         <div class="selcol"><input type="checkbox" ${selectedBestand.has(i.id)?'checked':''} onchange="toggleSelectBestand('${i.id}',this.checked)"></div>
         <div class="bbody">
           <input type="text" class="bname" value="${esc(i.name)}" onchange="updateItem('${i.id}','name',this.value)">
-          ${usageBadge}
+          ${usageBadge}${ratingBadge}
           <div><label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;">Category</label>
           <input type="text" list="categoryOptions" value="${esc(i.category)}" onchange="updateItem('${i.id}','category',this.value)"></div>
           <div class="batches">
@@ -1026,7 +1064,7 @@ function createTrip(){
   const name = prompt('Packing list name (e.g. "Summer Trip 2026"):');
   if(!name) return;
   const type = prompt('Type of trip:\nCampsite, Off-grid, Festival, Road trip, Apartment, Other', 'Campsite') || 'Miscellaneous';
-  const trip = {id:genId(), name, type, date:new Date().toISOString().slice(0,10), items:[], tasksBefore:[], tasksAfter:[]};
+  const trip = {id:genId(), name, type, date:new Date().toISOString().slice(0,10), items:[], tasksBefore:[], tasksAfter:[], includeInAverage:true};
   db.trips.push(trip); saveDB();
   openTrip(trip.id);
 }
@@ -1035,9 +1073,10 @@ function duplicateTrip(id){
   const name = prompt('Name of the new packing list:', t.name+' (Copy)');
   if(!name) return;
   const copy = {id:genId(), name, type:t.type, date:new Date().toISOString().slice(0,10),
-    items:t.items.map(i=>({batchId:i.batchId, qty:i.qty, packed:false, tags:(i.tags||[]).slice()})),
+    items:t.items.map(i=>({batchId:i.batchId, qty:i.qty, packed:false, tags:(i.tags||[]).slice(), rating:0})),
     tasksBefore:(t.tasksBefore||[]).map(x=>({id:genId(), text:x.text, done:false})),
-    tasksAfter:(t.tasksAfter||[]).map(x=>({id:genId(), text:x.text, done:false}))};
+    tasksAfter:(t.tasksAfter||[]).map(x=>({id:genId(), text:x.text, done:false})),
+    includeInAverage: t.includeInAverage!==false};
   db.trips.push(copy); saveDB(); renderTripsList(); toast('Packing list duplicated');
 }
 function deleteTrip(id){
@@ -1115,6 +1154,10 @@ function renderTripDetail(id){
       <a class="backlink" onclick="backToTrips()">← Back to packing lists</a>
       <div style="margin:8px 0;">
         <input type="text" id="tName" value="${esc(t.name)}" onchange="updateTrip('name',this.value)" style="font-size:1rem; font-weight:600; width:100%; margin-bottom:8px;">
+        <label style="display:flex; align-items:center; gap:6px; font-size:0.82rem; color:var(--muted); margin-bottom:8px;">
+          <input type="checkbox" ${t.includeInAverage!==false?'checked':''} onchange="updateTrip('includeInAverage', this.checked)">
+          Include this list in inventory average ratings
+        </label>
         <div class="row-inline">
         <button class="small secondary" onclick="openExportModal()">📤 Share list</button>
         <button class="small secondary" onclick="exportTripFile()" title="Save/share as an importable file">⬇ Export list to JSON</button>
@@ -1240,6 +1283,9 @@ function renderTripDetail(id){
                 <button type="button" class="tagconfirm" title="Add tag(s)" onclick="var el=document.getElementById('taginput_${r.ti.batchId}'); addTag('${t.id}','${r.ti.batchId}',el.value); el.value='';">✓</button>
               </span>
             </div>
+            <div class="starrow" title="Usefulness after the trip">
+              ${[1,2,3].map(n=>`<span class="star ${n<=r.ti.rating?'on':''}" title="${n===1?'Not used / superfluous':n===2?'Nice to have, alternatives exist':'Essential / mandatory'}" onclick="setTripItemRating('${t.id}','${r.ti.batchId}', ${n}===${r.ti.rating}?0:${n})">★</span>`).join('')}
+            </div>
           </div>
           <input type="number" min="0" value="${r.ti.qty}" id="tiQtyInput_${r.ti.batchId}" oninput="updateTripItemQtyIndicator('${r.ti.batchId}', ${r.batch.qty})" onchange="updateTripItemQty('${t.id}','${r.ti.batchId}',parseInt(this.value)||0)">
           <span id="tiQtyInd_${r.ti.batchId}" style="font-size:0.72rem; color:${r.ti.qty > r.batch.qty ? 'var(--danger)' : 'var(--accent2)'};" title="Available in inventory: ${r.batch.qty}">/${r.batch.qty}</span>
@@ -1328,6 +1374,11 @@ function updateTripItemQty(tripId, batchId, qty){
   const t = db.trips.find(x=>x.id===tripId);
   const ti = t.items.find(i=>i.batchId===batchId);
   ti.qty = qty; saveDB(); renderTripDetail(tripId);
+}
+function setTripItemRating(tripId, batchId, rating){
+  const t = db.trips.find(x=>x.id===tripId);
+  const ti = t.items.find(i=>i.batchId===batchId);
+  ti.rating = rating; saveDB(); renderTripDetail(tripId);
 }
 function removeTripItem(tripId, batchId){
   const t = db.trips.find(x=>x.id===tripId);
@@ -1521,14 +1572,15 @@ async function exportTripFile(){
     return {
       itemName: found.item.name, itemCategory: found.item.category, itemNote: found.item.note||'',
       batchQty: found.batch.qty, batchLocTo: found.batch.locTo||'', batchLocFrom: found.batch.locFrom||'',
-      qty: ti.qty, packed: !!ti.packed, tags: ti.tags||[]
+      qty: ti.qty, packed: !!ti.packed, tags: ti.tags||[], rating: ti.rating||0
     };
   }).filter(Boolean);
   const payload = {
     fileType: 'packliste-trip', version: 1, exportedAt: new Date().toISOString(),
     trip: {name:t.name, type:t.type, date:t.date, items:rows,
       tasksBefore:(t.tasksBefore||[]).map(x=>({text:x.text, done:x.done})),
-      tasksAfter:(t.tasksAfter||[]).map(x=>({text:x.text, done:x.done}))}
+      tasksAfter:(t.tasksAfter||[]).map(x=>({text:x.text, done:x.done})),
+      includeInAverage: t.includeInAverage!==false}
   };
   const filename = `packing_list_file_${slugify(t.name)}_${fileTimestamp()}.json`;
   const content = JSON.stringify(payload,null,2);
@@ -1561,7 +1613,7 @@ function mergeTripItemRows(rows){
       item.batches.push(batch);
       created++;
     }
-    items.push({batchId:batch.id, qty:row.qty||1, packed:!!row.packed, tags:row.tags||[]});
+    items.push({batchId:batch.id, qty:row.qty||1, packed:!!row.packed, tags:row.tags||[], rating:row.rating||0});
   });
   return {items, reused, created};
 }
@@ -1578,7 +1630,8 @@ function importTripFile(evt){
       const {items, reused, created} = mergeTripItemRows(src.items);
       const newTrip = {id:genId(), name, type:src.type||'Miscellaneous', date:src.date||new Date().toISOString().slice(0,10), items,
         tasksBefore:(src.tasksBefore||[]).map(x=>({id:genId(), text:x.text, done:!!x.done})),
-        tasksAfter:(src.tasksAfter||[]).map(x=>({id:genId(), text:x.text, done:!!x.done}))};
+        tasksAfter:(src.tasksAfter||[]).map(x=>({id:genId(), text:x.text, done:!!x.done})),
+        includeInAverage: src.includeInAverage!==false};
       db.trips.push(newTrip);
       saveDB();
       toast(`Packing list imported (${reused} batch(es) reused, ${created} newly created)`);
@@ -1596,7 +1649,8 @@ function buildTripTxt(trip){
   let out = '#PACKLIST v1\n';
   out += `name: ${trip.name}\n`;
   out += `type: ${trip.type}\n`;
-  out += `date: ${trip.date}\n\n`;
+  out += `date: ${trip.date}\n`;
+  out += `include_in_average: ${trip.includeInAverage!==false}\n\n`;
   const byCat = {};
   rows.forEach(r=>{ (byCat[r.item.category]=byCat[r.item.category]||[]).push(r); });
   const catOrder = db.categories.filter(c=>byCat[c]).concat(Object.keys(byCat).filter(c=>!db.categories.includes(c)));
@@ -1608,6 +1662,7 @@ function buildTripTxt(trip){
       if(r.batch.locFrom) out += `  from: ${r.batch.locFrom}\n`;
       if(r.item.note) out += `  note: ${r.item.note}\n`;
       if(r.ti.tags && r.ti.tags.length) out += `  tags: ${r.ti.tags.join(', ')}\n`;
+      if(r.ti.rating) out += `  rating: ${r.ti.rating}\n`;
     });
     out += '\n';
   });
@@ -1640,7 +1695,7 @@ function parseTripTxt(text){
       continue;
     }
     if(!section){
-      const meta = trimmed.match(/^(name|type|date):\s*(.*)$/i);
+      const meta = trimmed.match(/^(name|type|date|include_in_average):\s*(.*)$/i);
       if(meta) result[meta[1].toLowerCase()] = meta[2].trim();
       continue;
     }
@@ -1655,23 +1710,25 @@ function parseTripTxt(text){
         result[section.kind].push({text:name, done:checked});
         currentItem = null;
       } else {
-        currentItem = {itemName:name, itemCategory:section.category, itemNote:'', batchQty:qty, batchLocTo:'', batchLocFrom:'', qty, packed:checked, tags:[]};
+        currentItem = {itemName:name, itemCategory:section.category, itemNote:'', batchQty:qty, batchLocTo:'', batchLocFrom:'', qty, packed:checked, tags:[], rating:0};
         result.items.push(currentItem);
       }
       continue;
     }
-    const detail = raw.match(/^\s+(to|from|note|tags):\s*(.*)$/i);
+    const detail = raw.match(/^\s+(to|from|note|tags|rating):\s*(.*)$/i);
     if(detail && currentItem && section.kind==='items'){
       const key = detail[1].toLowerCase(); const val = detail[2].trim();
       if(key==='to') currentItem.batchLocTo = val;
       else if(key==='from') currentItem.batchLocFrom = val;
       else if(key==='note') currentItem.itemNote = val;
       else if(key==='tags') currentItem.tags = splitTags(val);
+      else if(key==='rating') currentItem.rating = parseInt(val)||0;
     }
   }
   if(!result.items.length && !result.tasksBefore.length && !result.tasksAfter.length){
     throw new Error('No items or tasks were recognized in this file.');
   }
+  result.includeInAverage = result.include_in_average==null ? true : /^true$/i.test(result.include_in_average);
   return result;
 }
 async function exportTripText(){
@@ -1696,7 +1753,8 @@ function importTripText(evt){
       const {items, reused, created} = mergeTripItemRows(parsed.items);
       const newTrip = {id:genId(), name, type:parsed.type||'Miscellaneous', date:parsed.date||new Date().toISOString().slice(0,10), items,
         tasksBefore: parsed.tasksBefore.map(x=>({id:genId(), text:x.text, done:!!x.done})),
-        tasksAfter: parsed.tasksAfter.map(x=>({id:genId(), text:x.text, done:!!x.done}))};
+        tasksAfter: parsed.tasksAfter.map(x=>({id:genId(), text:x.text, done:!!x.done})),
+        includeInAverage: parsed.includeInAverage!==false};
       db.trips.push(newTrip);
       saveDB();
       toast(`Packing list imported (${reused} batch(es) reused, ${created} newly created)`);
@@ -1724,6 +1782,7 @@ function applyTripText(tripId){
     if(parsed.name) t.name = parsed.name;
     if(parsed.type) t.type = parsed.type;
     if(parsed.date) t.date = parsed.date;
+    t.includeInAverage = parsed.includeInAverage!==false;
     saveDB();
     toast(`List updated from text (${reused} batch(es) reused, ${created} newly created)`);
     document.getElementById('tripDetailView').dataset.built=''; // forces the detail view (incl. text field) to rebuild
@@ -1809,7 +1868,7 @@ function pickerQty(batchId, qty){
 function confirmPicker(){
   const t = db.trips.find(x=>x.id===pickerTripId);
   Object.keys(pickerSelections).forEach(batchId=>{
-    t.items.push({batchId, qty: pickerSelections[batchId].qty, packed:false, tags:[]});
+    t.items.push({batchId, qty: pickerSelections[batchId].qty, packed:false, tags:[], rating:0});
   });
   saveDB(); closePicker(); renderTripDetail(pickerTripId); toast('Item(s) added');
 }
@@ -1825,7 +1884,7 @@ function quickAddCatalogItem(){
   const requestedQty = draft.qty;
   checkAndCreateItem(draft, (item, batch)=>{
     const t = db.trips.find(x=>x.id===pickerTripId);
-    if(!t.items.some(ti=>ti.batchId===batch.id)) t.items.push({batchId:batch.id, qty:requestedQty, packed:false, tags:[]});
+    if(!t.items.some(ti=>ti.batchId===batch.id)) t.items.push({batchId:batch.id, qty:requestedQty, packed:false, tags:[], rating:0});
     saveDB();
     document.getElementById('niName').value=''; document.getElementById('niQty').value='1';
     document.getElementById('niLoc').value=''; document.getElementById('niLocFrom').value='';
@@ -2052,9 +2111,10 @@ function importJSON(evt){
         if(b.locFrom && !db.locations.some(l=>normKey(l)===normKey(b.locFrom))) db.locations.push(b.locFrom);
       }));
       db.trips.forEach(t=>{
-        t.items.forEach(ti=>{ if(!ti.tags) ti.tags=[]; });
+        t.items.forEach(ti=>{ if(!ti.tags) ti.tags=[]; if(ti.rating==null) ti.rating=0; });
         if(!t.tasksBefore) t.tasksBefore=[];
         if(!t.tasksAfter) t.tasksAfter=[];
+        if(t.includeInAverage==null) t.includeInAverage=true;
       });
       saveDB();
       renderCatalog(); renderTripsList(); toast('Import successful');
@@ -2411,6 +2471,8 @@ function applyMigrations(){
 
 loadDB();
 applyMigrations();
+document.getElementById('appVersionBadge').textContent = 'v'+APP_VERSION;
+document.getElementById('helpVersionText').textContent = APP_VERSION;
 if(isNative || 'showSaveFilePicker' in window) document.getElementById('linkFileBtn').style.display='';
 updateLinkedFileUI();
 restoreLinkedFile();
