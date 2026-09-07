@@ -1171,6 +1171,7 @@ function renderTripDetail(id){
         <button class="small secondary" onclick="openExportModal()">📤 Share list</button>
         <button class="small secondary" onclick="exportTripFile()" title="Save/share as an importable file">⬇ Export list to JSON</button>
         <button class="small secondary" onclick="exportTripText()" title="Save/share as an editable .txt file">⬇ Export list to TXT</button>
+        <button class="small secondary" onclick="exportTripCSV()" title="Open in Excel, Google Sheets, Todoist, or similar (one-way, not re-importable here)">⬇ Export list to CSV</button>
         </div>
       </div>
       <div id="tripProgress"></div>
@@ -1722,6 +1723,32 @@ function exportTripText(){
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `packing_list_${slugify(t.name)}_${fileTimestamp()}.txt`;
+  a.click();
+}
+// ---- Packing list as CSV (one-way export for spreadsheets / other apps — not re-importable) ----
+function csvField(val){
+  const s = String(val==null?'':val);
+  return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+}
+function buildTripCsv(trip){
+  const rows = trip.items.map(ti=>{ const found=resolveBatch(ti.batchId); return found?{item:found.item, batch:found.batch, ti}:null; }).filter(Boolean);
+  const header = ['Name','Category','Quantity','Packed','Destination','Origin','Note','Weight (kg)','Rating','Tags'];
+  const lines = [header.map(csvField).join(',')];
+  rows.forEach(r=>{
+    lines.push([
+      r.item.name, r.item.category, r.ti.qty, r.ti.packed?'Yes':'No',
+      r.batch.locTo||'', r.batch.locFrom||'', r.item.note||'',
+      r.item.weight||'', r.ti.rating||'', (r.ti.tags||[]).join('; ')
+    ].map(csvField).join(','));
+  });
+  return lines.join('\r\n') + '\r\n';
+}
+function exportTripCSV(){
+  const t = db.trips.find(x=>x.id===currentTripId); if(!t) return;
+  const blob = new Blob(['﻿'+buildTripCsv(t)], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `packing_list_${slugify(t.name)}_${fileTimestamp()}.csv`;
   a.click();
 }
 function importTripText(evt){

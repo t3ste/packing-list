@@ -52,6 +52,7 @@ Runs as a website, an installable Progressive Web App (desktop and iOS), or a st
 ### Import & export
 - Full backup as JSON (entire inventory + all lists) — for safekeeping or moving to another device.
 - Per-list export as JSON (round-trips perfectly back into the app) or as plain text (`#PACKLIST v1` format — human-readable, hand-editable, and re-importable).
+- Per-list export as **CSV**, for opening in Excel, Google Sheets, Todoist, or similar (one-way — this format isn't re-imported back into the app).
 - A **Text tab** on every list shows and lets you edit that same plain-text format directly, with a button to apply your edits back onto the list.
 - Share a formatted, human-readable version of a list (for messaging apps, etc.), or open a print-friendly view.
 
