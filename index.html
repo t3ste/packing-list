@@ -172,7 +172,7 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
 <body>
 
 <div class="topbar">
-  <h1>Packing List <span class="pill" id="appVersionBadge" title="App version"></span><small>local · offline · <span id="appVersion">v3</span> · 📦 <span id="cacheTimestamp"></span> · 💾 <span id="saveTimestamp"></span></small><small id="linkedFileIndicator" style="color:var(--accent);"></small></h1>
+  <h1>Packing List <span class="pill" id="appVersionBadge" title="App version"></span><small>local · offline · <span id="appVersion">v3</span> · 📦 <span id="cacheTimestamp"></span> · 💾 <span id="saveTimestamp"></span></small><small id="linkedFileIndicator" style="color:var(--accent);"></small><small id="webdavIndicator" style="color:var(--accent);"></small></h1>
   <div class="menuWrap">
     <button class="menuToggle" id="menuToggleBtn" onclick="toggleMainMenu()" aria-label="Menu" title="Menu">☰</button>
     <div class="mainMenu" id="mainMenu">
@@ -182,6 +182,7 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
       <button class="secondary" onclick="openExportOptsModal(); closeMainMenu();">⬇ Export</button>
       <button class="secondary" onclick="openImportOptsModal(); closeMainMenu();">⬆ Import</button>
       <button class="secondary" id="linkFileBtn" style="display:none" onclick="handleLinkButtonClick(); closeMainMenu();">🔗 Link</button>
+      <button class="secondary" onclick="openWebdavModal(); closeMainMenu();">🌐 WebDAV</button>
     </div>
   </div>
 </div>
@@ -337,6 +338,26 @@ Cutlery"></textarea>
   </div>
 </div>
 <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importJSON(event)">
+
+<!-- WebDAV sync -->
+<div class="modal-bg" id="webdavModal">
+  <div class="modal">
+    <h2>🌐 WebDAV sync</h2>
+    <p class="help-list" style="margin:0 0 10px; font-size:0.82rem; color:var(--muted);">Reads/writes one shared file over WebDAV, like the local file link but over the network. There's no conflict resolution — whoever saves last wins. The server must allow requests from this app (CORS).</p>
+    <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;">URL</label>
+    <input type="text" id="webdavUrlInput" placeholder="https://cloud.example.com/remote.php/dav/files/you/packing-list.json" class="full">
+    <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;">Username (optional)</label>
+    <input type="text" id="webdavUserInput" class="full">
+    <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;">Password (optional)</label>
+    <input type="password" id="webdavPassInput" class="full">
+    <div class="row-inline" style="justify-content:flex-end; margin-top:12px;">
+      <button class="ghost" id="webdavDisconnectBtn" onclick="disconnectWebdav()" style="display:none;">Disconnect</button>
+      <button class="secondary" id="webdavPullBtn" onclick="pullFromWebdav()" style="display:none;">Pull now</button>
+      <button class="secondary" onclick="closeWebdavModal()">Cancel</button>
+      <button onclick="connectWebdav()">Save & connect</button>
+    </div>
+  </div>
+</div>
 
 <!-- Item picker (packing list: add items) -->
 <div class="modal-bg" id="pickerModal">
@@ -495,6 +516,9 @@ let pendingHandle = null;
 let photoCache = {};
 let photoDB = null;
 let pendingImportIncludePhotos = true;
+let webdavUrl = null;
+let webdavUser = '';
+let webdavPass = '';
 let currentTripId = null;
 let pickerTripId = null;
 let pickerSelections = {};
@@ -602,6 +626,7 @@ function saveDB(){
     alert('Your last change could not be saved to this browser\'s storage (it may be full). Please export a backup now (☰ menu → Export) to avoid losing it.');
   }
   if(fileHandle) writeLinkedFile();
+  if(webdavUrl) pushToWebdav();
 }
 // ---- Photo storage (IndexedDB, mirrored into a synchronous in-memory cache) ----
 // Photos are kept out of `db`/localStorage entirely: even compressed, a handful of
@@ -2295,6 +2320,36 @@ function chooseImportFile(){
   closeImportOptsModal();
   document.getElementById('importFile').click();
 }
+// Shared by importJSON and pullFromWebdav: applies a full-db-shaped object (catalog+
+// trips, optionally a `photos` map) as the new live database, running the same
+// backfill/migration steps as loadDB, and replacing the photo set the same way the
+// rest of the inventory gets replaced (a full import/pull is a wholesale swap).
+function applyFullDbImport(data, includePhotos){
+  const importedPhotos = data.photos;
+  delete data.photos;
+  db = data;
+  if(!db.categories) db.categories = CATEGORIES_DEFAULT.slice();
+  migrateToBatches();
+  if(!db.locations) db.locations = KNOWN_LOCATIONS.slice();
+  db.catalog.forEach(i=>{
+    if(i.weight==null) i.weight=0;
+    if(!i.requires) i.requires=[];
+    i.batches.forEach(b=>{
+      if(b.locTo && !db.locations.some(l=>normKey(l)===normKey(b.locTo))) db.locations.push(b.locTo);
+      if(b.locFrom && !db.locations.some(l=>normKey(l)===normKey(b.locFrom))) db.locations.push(b.locFrom);
+    });
+  });
+  db.trips.forEach(t=>{
+    t.items.forEach(ti=>{ if(!ti.tags) ti.tags=[]; if(ti.rating==null) ti.rating=0; });
+    if(!t.tasksBefore) t.tasksBefore=[];
+    if(!t.tasksAfter) t.tasksAfter=[];
+    if(t.includeInAverage==null) t.includeInAverage=true;
+  });
+  Object.keys(photoCache).forEach(deletePhoto);
+  if(includePhotos && importedPhotos){
+    Object.entries(importedPhotos).forEach(([k,v])=>savePhoto(k,v));
+  }
+}
 function importJSON(evt){
   const file = evt.target.files[0]; if(!file) return;
   const reader = new FileReader();
@@ -2303,31 +2358,7 @@ function importJSON(evt){
       const data = JSON.parse(reader.result);
       if(!data.catalog || !data.trips) throw new Error('invalid format');
       if(!confirm('Import will overwrite the current inventory & all packing lists. Continue?')) return;
-      const importedPhotos = data.photos;
-      delete data.photos;
-      db = data;
-      if(!db.categories) db.categories = CATEGORIES_DEFAULT.slice();
-      migrateToBatches();
-      if(!db.locations) db.locations = KNOWN_LOCATIONS.slice();
-      db.catalog.forEach(i=>{
-        if(i.weight==null) i.weight=0;
-        if(!i.requires) i.requires=[];
-        i.batches.forEach(b=>{
-          if(b.locTo && !db.locations.some(l=>normKey(l)===normKey(b.locTo))) db.locations.push(b.locTo);
-          if(b.locFrom && !db.locations.some(l=>normKey(l)===normKey(b.locFrom))) db.locations.push(b.locFrom);
-        });
-      });
-      db.trips.forEach(t=>{
-        t.items.forEach(ti=>{ if(!ti.tags) ti.tags=[]; if(ti.rating==null) ti.rating=0; });
-        if(!t.tasksBefore) t.tasksBefore=[];
-        if(!t.tasksAfter) t.tasksAfter=[];
-        if(t.includeInAverage==null) t.includeInAverage=true;
-      });
-      // A full import replaces the whole inventory, so it replaces photos the same way.
-      Object.keys(photoCache).forEach(deletePhoto);
-      if(pendingImportIncludePhotos && importedPhotos){
-        Object.entries(importedPhotos).forEach(([k,v])=>savePhoto(k,v));
-      }
+      applyFullDbImport(data, pendingImportIncludePhotos);
       saveDB();
       renderCatalog(); renderTripsList(); renderManage(); toast('Import successful');
     }catch(e){ alert('Import failed: '+e.message); }
@@ -2506,6 +2537,108 @@ async function writeLinkedFile(){
   }
 }
 
+// =================== WebDAV sync (simple, no conflict resolution) ===================
+// A shared file read/written over HTTP GET/PUT, independent of the local file link
+// above (both can be active at once). Whoever saves last simply overwrites the
+// remote file — there's no merge if two devices edit while offline at the same time.
+// See the README for server-side CORS requirements.
+function loadWebdavConfig(){
+  try{
+    const raw = localStorage.getItem('packliste_webdav_config');
+    if(!raw) return;
+    const cfg = JSON.parse(raw);
+    webdavUrl = cfg.url||null; webdavUser = cfg.user||''; webdavPass = cfg.pass||'';
+  }catch(e){ console.warn('Could not load WebDAV config', e); }
+}
+function saveWebdavConfigToStorage(){
+  try{
+    if(webdavUrl) localStorage.setItem('packliste_webdav_config', JSON.stringify({url:webdavUrl, user:webdavUser, pass:webdavPass}));
+    else localStorage.removeItem('packliste_webdav_config');
+  }catch(e){ console.warn('Could not save WebDAV config', e); }
+}
+function webdavAuthHeader(){
+  return webdavUser ? {'Authorization': 'Basic '+btoa(webdavUser+':'+webdavPass)} : {};
+}
+function openWebdavModal(){
+  document.getElementById('webdavUrlInput').value = webdavUrl||'';
+  document.getElementById('webdavUserInput').value = webdavUser||'';
+  document.getElementById('webdavPassInput').value = webdavPass||'';
+  document.getElementById('webdavDisconnectBtn').style.display = webdavUrl?'':'none';
+  document.getElementById('webdavPullBtn').style.display = webdavUrl?'':'none';
+  document.getElementById('webdavModal').classList.add('show');
+}
+function closeWebdavModal(){ document.getElementById('webdavModal').classList.remove('show'); }
+function updateWebdavUI(){
+  const indicator = document.getElementById('webdavIndicator');
+  if(indicator) indicator.textContent = webdavUrl ? ` · 🌐 ${webdavUrl}` : '';
+}
+async function connectWebdav(){
+  const url = document.getElementById('webdavUrlInput').value.trim();
+  if(!url){ toast('Please enter a URL'); return; }
+  webdavUrl = url;
+  webdavUser = document.getElementById('webdavUserInput').value.trim();
+  webdavPass = document.getElementById('webdavPassInput').value;
+  saveWebdavConfigToStorage();
+  updateWebdavUI();
+  closeWebdavModal();
+  try{
+    const res = await fetch(webdavUrl, {method:'GET', headers: webdavAuthHeader()});
+    if(res.status===404){
+      await pushToWebdav();
+      toast('WebDAV connected — no file existed yet, created one from your current data.');
+    } else if(res.ok){
+      const text = await res.text();
+      const data = JSON.parse(text);
+      if(!data.catalog || !data.trips) throw new Error('The file at that URL isn\'t a Packing List export.');
+      if(confirm('A Packing List file already exists at that URL. Load it now (replacing your current data)? Cancel to keep your current data and overwrite the remote file instead.')){
+        applyFullDbImport(data, true);
+        saveDB();
+        renderCatalog(); renderTripsList(); renderManage();
+        toast('Loaded data from WebDAV.');
+      } else {
+        await pushToWebdav();
+        toast('WebDAV connected — your current data was uploaded, replacing the remote file.');
+      }
+    } else {
+      throw new Error(`Server returned ${res.status}`);
+    }
+  }catch(e){
+    console.error('WebDAV connect failed', e);
+    alert('Could not reach that WebDAV URL: '+e.message+'\n\nCheck the URL/credentials, and that the server allows requests from this app (CORS) — see the README.');
+  }
+}
+function disconnectWebdav(){
+  webdavUrl = null; webdavUser=''; webdavPass='';
+  saveWebdavConfigToStorage();
+  updateWebdavUI();
+  closeWebdavModal();
+  toast('WebDAV disconnected (the remote file is left as-is).');
+}
+async function pushToWebdav(){
+  if(!webdavUrl) return;
+  try{
+    await fetch(webdavUrl, {method:'PUT', headers:{...webdavAuthHeader(), 'Content-Type':'application/json'}, body: JSON.stringify(db,null,2)});
+  }catch(e){ console.warn('WebDAV push failed (will retry on next save):', e); }
+}
+async function pullFromWebdav(){
+  if(!webdavUrl) return;
+  if(!confirm('Replace your current inventory & lists with the version from WebDAV?')) return;
+  try{
+    const res = await fetch(webdavUrl, {method:'GET', headers: webdavAuthHeader()});
+    if(!res.ok) throw new Error(`Server returned ${res.status}`);
+    const data = JSON.parse(await res.text());
+    if(!data.catalog || !data.trips) throw new Error('invalid format');
+    applyFullDbImport(data, true);
+    saveDB();
+    renderCatalog(); renderTripsList(); renderManage();
+    closeWebdavModal();
+    toast('Loaded data from WebDAV.');
+  }catch(e){
+    console.error('WebDAV pull failed', e);
+    alert('Could not load from WebDAV: '+e.message);
+  }
+}
+
 // =================== Migrations (historical, run once) ===================
 const MIGRATIONS = [];
 function applyMigrations(){
@@ -2544,6 +2677,8 @@ updateSaveTimestampUI();
 renderCatalog();
 renderTripsList();
 loadPhotoCache().then(()=>{ renderCatalog(); renderManage(); });
+loadWebdavConfig();
+updateWebdavUI();
 </script>
 <script>
 // PWA installability & offline use. Only works over http(s)/localhost,
