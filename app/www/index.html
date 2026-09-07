@@ -512,12 +512,21 @@ function normKey(s){ return (s||'').trim().toLowerCase(); }
 function slugify(s){ return (s||'').replace(/[^a-z0-9]+/gi,'_').replace(/^_+|_+$/g,'')||'unnamed'; }
 function fileTimestamp(){ return new Date().toISOString().replace(/[:.]/g,'-').slice(0,19); }
 const GROUP_LABEL_FOR_FILENAME = {category:'category', location:'location', current:'currentlocation'};
-function esc(s){ return (s||'').replace(/"/g,'&quot;'); }
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 function loadDB(){
   const raw = localStorage.getItem('packliste_v3_db');
+  let parsed = null;
   if(raw){
-    db = JSON.parse(raw);
+    try{ parsed = JSON.parse(raw); }
+    catch(e){
+      console.error('Stored inventory data is corrupted and could not be read:', e);
+      localStorage.setItem('packliste_v3_db_corrupted_'+Date.now(), raw);
+      alert('Your saved inventory could not be read (the stored data appears corrupted). A copy of the unreadable data was kept in this browser\'s storage under a "packliste_v3_db_corrupted_…" key in case it can be recovered manually. Starting with an empty inventory.');
+    }
+  }
+  if(parsed){
+    db = parsed;
     if(!db.categories) db.categories = CATEGORIES_DEFAULT.slice();
     db.catalog.forEach(i=>{
       if(!db.categories.some(c=>normKey(c)===normKey(i.category))) db.categories.push(i.category);
@@ -570,9 +579,14 @@ function migrateToBatches(){
   saveDB();
 }
 function saveDB(){
-  localStorage.setItem('packliste_v3_db', JSON.stringify(db));
-  localStorage.setItem('packliste_v3_saved_at', new Date().toISOString());
-  updateSaveTimestampUI();
+  try{
+    localStorage.setItem('packliste_v3_db', JSON.stringify(db));
+    localStorage.setItem('packliste_v3_saved_at', new Date().toISOString());
+    updateSaveTimestampUI();
+  }catch(e){
+    console.error('Could not save to this browser\'s storage:', e);
+    if(!isNative) alert('Your last change could not be saved to this browser\'s storage (it may be full). Please export a backup now (☰ menu → Export) to avoid losing it.');
+  }
   if(fileHandle) writeLinkedFile();
   if(isNative){ if(nativeLinkedName) writeNativeFile(); else writeInternalFile(); }
 }
@@ -727,6 +741,9 @@ function mergeItemBatches(sourceId, targetItem){
   const src = db.catalog.find(i=>i.id===sourceId);
   if(!src || src.id===targetItem.id) return;
   targetItem.batches.push(...src.batches);
+  // Don't silently discard the source's note/weight if the target doesn't have one set.
+  if(!targetItem.note && src.note) targetItem.note = src.note;
+  if(!targetItem.weight && src.weight) targetItem.weight = src.weight;
   db.catalog = db.catalog.filter(i=>i.id!==sourceId);
   // Trip references stay valid: batchId is unique and moves with the batch to the target item.
 }
@@ -1034,7 +1051,10 @@ function resolveDupChoice(choice){
   const {draft, existing, onDone} = pendingDup;
   if(choice==='A'){
     const batch = {id:genBatchId(), qty:draft.qty, locTo:draft.locTo||'', locFrom:draft.locFrom||''};
-    existing.batches.push(batch); saveDB(); onDone(existing, batch);
+    existing.batches.push(batch);
+    if(!existing.note && draft.note) existing.note = draft.note;
+    if(!existing.weight && draft.weight) existing.weight = draft.weight;
+    saveDB(); onDone(existing, batch);
   } else if(choice==='B'){
     createItemRaw(draft, onDone);
   }
