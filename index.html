@@ -126,6 +126,7 @@ summary .cnt{color:var(--muted); font-weight:400; font-size:0.74rem; white-space
 .starrow .star{cursor:pointer; font-size:1rem; color:var(--border); line-height:1; user-select:none;}
 .starrow .star.on{color:var(--warn);}
 .reqhint{font-size:0.72rem; color:var(--warn); margin-top:2px;}
+.photothumb{width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid var(--border); flex-shrink:0;}
 .tagpill{display:inline-flex; align-items:center; gap:4px; background:var(--accent-soft-15); color:var(--accent);
   border-radius:10px; padding:1px 6px 1px 8px; font-size:0.7rem;}
 .tagpill button{background:none; border:none; color:var(--accent); padding:0; margin:0; font-size:0.85rem; cursor:pointer; line-height:1;}
@@ -178,9 +179,8 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
       <button class="secondary" onclick="openHelpModal(); closeMainMenu();">ℹ️ Help</button>
       <button class="secondary" id="themeToggleBtn" onclick="toggleTheme(); closeMainMenu();">🎨 Light theme</button>
       <div class="menuDivider"></div>
-      <button class="secondary" onclick="exportJSON(); closeMainMenu();">⬇ Export</button>
-      <button class="secondary" onclick="document.getElementById('importFile').click(); closeMainMenu();">⬆ Import</button>
-      <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importJSON(event)">
+      <button class="secondary" onclick="openExportOptsModal(); closeMainMenu();">⬇ Export</button>
+      <button class="secondary" onclick="openImportOptsModal(); closeMainMenu();">⬆ Import</button>
       <button class="secondary" id="linkFileBtn" style="display:none" onclick="handleLinkButtonClick(); closeMainMenu();">🔗 Link</button>
     </div>
   </div>
@@ -312,6 +312,31 @@ Cutlery"></textarea>
     </div>
   </div>
 </div>
+
+<!-- Export options -->
+<div class="modal-bg" id="exportOptsModal">
+  <div class="modal">
+    <h2>Export options</h2>
+    <label><input type="checkbox" id="exportIncludePhotos" checked> Include photos (larger file)</label>
+    <div class="row-inline" style="justify-content:flex-end; margin-top:12px;">
+      <button class="secondary" onclick="closeExportOptsModal()">Cancel</button>
+      <button onclick="confirmExportJSON()">Export</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import options -->
+<div class="modal-bg" id="importOptsModal">
+  <div class="modal">
+    <h2>Import options</h2>
+    <label><input type="checkbox" id="importIncludePhotos" checked> Include photos from this file</label>
+    <div class="row-inline" style="justify-content:flex-end; margin-top:12px;">
+      <button class="secondary" onclick="closeImportOptsModal()">Cancel</button>
+      <button onclick="chooseImportFile()">Choose file…</button>
+    </div>
+  </div>
+</div>
+<input type="file" id="importFile" accept="application/json" style="display:none" onchange="importJSON(event)">
 
 <!-- Item picker (packing list: add items) -->
 <div class="modal-bg" id="pickerModal">
@@ -467,6 +492,9 @@ const SEED = [];
 let db = null;
 let fileHandle = null;
 let pendingHandle = null;
+let photoCache = {};
+let photoDB = null;
+let pendingImportIncludePhotos = true;
 let currentTripId = null;
 let pickerTripId = null;
 let pickerSelections = {};
@@ -574,6 +602,98 @@ function saveDB(){
     alert('Your last change could not be saved to this browser\'s storage (it may be full). Please export a backup now (☰ menu → Export) to avoid losing it.');
   }
   if(fileHandle) writeLinkedFile();
+}
+// ---- Photo storage (IndexedDB, mirrored into a synchronous in-memory cache) ----
+// Photos are kept out of `db`/localStorage entirely: even compressed, a handful of
+// embedded images would bloat the payload that gets rewritten on every single edit.
+// Everything else in the app reads photoCache synchronously, exactly like any other
+// field — IndexedDB is purely the persistence backing store, kept in sync on writes.
+// If IndexedDB isn't available (older browser, restricted context), every function
+// here silently no-ops: photoCache stays empty and nothing else in the app is affected.
+function openPhotoDB(){
+  return new Promise((resolve, reject)=>{
+    if(typeof indexedDB==='undefined'){ reject(new Error('IndexedDB not available')); return; }
+    const req = indexedDB.open('packliste_photos', 1);
+    req.onupgradeneeded = ()=>{ req.result.createObjectStore('photos'); };
+    req.onsuccess = ()=>resolve(req.result);
+    req.onerror = ()=>reject(req.error);
+  });
+}
+async function loadPhotoCache(){
+  try{
+    photoDB = await openPhotoDB();
+    await new Promise((resolve, reject)=>{
+      const req = photoDB.transaction('photos','readonly').objectStore('photos').openCursor();
+      req.onsuccess = ()=>{
+        const cursor = req.result;
+        if(cursor){ photoCache[cursor.key] = cursor.value; cursor.continue(); }
+        else resolve();
+      };
+      req.onerror = ()=>reject(req.error);
+    });
+  }catch(e){
+    console.warn('Photo storage unavailable, continuing without photos:', e);
+  }
+}
+function savePhoto(key, dataUrl){
+  photoCache[key] = dataUrl;
+  if(!photoDB) return;
+  try{ photoDB.transaction('photos','readwrite').objectStore('photos').put(dataUrl, key); }
+  catch(e){ console.warn('Could not persist photo:', e); }
+}
+function deletePhoto(key){
+  delete photoCache[key];
+  if(!photoDB) return;
+  try{ photoDB.transaction('photos','readwrite').objectStore('photos').delete(key); }
+  catch(e){ console.warn('Could not delete photo:', e); }
+}
+function compressImageFile(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const maxDim = 480;
+        let w = img.width, h = img.height;
+        if(w>h && w>maxDim){ h = Math.round(h*maxDim/w); w = maxDim; }
+        else if(h>=w && h>maxDim){ w = Math.round(w*maxDim/h); h = maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.6));
+      };
+      img.onerror = ()=>reject(new Error('Could not read that image'));
+      img.src = reader.result;
+    };
+    reader.onerror = ()=>reject(new Error('Could not read that file'));
+    reader.readAsDataURL(file);
+  });
+}
+async function handleItemPhotoChange(itemId, input){
+  const file = input.files[0]; if(!file) return;
+  try{
+    const dataUrl = await compressImageFile(file);
+    savePhoto('item:'+itemId, dataUrl);
+    renderCatalog();
+  }catch(e){ console.error(e); alert('Could not process that image.'); }
+  input.value='';
+}
+function removeItemPhoto(itemId){
+  deletePhoto('item:'+itemId);
+  renderCatalog();
+}
+async function handleLocationPhotoChange(locationName, input){
+  const file = input.files[0]; if(!file) return;
+  try{
+    const dataUrl = await compressImageFile(file);
+    savePhoto('loc:'+normKey(locationName), dataUrl);
+    renderManage();
+  }catch(e){ console.error(e); alert('Could not process that image.'); }
+  input.value='';
+}
+function removeLocationPhoto(locationName){
+  deletePhoto('loc:'+normKey(locationName));
+  renderManage();
 }
 // Short, readable timestamp format for the header: time only if today,
 // otherwise date + time too. The full timestamp is available as a tooltip.
@@ -835,6 +955,12 @@ function renderCatalog(){
         <div class="bbody">
           <input type="text" class="bname" value="${esc(i.name)}" onchange="updateItem('${i.id}','name',this.value)">
           ${usageBadge}${ratingBadge}
+          <div class="row-inline">
+            ${photoCache['item:'+i.id]?`<img class="photothumb" src="${photoCache['item:'+i.id]}">`:''}
+            <input type="file" accept="image/*" style="display:none" id="photoInput_${i.id}" onchange="handleItemPhotoChange('${i.id}', this)">
+            <button type="button" class="small secondary" onclick="document.getElementById('photoInput_${i.id}').click()">📷 ${photoCache['item:'+i.id]?'Change':'Add'} photo</button>
+            ${photoCache['item:'+i.id]?`<button type="button" class="small ghost" onclick="removeItemPhoto('${i.id}')">✕ Remove photo</button>`:''}
+          </div>
           <div><label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;">Category</label>
           <input type="text" list="categoryOptions" value="${esc(i.category)}" onchange="updateItem('${i.id}','category',this.value)"></div>
           <div><label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;">Weight per unit (kg)</label>
@@ -912,6 +1038,7 @@ function bulkDelete(){
     db.catalog = db.catalog.filter(i=>i.id!==id);
     db.catalog.forEach(i=>{ if(i.requires) i.requires = i.requires.filter(rid=>rid!==id); });
     db.trips.forEach(t=>{ t.items = t.items.filter(ti=>!batchIds.has(ti.batchId)); });
+    deletePhoto('item:'+id);
   });
   selectedBestand.clear(); saveDB(); renderCatalog(); toast('Item(s) deleted');
 }
@@ -1012,6 +1139,7 @@ function deleteItem(id){
   db.catalog.forEach(i=>{ if(i.requires) i.requires = i.requires.filter(rid=>rid!==id); });
   db.trips.forEach(t=>{ t.items = t.items.filter(ti=>!batchIds.has(ti.batchId)); });
   selectedBestand.delete(id);
+  deletePhoto('item:'+id);
   saveDB(); renderCatalog(); toast('Item deleted');
 }
 
@@ -1327,6 +1455,7 @@ function renderTripDetail(id){
         return `<div class="itemrow">
           <input type="checkbox" ${r.ti.packed?'checked':''} onchange="toggleTripItem('${t.id}','${r.ti.batchId}',this.checked)">
           <input type="checkbox" title="select" ${selectedTripItems.has(r.ti.batchId)?'checked':''} onchange="toggleSelectTripItem('${r.ti.batchId}',this.checked)">
+          ${photoCache['item:'+r.item.id]?`<img class="photothumb" src="${photoCache['item:'+r.item.id]}">`:''}
           <div class="name ${r.ti.packed?'packed':''}">
             <b>${esc(r.item.name)}</b>
             <span class="loc">📍 ${locLabel}: ${esc(loc)}${r.item.note?' · '+esc(r.item.note):''}${r.item.weight?' · '+(r.item.weight*r.ti.qty).toFixed(2)+' kg':''}</span>
@@ -2022,12 +2151,18 @@ function renderManage(){
   const locWrap = document.getElementById('manageLocList');
   const locs = uniqueLocations();
   if(locs.length===0){ locWrap.innerHTML='<p class="empty">No locations set yet.</p>'; return; }
-  locWrap.innerHTML = locs.map(l=>{
+  locWrap.innerHTML = locs.map((l,idx)=>{
     let asTo=0, asFrom=0;
     db.catalog.forEach(i=>i.batches.forEach(b=>{ if(b.locTo===l) asTo++; if(b.locFrom===l) asFrom++; }));
+    const lSafe = esc(l).replace(/'/g,"&#39;");
+    const photo = photoCache['loc:'+normKey(l)];
     return `<div class="manage-row" data-old="${esc(l)}">
+      ${photo?`<img class="photothumb" src="${photo}">`:''}
       <input type="text" class="grow locNewName" value="${esc(l)}">
       <span class="pill">Destination: ${asTo} · Origin: ${asFrom}</span>
+      <input type="file" accept="image/*" style="display:none" id="locPhotoInput_${idx}" onchange="handleLocationPhotoChange('${lSafe}', this)">
+      <button type="button" class="small secondary" onclick="document.getElementById('locPhotoInput_${idx}').click()" title="Add/change photo">📷</button>
+      ${photo?`<button type="button" class="small ghost" onclick="removeLocationPhoto('${lSafe}')" title="Remove photo">✕📷</button>`:''}
       <button class="small secondary" onclick="renameLocationRow(this)">Save</button>
       <button class="small ghost" onclick="clearLocationRow(this)" title="Remove from all batches, location stays in the list">Clear</button>
       <button class="small danger" onclick="deleteLocationRow(this)" title="Remove from all batches AND delete from the list">Delete</button>
@@ -2104,6 +2239,8 @@ function renameLocationRow(btn){
     if(b.locTo===oldName) b.locTo=newName;
     if(b.locFrom===oldName) b.locFrom=newName;
   }));
+  const oldKey = 'loc:'+normKey(oldName);
+  if(photoCache[oldKey]){ savePhoto('loc:'+normKey(newName), photoCache[oldKey]); deletePhoto(oldKey); }
   saveDB(); renderManage(); toast('Location renamed');
 }
 function clearLocationRow(btn){
@@ -2125,6 +2262,7 @@ function deleteLocationRow(btn){
     if(b.locFrom===name) b.locFrom='';
   }));
   db.locations = (db.locations||[]).filter(l=>l!==name);
+  deletePhoto('loc:'+normKey(name));
   saveDB(); renderManage(); toast('Location deleted');
 }
 function wipeCatalog(){
@@ -2137,12 +2275,25 @@ function wipeCatalog(){
 }
 
 // =================== EXPORT / IMPORT / FILE LINKING ===================
-function exportJSON(){
-  const blob = new Blob([JSON.stringify(db,null,2)], {type:'application/json'});
+function openExportOptsModal(){ document.getElementById('exportOptsModal').classList.add('show'); }
+function closeExportOptsModal(){ document.getElementById('exportOptsModal').classList.remove('show'); }
+function confirmExportJSON(){
+  const includePhotos = document.getElementById('exportIncludePhotos').checked;
+  closeExportOptsModal();
+  const payload = {...db};
+  if(includePhotos) payload.photos = {...photoCache};
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `packing_list_full_export_${fileTimestamp()}.json`;
   a.click();
+}
+function openImportOptsModal(){ document.getElementById('importOptsModal').classList.add('show'); }
+function closeImportOptsModal(){ document.getElementById('importOptsModal').classList.remove('show'); }
+function chooseImportFile(){
+  pendingImportIncludePhotos = document.getElementById('importIncludePhotos').checked;
+  closeImportOptsModal();
+  document.getElementById('importFile').click();
 }
 function importJSON(evt){
   const file = evt.target.files[0]; if(!file) return;
@@ -2152,6 +2303,8 @@ function importJSON(evt){
       const data = JSON.parse(reader.result);
       if(!data.catalog || !data.trips) throw new Error('invalid format');
       if(!confirm('Import will overwrite the current inventory & all packing lists. Continue?')) return;
+      const importedPhotos = data.photos;
+      delete data.photos;
       db = data;
       if(!db.categories) db.categories = CATEGORIES_DEFAULT.slice();
       migrateToBatches();
@@ -2170,8 +2323,13 @@ function importJSON(evt){
         if(!t.tasksAfter) t.tasksAfter=[];
         if(t.includeInAverage==null) t.includeInAverage=true;
       });
+      // A full import replaces the whole inventory, so it replaces photos the same way.
+      Object.keys(photoCache).forEach(deletePhoto);
+      if(pendingImportIncludePhotos && importedPhotos){
+        Object.entries(importedPhotos).forEach(([k,v])=>savePhoto(k,v));
+      }
       saveDB();
-      renderCatalog(); renderTripsList(); toast('Import successful');
+      renderCatalog(); renderTripsList(); renderManage(); toast('Import successful');
     }catch(e){ alert('Import failed: '+e.message); }
   };
   reader.readAsText(file);
@@ -2385,6 +2543,7 @@ updateBestandViewBtn();
 updateSaveTimestampUI();
 renderCatalog();
 renderTripsList();
+loadPhotoCache().then(()=>{ renderCatalog(); renderManage(); });
 </script>
 <script>
 // PWA installability & offline use. Only works over http(s)/localhost,

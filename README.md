@@ -30,6 +30,7 @@ Runs as a website, an installable Progressive Web App (desktop and iOS), or a st
 - Filter by category, current location, active status, list usage, or rating (including "not yet rated").
 - **Weight per unit** (optional, kg): set it once per item and totals show up automatically — in the inventory (weight × quantity), per packing list, per group within a list, and as an overall figure in the stats view.
 - **Requires** (optional): mark that one item needs another (e.g. "Bicycle" requires "Bike rack", "Charcoal grill" requires "Charcoal"). When you pack an item without something it requires, a soft warning shows up on the list — nothing is blocked, it's just a reminder.
+- **One photo per item, and one per location** (e.g. "Garage"): a small, automatically compressed thumbnail for quick visual recognition, shown in the inventory, in Manage → Locations, and next to the item in any packing list it's part of.
 - Bulk add: create several items in one category in one pass.
 
 <p align="center">
@@ -51,7 +52,7 @@ Runs as a website, an installable Progressive Web App (desktop and iOS), or a st
 </p>
 
 ### Import & export
-- Full backup as JSON (entire inventory + all lists) — for safekeeping or moving to another device.
+- Full backup as JSON (entire inventory + all lists) — for safekeeping or moving to another device. The ☰ menu's Export/Import each ask first whether to include photos — leave it on for a complete backup, or turn it off for a smaller, photo-free file.
 - Per-list export as JSON (round-trips perfectly back into the app) or as plain text (`#PACKLIST v1` format — human-readable, hand-editable, and re-importable).
 - Per-list export as **CSV**, for opening in Excel, Google Sheets, Todoist, or similar (one-way — this format isn't re-imported back into the app).
 - A **Text tab** on every list shows and lets you edit that same plain-text format directly, with a button to apply your edits back onto the list.
