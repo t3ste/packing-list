@@ -29,6 +29,7 @@ Runs as a website, an installable Progressive Web App (desktop and iOS), or a st
 - **Average usefulness rating** (★ badge): once you've rated items after a trip (see *Packing lists* below), each catalog item shows its average rating across the packing lists you've chosen to count toward it — a quick "was this actually worth bringing?" view over time.
 - Filter by category, current location, active status, list usage, or rating (including "not yet rated").
 - **Weight per unit** (optional, kg): set it once per item and totals show up automatically — in the inventory (weight × quantity), per packing list, per group within a list, and as an overall figure in the stats view.
+- **Requires** (optional): mark that one item needs another (e.g. "Bicycle" requires "Bike rack", "Charcoal grill" requires "Charcoal"). When you pack an item without something it requires, a soft warning shows up on the list — nothing is blocked, it's just a reminder.
 - Bulk add: create several items in one category in one pass.
 
 <p align="center">

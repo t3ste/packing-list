@@ -125,6 +125,7 @@ summary .cnt{color:var(--muted); font-weight:400; font-size:0.74rem; white-space
 .starrow{display:flex; gap:2px; margin-top:4px;}
 .starrow .star{cursor:pointer; font-size:1rem; color:var(--border); line-height:1; user-select:none;}
 .starrow .star.on{color:var(--warn);}
+.reqhint{font-size:0.72rem; color:var(--warn); margin-top:2px;}
 .tagpill{display:inline-flex; align-items:center; gap:4px; background:var(--accent-soft-15); color:var(--accent);
   border-radius:10px; padding:1px 6px 1px 8px; font-size:0.7rem;}
 .tagpill button{background:none; border:none; color:var(--accent); padding:0; margin:0; font-size:0.85rem; cursor:pointer; line-height:1;}
@@ -299,6 +300,7 @@ Cutlery"></textarea>
 <div id="toast"></div>
 <datalist id="categoryOptions"></datalist>
 <datalist id="locationOptions"></datalist>
+<datalist id="itemNameOptions"></datalist>
 
 <!-- Inventory statistics -->
 <div class="modal-bg" id="statsModal">
@@ -514,6 +516,7 @@ function loadDB(){
     db.catalog.forEach(i=>{
       if(!db.categories.some(c=>normKey(c)===normKey(i.category))) db.categories.push(i.category);
       if(i.weight==null) i.weight=0;
+      if(!i.requires) i.requires=[];
     });
     migrateToBatches();
     if(!db.locations) db.locations = KNOWN_LOCATIONS.slice();
@@ -678,6 +681,10 @@ function renderCategoryDatalist(){
 function renderLocationDatalist(){
   document.getElementById('locationOptions').innerHTML = uniqueLocations().map(l=>`<option value="${esc(l)}">`).join('');
 }
+function renderItemNameDatalist(){
+  const names = [...new Set(db.catalog.map(i=>i.name))].sort((a,b)=>a.localeCompare(b,'en'));
+  document.getElementById('itemNameOptions').innerHTML = names.map(n=>`<option value="${esc(n)}">`).join('');
+}
 function uniqueLocations(){
   const set = new Set(db.locations||KNOWN_LOCATIONS);
   db.catalog.forEach(i=>i.batches.forEach(b=>{ if(b.locTo) set.add(b.locTo); if(b.locFrom) set.add(b.locFrom); }));
@@ -723,10 +730,18 @@ function mergeItemBatches(sourceId, targetItem){
   const src = db.catalog.find(i=>i.id===sourceId);
   if(!src || src.id===targetItem.id) return;
   targetItem.batches.push(...src.batches);
-  // Don't silently discard the source's note/weight if the target doesn't have one set.
+  // Don't silently discard the source's note/weight/requirements if the target doesn't have any set.
   if(!targetItem.note && src.note) targetItem.note = src.note;
   if(!targetItem.weight && src.weight) targetItem.weight = src.weight;
+  if((!targetItem.requires||!targetItem.requires.length) && src.requires && src.requires.length) targetItem.requires = src.requires.slice();
   db.catalog = db.catalog.filter(i=>i.id!==sourceId);
+  // Also repoint anything that required the now-removed source item to the surviving target instead.
+  db.catalog.forEach(i=>{
+    if(i.requires && i.requires.includes(sourceId)){
+      i.requires = i.requires.filter(rid=>rid!==sourceId);
+      if(!i.requires.includes(targetItem.id)) i.requires.push(targetItem.id);
+    }
+  });
   // Trip references stay valid: batchId is unique and moves with the batch to the target item.
 }
 
@@ -755,7 +770,7 @@ function updateBestandViewBtn(){
   if(btn) btn.textContent = bestandCompactView ? '🔎 Expanded view' : '🔎 Simplified view';
 }
 function renderCatalog(){
-  renderCategoryDatalist(); renderLocationDatalist();
+  renderCategoryDatalist(); renderLocationDatalist(); renderItemNameDatalist();
   const search = document.getElementById('bSearch').value.trim().toLowerCase();
   const catSel = document.getElementById('bCat'); fillCategoryFilterSelect(catSel);
   const catF = catSel.value;
@@ -824,6 +839,15 @@ function renderCatalog(){
           <input type="text" list="categoryOptions" value="${esc(i.category)}" onchange="updateItem('${i.id}','category',this.value)"></div>
           <div><label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;">Weight per unit (kg)</label>
           <input type="number" min="0" step="0.01" value="${i.weight||0}" onchange="updateItem('${i.id}','weight',parseFloat(this.value)||0)"></div>
+          <div><label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;">Requires (optional)</label>
+          <div class="tags">
+            ${(i.requires||[]).map(rid=>{ const req=db.catalog.find(x=>x.id===rid); return req?`<span class="tagpill">${esc(req.name)}<button onclick="removeRequirement('${i.id}','${rid}')">✕</button></span>`:''; }).join('')}
+            <span class="tagadd">
+              <input type="text" class="taginput" list="itemNameOptions" id="reqinput_${i.id}" placeholder="+ Requires item…"
+                onkeydown="if(event.key==='Enter'){event.preventDefault(); addRequirement('${i.id}', this.value); this.value='';}">
+              <button type="button" class="tagconfirm" title="Add" onclick="var el=document.getElementById('reqinput_${i.id}'); addRequirement('${i.id}', el.value); el.value='';">✓</button>
+            </span>
+          </div></div>
           <div class="batches">
             <div class="batch-hdr">Batches (${totalQty(i)}x total${i.weight?' · '+(i.weight*totalQty(i)).toFixed(2)+' kg total':''})</div>
             ${i.batches.map(b=>`<div class="batch-row">
@@ -886,6 +910,7 @@ function bulkDelete(){
     const item = db.catalog.find(i=>i.id===id); if(!item) return;
     const batchIds = new Set(item.batches.map(b=>b.id));
     db.catalog = db.catalog.filter(i=>i.id!==id);
+    db.catalog.forEach(i=>{ if(i.requires) i.requires = i.requires.filter(rid=>rid!==id); });
     db.trips.forEach(t=>{ t.items = t.items.filter(ti=>!batchIds.has(ti.batchId)); });
   });
   selectedBestand.clear(); saveDB(); renderCatalog(); toast('Item(s) deleted');
@@ -935,6 +960,20 @@ function updateItem(id, field, value){
   }
   saveDB(); renderCatalog();
 }
+function addRequirement(itemId, name){
+  name = (name||'').trim(); if(!name) return;
+  const item = db.catalog.find(i=>i.id===itemId); if(!item) return;
+  const target = db.catalog.find(i=>normKey(i.name)===normKey(name) && i.id!==itemId);
+  if(!target){ toast(`No item named "${name}" found`); renderCatalog(); return; }
+  if(!item.requires) item.requires=[];
+  if(!item.requires.includes(target.id)) item.requires.push(target.id);
+  saveDB(); renderCatalog();
+}
+function removeRequirement(itemId, requiredId){
+  const item = db.catalog.find(i=>i.id===itemId); if(!item) return;
+  item.requires = (item.requires||[]).filter(rid=>rid!==requiredId);
+  saveDB(); renderCatalog();
+}
 function addBatch(itemId){
   const item = db.catalog.find(i=>i.id===itemId); if(!item) return;
   item.batches.push({id:genBatchId(), qty:1, locTo:'', locFrom:''});
@@ -970,6 +1009,7 @@ function deleteItem(id){
   if(!confirm(msg)) return;
   const batchIds = new Set(item.batches.map(b=>b.id));
   db.catalog = db.catalog.filter(i=>i.id!==id);
+  db.catalog.forEach(i=>{ if(i.requires) i.requires = i.requires.filter(rid=>rid!==id); });
   db.trips.forEach(t=>{ t.items = t.items.filter(ti=>!batchIds.has(ti.batchId)); });
   selectedBestand.delete(id);
   saveDB(); renderCatalog(); toast('Item deleted');
@@ -1016,7 +1056,7 @@ function checkAndCreateItem(draft, onDone){
 }
 function createItemRaw(draft, onDone){
   const batch = {id:genBatchId(), qty:draft.qty, locTo:draft.locTo||'', locFrom:draft.locFrom||''};
-  const item = {id:genId(), name:draft.name, category:draft.category, note:draft.note||'', active: draft.active!==false, weight: draft.weight||0, batches:[batch]};
+  const item = {id:genId(), name:draft.name, category:draft.category, note:draft.note||'', active: draft.active!==false, weight: draft.weight||0, requires:[], batches:[batch]};
   db.catalog.push(item); saveDB();
   onDone && onDone(item, batch);
 }
@@ -1238,6 +1278,8 @@ function renderTripDetail(id){
   const tagF = document.getElementById('dTag').value;
   const groupMode = document.getElementById('dGroup').value;
 
+  const presentItemIds = new Set(t.items.map(ti=>{ const found=resolveBatch(ti.batchId); return found?found.item.id:null; }).filter(Boolean));
+
   let rows = t.items.map(ti=>{
     const found = resolveBatch(ti.batchId);
     return found ? {ti, item:found.item, batch:found.batch} : null;
@@ -1281,12 +1323,14 @@ function renderTripDetail(id){
         const loc = r.ti.packed ? (r.batch.locTo||'—') : (r.batch.locFrom||r.batch.locTo||'—');
         const locLabel = r.ti.packed ? 'now' : 'currently';
         const tags = r.ti.tags||[];
+        const missingReqs = (r.item.requires||[]).map(rid=>db.catalog.find(c=>c.id===rid)).filter(req=>req && !presentItemIds.has(req.id));
         return `<div class="itemrow">
           <input type="checkbox" ${r.ti.packed?'checked':''} onchange="toggleTripItem('${t.id}','${r.ti.batchId}',this.checked)">
           <input type="checkbox" title="select" ${selectedTripItems.has(r.ti.batchId)?'checked':''} onchange="toggleSelectTripItem('${r.ti.batchId}',this.checked)">
           <div class="name ${r.ti.packed?'packed':''}">
             <b>${esc(r.item.name)}</b>
             <span class="loc">📍 ${locLabel}: ${esc(loc)}${r.item.note?' · '+esc(r.item.note):''}${r.item.weight?' · '+(r.item.weight*r.ti.qty).toFixed(2)+' kg':''}</span>
+            ${missingReqs.length?`<div class="reqhint">⚠ also needs: ${missingReqs.map(x=>esc(x.name)).join(', ')}</div>`:''}
             <div class="tags">
               ${tags.map(tg=>`<span class="tagpill">${esc(tg)}<button onclick="removeTag('${t.id}','${r.ti.batchId}','${esc(tg)}')">✕</button></span>`).join('')}
               <span class="tagadd">
@@ -1587,7 +1631,7 @@ function mergeTripItemRows(rows){
     const locFrom = resolveLocation(row.batchLocFrom);
     let item = db.catalog.find(i=>normKey(i.name)===normKey(row.itemName) && i.category===category);
     if(!item){
-      item = {id:genId(), name:row.itemName, category, note:row.itemNote||'', active:true, weight:row.itemWeight||0, batches:[]};
+      item = {id:genId(), name:row.itemName, category, note:row.itemNote||'', active:true, weight:row.itemWeight||0, requires:[], batches:[]};
       db.catalog.push(item);
     }
     let batch = item.batches.find(b=>normKey(b.locTo)===normKey(locTo) && normKey(b.locFrom)===normKey(locFrom));
@@ -2114,6 +2158,7 @@ function importJSON(evt){
       if(!db.locations) db.locations = KNOWN_LOCATIONS.slice();
       db.catalog.forEach(i=>{
         if(i.weight==null) i.weight=0;
+        if(!i.requires) i.requires=[];
         i.batches.forEach(b=>{
           if(b.locTo && !db.locations.some(l=>normKey(l)===normKey(b.locTo))) db.locations.push(b.locTo);
           if(b.locFrom && !db.locations.some(l=>normKey(l)===normKey(b.locFrom))) db.locations.push(b.locFrom);
