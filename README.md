@@ -28,6 +28,7 @@ Runs as a website, an installable Progressive Web App (desktop and iOS), or a st
 - Usage badge on every item shows at a glance whether it's currently used in a packing list, and in how many.
 - **Average usefulness rating** (★ badge): once you've rated items after a trip (see *Packing lists* below), each catalog item shows its average rating across the packing lists you've chosen to count toward it — a quick "was this actually worth bringing?" view over time.
 - Filter by category, current location, active status, list usage, or rating (including "not yet rated").
+- **Weight per unit** (optional, kg): set it once per item and totals show up automatically — in the inventory (weight × quantity), per packing list, per group within a list, and as an overall figure in the stats view.
 - Bulk add: create several items in one category in one pass.
 
 <p align="center">
@@ -63,7 +64,7 @@ Runs as a website, an installable Progressive Web App (desktop and iOS), or a st
 - Light and dark theme.
 - Manage your own categories and locations (rename, delete, merge).
 - Warnings before deleting anything still referenced by a packing list — no silent data loss.
-- A small stats view (total items, batches, units, how many are actively used) for a sanity check on a growing inventory.
+- A small stats view (total items, batches, units, total weight, how many are actively used) for a sanity check on a growing inventory.
 
 <p align="center">
   <img src="screenshots/menu.png" width="220">

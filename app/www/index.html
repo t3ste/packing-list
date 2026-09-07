@@ -348,6 +348,7 @@ Cutlery"></textarea>
       <input type="text" id="mNiLocTo" list="locationOptions" placeholder="Destination">
       <input type="text" id="mNiLocFrom" list="locationOptions" placeholder="Origin">
       <textarea id="mNiNote" placeholder="Note" class="full" rows="2"></textarea>
+      <input type="number" id="mNiWeight" placeholder="Weight per unit (kg, optional)" min="0" step="0.01">
     </div>
     <div class="row-inline" style="justify-content:flex-end;">
       <button class="secondary" onclick="closeNewItemModal()">Cancel</button>
@@ -520,6 +521,7 @@ function loadDB(){
     if(!db.categories) db.categories = CATEGORIES_DEFAULT.slice();
     db.catalog.forEach(i=>{
       if(!db.categories.some(c=>normKey(c)===normKey(i.category))) db.categories.push(i.category);
+      if(i.weight==null) i.weight=0;
     });
     migrateToBatches();
     if(!db.locations) db.locations = KNOWN_LOCATIONS.slice();
@@ -636,7 +638,8 @@ function computeInventoryStats(){
   const categoriesInUse = new Set(db.catalog.map(i=>i.category)).size;
   const locationsInUse = new Set(db.catalog.flatMap(i=>i.batches.flatMap(b=>[b.locTo,b.locFrom].filter(Boolean)))).size;
   const usedItems = db.catalog.filter(i=>tripsUsingItem(i).length>0).length;
-  return {totalItems, active, inactive, totalBatches, totalUnits, categoriesInUse, locationsInUse, usedItems, unusedItems: totalItems-usedItems, totalTrips: db.trips.length};
+  const totalWeightActive = db.catalog.filter(i=>i.active).reduce((s,i)=>s+(i.weight||0)*totalQty(i),0);
+  return {totalItems, active, inactive, totalBatches, totalUnits, categoriesInUse, locationsInUse, usedItems, unusedItems: totalItems-usedItems, totalTrips: db.trips.length, totalWeightActive};
 }
 function openStatsModal(){
   const s = computeInventoryStats();
@@ -646,6 +649,7 @@ function openStatsModal(){
     <li><b>${s.categoriesInUse}</b> categories in use, <b>${s.locationsInUse}</b> locations in use</li>
     <li><b>${s.usedItems}</b> item(s) used in at least one packing list, <b>${s.unusedItems}</b> not used in any</li>
     <li><b>${s.totalTrips}</b> packing list(s) total</li>
+    <li><b>${s.totalWeightActive.toFixed(2)}</b> kg total weight (active items)</li>
   `;
   document.getElementById('statsModal').classList.add('show');
 }
@@ -819,8 +823,10 @@ function renderCatalog(){
           ${usageBadge}${ratingBadge}
           <div><label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;">Category</label>
           <input type="text" list="categoryOptions" value="${esc(i.category)}" onchange="updateItem('${i.id}','category',this.value)"></div>
+          <div><label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;">Weight per unit (kg)</label>
+          <input type="number" min="0" step="0.01" value="${i.weight||0}" onchange="updateItem('${i.id}','weight',parseFloat(this.value)||0)"></div>
           <div class="batches">
-            <div class="batch-hdr">Batches (${totalQty(i)}x total)</div>
+            <div class="batch-hdr">Batches (${totalQty(i)}x total${i.weight?' · '+(i.weight*totalQty(i)).toFixed(2)+' kg total':''})</div>
             ${i.batches.map(b=>`<div class="batch-row">
               <input type="number" min="0" value="${b.qty}" title="Quantity" onchange="updateBatch('${i.id}','${b.id}','qty',parseInt(this.value)||0)">
               <input type="text" list="locationOptions" value="${esc(b.locTo)}" placeholder="Destination" onchange="updateBatch('${i.id}','${b.id}','locTo',this.value)">
@@ -972,7 +978,7 @@ function deleteItem(id){
 
 // ---- New item (modal, with duplicate check) ----
 function openNewItemModal(){
-  ['mNiName','mNiCat','mNiQty','mNiLocTo','mNiLocFrom','mNiNote'].forEach(id=>document.getElementById(id).value='');
+  ['mNiName','mNiCat','mNiQty','mNiLocTo','mNiLocFrom','mNiNote','mNiWeight'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('mNiQty').value=1;
   document.getElementById('newItemModal').classList.add('show');
 }
@@ -985,7 +991,8 @@ function submitNewItemModal(){
     qty: parseInt(document.getElementById('mNiQty').value)||1,
     locTo: document.getElementById('mNiLocTo').value.trim(),
     locFrom: document.getElementById('mNiLocFrom').value.trim(),
-    note: document.getElementById('mNiNote').value.trim(), active:true
+    note: document.getElementById('mNiNote').value.trim(), active:true,
+    weight: parseFloat(document.getElementById('mNiWeight').value)||0
   };
   closeNewItemModal();
   checkAndCreateItem(draft, ()=>{ renderCatalog(); toast('Item created'); });
@@ -1010,7 +1017,7 @@ function checkAndCreateItem(draft, onDone){
 }
 function createItemRaw(draft, onDone){
   const batch = {id:genBatchId(), qty:draft.qty, locTo:draft.locTo||'', locFrom:draft.locFrom||''};
-  const item = {id:genId(), name:draft.name, category:draft.category, note:draft.note||'', active: draft.active!==false, batches:[batch]};
+  const item = {id:genId(), name:draft.name, category:draft.category, note:draft.note||'', active: draft.active!==false, weight: draft.weight||0, batches:[batch]};
   db.catalog.push(item); saveDB();
   onDone && onDone(item, batch);
 }
@@ -1211,8 +1218,9 @@ function renderTripDetail(id){
   const total = t.items.reduce((s,i)=>s+i.qty,0);
   const packed = t.items.filter(i=>i.packed).reduce((s,i)=>s+i.qty,0);
   const pct = total? Math.round(packed/total*100):0;
+  const totalWeight = t.items.reduce((s,ti)=>{ const found=resolveBatch(ti.batchId); return s+(found?(found.item.weight||0)*ti.qty:0); },0);
   document.getElementById('tripProgress').innerHTML =
-    `<div class="meta" style="color:var(--muted); font-size:0.82rem;">${packed}/${total} packed (${pct}%)</div>
+    `<div class="meta" style="color:var(--muted); font-size:0.82rem;">${packed}/${total} packed (${pct}%)${totalWeight?' · '+totalWeight.toFixed(2)+' kg total':''}</div>
      <div class="progress"><div style="width:${pct}%"></div></div>`;
 
   const allTags = [...new Set(t.items.flatMap(i=>i.tags||[]))].sort((a,b)=>a.localeCompare(b,'en'));
@@ -1261,10 +1269,11 @@ function renderTripDetail(id){
   wrap.innerHTML = groupOrder.map(g=>{
     const list = byGroup[g].sort((a,b)=>a.item.name.localeCompare(b.item.name,'en'));
     const packedCount = list.filter(r=>r.ti.packed).length;
+    const groupWeight = list.reduce((s,r)=>s+(r.item.weight||0)*r.ti.qty,0);
     const gc = colorFor(g);
     const gOpen = !tripClosedGroups.has(g);
     return `<details ${gOpen?'open':''} data-key="${esc(g)}" data-scope="trip" ontoggle="onDetailsToggle(this)" style="border-left:4px solid ${gc};">
-      <summary style="color:${gc};">${esc(g)} <span class="cnt">${packedCount}/${list.length} packed</span></summary>
+      <summary style="color:${gc};">${esc(g)} <span class="cnt">${packedCount}/${list.length} packed${groupWeight?' · '+groupWeight.toFixed(2)+' kg':''}</span></summary>
       <div>${list.map(r=>{
         const loc = r.ti.packed ? (r.batch.locTo||'—') : (r.batch.locFrom||r.batch.locTo||'—');
         const locLabel = r.ti.packed ? 'now' : 'currently';
@@ -1274,7 +1283,7 @@ function renderTripDetail(id){
           <input type="checkbox" title="select" ${selectedTripItems.has(r.ti.batchId)?'checked':''} onchange="toggleSelectTripItem('${r.ti.batchId}',this.checked)">
           <div class="name ${r.ti.packed?'packed':''}">
             <b>${esc(r.item.name)}</b>
-            <span class="loc">📍 ${locLabel}: ${esc(loc)}${r.item.note?' · '+esc(r.item.note):''}</span>
+            <span class="loc">📍 ${locLabel}: ${esc(loc)}${r.item.note?' · '+esc(r.item.note):''}${r.item.weight?' · '+(r.item.weight*r.ti.qty).toFixed(2)+' kg':''}</span>
             <div class="tags">
               ${tags.map(tg=>`<span class="tagpill">${esc(tg)}<button onclick="removeTag('${t.id}','${r.ti.batchId}','${esc(tg)}')">✕</button></span>`).join('')}
               <span class="tagadd">
@@ -1571,6 +1580,7 @@ async function exportTripFile(){
     const found = resolveBatch(ti.batchId); if(!found) return null;
     return {
       itemName: found.item.name, itemCategory: found.item.category, itemNote: found.item.note||'',
+      itemWeight: found.item.weight||0,
       batchQty: found.batch.qty, batchLocTo: found.batch.locTo||'', batchLocFrom: found.batch.locFrom||'',
       qty: ti.qty, packed: !!ti.packed, tags: ti.tags||[], rating: ti.rating||0
     };
@@ -1603,7 +1613,7 @@ function mergeTripItemRows(rows){
     const locFrom = resolveLocation(row.batchLocFrom);
     let item = db.catalog.find(i=>normKey(i.name)===normKey(row.itemName) && i.category===category);
     if(!item){
-      item = {id:genId(), name:row.itemName, category, note:row.itemNote||'', active:true, batches:[]};
+      item = {id:genId(), name:row.itemName, category, note:row.itemNote||'', active:true, weight:row.itemWeight||0, batches:[]};
       db.catalog.push(item);
     }
     let batch = item.batches.find(b=>normKey(b.locTo)===normKey(locTo) && normKey(b.locFrom)===normKey(locFrom));
@@ -1661,6 +1671,7 @@ function buildTripTxt(trip){
       if(r.batch.locTo) out += `  to: ${r.batch.locTo}\n`;
       if(r.batch.locFrom) out += `  from: ${r.batch.locFrom}\n`;
       if(r.item.note) out += `  note: ${r.item.note}\n`;
+      if(r.item.weight) out += `  weight: ${r.item.weight}\n`;
       if(r.ti.tags && r.ti.tags.length) out += `  tags: ${r.ti.tags.join(', ')}\n`;
       if(r.ti.rating) out += `  rating: ${r.ti.rating}\n`;
     });
@@ -1710,12 +1721,12 @@ function parseTripTxt(text){
         result[section.kind].push({text:name, done:checked});
         currentItem = null;
       } else {
-        currentItem = {itemName:name, itemCategory:section.category, itemNote:'', batchQty:qty, batchLocTo:'', batchLocFrom:'', qty, packed:checked, tags:[], rating:0};
+        currentItem = {itemName:name, itemCategory:section.category, itemNote:'', itemWeight:0, batchQty:qty, batchLocTo:'', batchLocFrom:'', qty, packed:checked, tags:[], rating:0};
         result.items.push(currentItem);
       }
       continue;
     }
-    const detail = raw.match(/^\s+(to|from|note|tags|rating):\s*(.*)$/i);
+    const detail = raw.match(/^\s+(to|from|note|tags|rating|weight):\s*(.*)$/i);
     if(detail && currentItem && section.kind==='items'){
       const key = detail[1].toLowerCase(); const val = detail[2].trim();
       if(key==='to') currentItem.batchLocTo = val;
@@ -1723,6 +1734,7 @@ function parseTripTxt(text){
       else if(key==='note') currentItem.itemNote = val;
       else if(key==='tags') currentItem.tags = splitTags(val);
       else if(key==='rating') currentItem.rating = parseInt(val)||0;
+      else if(key==='weight') currentItem.itemWeight = parseFloat(val)||0;
     }
   }
   if(!result.items.length && !result.tasksBefore.length && !result.tasksAfter.length){
@@ -2106,10 +2118,13 @@ function importJSON(evt){
       if(!db.categories) db.categories = CATEGORIES_DEFAULT.slice();
       migrateToBatches();
       if(!db.locations) db.locations = KNOWN_LOCATIONS.slice();
-      db.catalog.forEach(i=>i.batches.forEach(b=>{
-        if(b.locTo && !db.locations.some(l=>normKey(l)===normKey(b.locTo))) db.locations.push(b.locTo);
-        if(b.locFrom && !db.locations.some(l=>normKey(l)===normKey(b.locFrom))) db.locations.push(b.locFrom);
-      }));
+      db.catalog.forEach(i=>{
+        if(i.weight==null) i.weight=0;
+        i.batches.forEach(b=>{
+          if(b.locTo && !db.locations.some(l=>normKey(l)===normKey(b.locTo))) db.locations.push(b.locTo);
+          if(b.locFrom && !db.locations.some(l=>normKey(l)===normKey(b.locFrom))) db.locations.push(b.locFrom);
+        });
+      });
       db.trips.forEach(t=>{
         t.items.forEach(ti=>{ if(!ti.tags) ti.tags=[]; if(ti.rating==null) ti.rating=0; });
         if(!t.tasksBefore) t.tasksBefore=[];
