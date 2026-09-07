@@ -176,56 +176,57 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
   <div class="menuWrap">
     <button class="menuToggle" id="menuToggleBtn" onclick="toggleMainMenu()" aria-label="Menu" title="Menu">☰</button>
     <div class="mainMenu" id="mainMenu">
-      <button class="secondary" onclick="openHelpModal(); closeMainMenu();">ℹ️ Help</button>
+      <button class="secondary" data-i18n="menu.help" onclick="openHelpModal(); closeMainMenu();">ℹ️ Help</button>
       <button class="secondary" id="themeToggleBtn" onclick="toggleTheme(); closeMainMenu();">🎨 Light theme</button>
+      <button class="secondary" id="langToggleBtn" onclick="toggleLang(); closeMainMenu();">🌍 Deutsch</button>
       <div class="menuDivider"></div>
-      <button class="secondary" onclick="openExportOptsModal(); closeMainMenu();">⬇ Export</button>
-      <button class="secondary" onclick="openImportOptsModal(); closeMainMenu();">⬆ Import</button>
+      <button class="secondary" data-i18n="menu.export" onclick="openExportOptsModal(); closeMainMenu();">⬇ Export</button>
+      <button class="secondary" data-i18n="menu.import" onclick="openImportOptsModal(); closeMainMenu();">⬆ Import</button>
       <button class="secondary" id="linkFileBtn" style="display:none" onclick="handleLinkButtonClick(); closeMainMenu();">🔗 Link</button>
-      <button class="secondary" onclick="openWebdavModal(); closeMainMenu();">🌐 WebDAV</button>
+      <button class="secondary" data-i18n="menu.webdav" onclick="openWebdavModal(); closeMainMenu();">🌐 WebDAV</button>
     </div>
   </div>
 </div>
 
 <div class="tabbar">
-  <button id="tabBestand" class="active" onclick="showTab('bestand')">Inventory</button>
-  <button id="tabTrips" onclick="showTab('trips')">Lists</button>
-  <button id="tabBulk" onclick="showTab('bulk')">Bulk Add</button>
-  <button id="tabManage" onclick="showTab('manage')">Manage</button>
+  <button id="tabBestand" class="active" data-i18n="tabs.inventory" onclick="showTab('bestand')">Inventory</button>
+  <button id="tabTrips" data-i18n="tabs.lists" onclick="showTab('trips')">Lists</button>
+  <button id="tabBulk" data-i18n="tabs.bulk" onclick="showTab('bulk')">Bulk Add</button>
+  <button id="tabManage" data-i18n="tabs.manage" onclick="showTab('manage')">Manage</button>
 </div>
 
 <div id="view-bestand" class="view active">
   <div class="toolbar">
-    <input type="search" id="bSearch" placeholder="Search…" oninput="renderCatalog()">
-    <select id="bCat" onchange="renderCatalog()" aria-label="Filter by category"><option value="">All categories</option></select>
-    <select id="bLoc" onchange="renderCatalog()" aria-label="Filter by location">
-      <option value="">All locations</option>
-      <option value="__none__">Incomplete location (destination or origin missing)</option>
+    <input type="search" id="bSearch" data-i18n-placeholder="common.search" placeholder="Search…" oninput="renderCatalog()">
+    <select id="bCat" onchange="renderCatalog()" data-i18n-aria-label="inv.filterCategory" aria-label="Filter by category"><option value="" data-i18n="inv.allCategories">All categories</option></select>
+    <select id="bLoc" onchange="renderCatalog()" data-i18n-aria-label="inv.filterLocation" aria-label="Filter by location">
+      <option value="" data-i18n="inv.allLocations">All locations</option>
+      <option value="__none__" data-i18n="inv.incompleteLocation">Incomplete location (destination or origin missing)</option>
     </select>
-    <select id="bStatus" onchange="renderCatalog()" aria-label="Filter by status">
-      <option value="active">Active only</option>
-      <option value="all">All (active + inactive)</option>
-      <option value="inactive">Inactive only</option>
+    <select id="bStatus" onchange="renderCatalog()" data-i18n-aria-label="inv.filterStatus" aria-label="Filter by status">
+      <option value="active" data-i18n="inv.activeOnly">Active only</option>
+      <option value="all" data-i18n="inv.allActiveInactive">All (active + inactive)</option>
+      <option value="inactive" data-i18n="inv.inactiveOnly">Inactive only</option>
     </select>
-    <select id="bUsage" onchange="renderCatalog()" aria-label="Filter by list usage">
-      <option value="">All items</option>
-      <option value="used">Used in a list</option>
-      <option value="unused">Not used in any list</option>
+    <select id="bUsage" onchange="renderCatalog()" data-i18n-aria-label="inv.filterUsage" aria-label="Filter by list usage">
+      <option value="" data-i18n="inv.allItems">All items</option>
+      <option value="used" data-i18n="inv.usedInList">Used in a list</option>
+      <option value="unused" data-i18n="inv.unusedInList">Not used in any list</option>
     </select>
-    <select id="bRating" onchange="renderCatalog()" aria-label="Filter by rating">
-      <option value="">All ratings</option>
-      <option value="__none__">Not yet rated</option>
-      <option value="1">★ (rounds to 1)</option>
-      <option value="2">★★ (rounds to 2)</option>
-      <option value="3">★★★ (rounds to 3)</option>
+    <select id="bRating" onchange="renderCatalog()" data-i18n-aria-label="inv.filterRating" aria-label="Filter by rating">
+      <option value="" data-i18n="inv.allRatings">All ratings</option>
+      <option value="__none__" data-i18n="inv.notYetRated">Not yet rated</option>
+      <option value="1" data-i18n="inv.rating1">★ (rounds to 1)</option>
+      <option value="2" data-i18n="inv.rating2">★★ (rounds to 2)</option>
+      <option value="3" data-i18n="inv.rating3">★★★ (rounds to 3)</option>
     </select>
-    <button class="ghost small" onclick="toggleAllBestandGroups()" id="bToggleAllBtn">Collapse all</button>
+    <button class="ghost small" onclick="toggleAllBestandGroups()" id="bToggleAllBtn" data-i18n="common.collapseAll">Collapse all</button>
     <button class="ghost small" onclick="toggleBestandView()" id="bViewToggleBtn">🔎 Simplified view</button>
-    <button onclick="openNewItemModal()">+ New item</button>
+    <button onclick="openNewItemModal()" data-i18n="inv.newItem">+ New item</button>
   </div>
   <div class="meta" style="color:var(--muted); font-size:0.82rem; margin:-4px 0 8px; display:flex; align-items:center; gap:8px;">
     <span id="bStatsText"></span>
-    <button class="ghost small" onclick="openStatsModal()" title="More statistics">📊 Stats</button>
+    <button class="ghost small" onclick="openStatsModal()" data-i18n-title="inv.statsTitle" title="More statistics" data-i18n="inv.stats">📊 Stats</button>
   </div>
   <div id="bSelectBar"></div>
   <div id="catalogList"></div>
@@ -234,10 +235,10 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
 <div id="view-trips" class="view">
   <div id="tripsListView">
     <div class="toolbar">
-      <button onclick="createTrip()">+ New packing list</button>
-      <button class="secondary" onclick="document.getElementById('importTripFile').click()">⬆ Import list from JSON</button>
+      <button onclick="createTrip()" data-i18n="trips.newList">+ New packing list</button>
+      <button class="secondary" onclick="document.getElementById('importTripFile').click()" data-i18n="trips.importJson">⬆ Import list from JSON</button>
       <input type="file" id="importTripFile" accept="application/json" style="display:none" onchange="importTripFile(event)">
-      <button class="secondary" onclick="document.getElementById('importTripTextFile').click()">⬆ Import list from TXT</button>
+      <button class="secondary" onclick="document.getElementById('importTripTextFile').click()" data-i18n="trips.importTxt">⬆ Import list from TXT</button>
       <input type="file" id="importTripTextFile" accept=".txt,text/plain" style="display:none" onchange="importTripText(event)">
     </div>
     <div id="tripsList"></div>
@@ -247,31 +248,31 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
 
 <div id="view-bulk" class="view">
   <div class="manage-section">
-    <h3>Add multiple items at once</h3>
+    <h3 data-i18n="bulk.title">Add multiple items at once</h3>
     <div class="newitem-form">
       <div>
-        <label style="font-size:0.72rem;color:var(--muted);">Category</label>
-        <input type="text" id="baCat" list="categoryOptions" placeholder="e.g. Kitchen (new or existing)">
+        <label style="font-size:0.72rem;color:var(--muted);" data-i18n="common.category">Category</label>
+        <input type="text" id="baCat" list="categoryOptions" data-i18n-placeholder="bulk.categoryPh" placeholder="e.g. Kitchen (new or existing)">
       </div>
       <div>
-        <label style="font-size:0.72rem;color:var(--muted);">Quantity per item (default)</label>
+        <label style="font-size:0.72rem;color:var(--muted);" data-i18n="bulk.qtyPerItem">Quantity per item (default)</label>
         <input type="number" id="baQtyDefault" value="1" min="1">
       </div>
       <div>
-        <label style="font-size:0.72rem;color:var(--muted);">Destination (optional, for all)</label>
+        <label style="font-size:0.72rem;color:var(--muted);" data-i18n="bulk.destOptional">Destination (optional, for all)</label>
         <input type="text" id="baLocTo" list="locationOptions">
       </div>
       <div>
-        <label style="font-size:0.72rem;color:var(--muted);">Origin (optional, for all)</label>
+        <label style="font-size:0.72rem;color:var(--muted);" data-i18n="bulk.originOptional">Origin (optional, for all)</label>
         <input type="text" id="baLocFrom" list="locationOptions">
       </div>
       <div class="full">
-        <label style="font-size:0.72rem;color:var(--muted);">Item names (one name per line)</label>
-        <textarea id="baNames" rows="6" placeholder="Bowl
+        <label style="font-size:0.72rem;color:var(--muted);" data-i18n="bulk.namesLabel">Item names (one name per line)</label>
+        <textarea id="baNames" rows="6" data-i18n-placeholder="bulk.namesPh" placeholder="Bowl
 Pan
 Cutlery"></textarea>
       </div>
-      <button class="full" onclick="previewBulkAdd()">Create preview</button>
+      <button class="full" onclick="previewBulkAdd()" data-i18n="bulk.preview">Create preview</button>
     </div>
     <div id="baPreviewWrap"></div>
   </div>
@@ -279,21 +280,21 @@ Cutlery"></textarea>
 
 <div id="view-manage" class="view">
   <div class="manage-section">
-    <h3>Categories</h3>
+    <h3 data-i18n="common.categories">Categories</h3>
     <div class="row-inline" style="margin-bottom:8px;">
-      <input type="text" id="newCatName" placeholder="New category…" style="flex:1;">
-      <button class="small" onclick="addCategoryFromInput()">+ Create</button>
+      <input type="text" id="newCatName" data-i18n-placeholder="manage.newCategoryPh" placeholder="New category…" style="flex:1;">
+      <button class="small" onclick="addCategoryFromInput()" data-i18n="common.create">+ Create</button>
     </div>
     <div id="manageCatList"></div>
   </div>
   <div class="manage-section">
-    <h3>Locations (destination &amp; origin)</h3>
+    <h3 data-i18n="manage.locationsTitle">Locations (destination &amp; origin)</h3>
     <div id="manageLocList"></div>
   </div>
   <div class="danger-zone">
-    <h3>⚠ Danger zone</h3>
-    <p class="meta" style="color:var(--muted); font-size:0.82rem;">Permanently deletes the entire item inventory (packing lists remain as empty shells).</p>
-    <button class="danger" onclick="wipeCatalog()">Delete entire inventory</button>
+    <h3 data-i18n="manage.dangerZone">⚠ Danger zone</h3>
+    <p class="meta" style="color:var(--muted); font-size:0.82rem;" data-i18n="manage.dangerZoneDesc">Permanently deletes the entire item inventory (packing lists remain as empty shells).</p>
+    <button class="danger" onclick="wipeCatalog()" data-i18n="manage.deleteInventory">Delete entire inventory</button>
   </div>
 </div>
 
@@ -306,10 +307,10 @@ Cutlery"></textarea>
 <!-- Inventory statistics -->
 <div class="modal-bg" id="statsModal">
   <div class="modal">
-    <h2>📊 Inventory statistics</h2>
+    <h2 data-i18n="inv.statsHeading">📊 Inventory statistics</h2>
     <ul class="help-list" id="statsList"></ul>
     <div class="row-inline" style="justify-content:flex-end; margin-top:12px;">
-      <button onclick="closeStatsModal()">Close</button>
+      <button onclick="closeStatsModal()" data-i18n="common.close">Close</button>
     </div>
   </div>
 </div>
@@ -317,11 +318,11 @@ Cutlery"></textarea>
 <!-- Export options -->
 <div class="modal-bg" id="exportOptsModal">
   <div class="modal">
-    <h2>Export options</h2>
-    <label><input type="checkbox" id="exportIncludePhotos" checked> Include photos (larger file)</label>
+    <h2 data-i18n="modal.exportOpts.title">Export options</h2>
+    <label><input type="checkbox" id="exportIncludePhotos" checked> <span data-i18n="modal.exportOpts.includePhotos">Include photos (larger file)</span></label>
     <div class="row-inline" style="justify-content:flex-end; margin-top:12px;">
-      <button class="secondary" onclick="closeExportOptsModal()">Cancel</button>
-      <button onclick="confirmExportJSON()">Export</button>
+      <button class="secondary" onclick="closeExportOptsModal()" data-i18n="common.cancel">Cancel</button>
+      <button onclick="confirmExportJSON()" data-i18n="menu.exportShort">Export</button>
     </div>
   </div>
 </div>
@@ -329,11 +330,11 @@ Cutlery"></textarea>
 <!-- Import options -->
 <div class="modal-bg" id="importOptsModal">
   <div class="modal">
-    <h2>Import options</h2>
-    <label><input type="checkbox" id="importIncludePhotos" checked> Include photos from this file</label>
+    <h2 data-i18n="modal.importOpts.title">Import options</h2>
+    <label><input type="checkbox" id="importIncludePhotos" checked> <span data-i18n="modal.importOpts.includePhotos">Include photos from this file</span></label>
     <div class="row-inline" style="justify-content:flex-end; margin-top:12px;">
-      <button class="secondary" onclick="closeImportOptsModal()">Cancel</button>
-      <button onclick="chooseImportFile()">Choose file…</button>
+      <button class="secondary" onclick="closeImportOptsModal()" data-i18n="common.cancel">Cancel</button>
+      <button onclick="chooseImportFile()" data-i18n="modal.importOpts.chooseFile">Choose file…</button>
     </div>
   </div>
 </div>
@@ -342,19 +343,19 @@ Cutlery"></textarea>
 <!-- WebDAV sync -->
 <div class="modal-bg" id="webdavModal">
   <div class="modal">
-    <h2>🌐 WebDAV sync</h2>
-    <p class="help-list" style="margin:0 0 10px; font-size:0.82rem; color:var(--muted);">Reads/writes one shared file over WebDAV, like the local file link but over the network. There's no conflict resolution — whoever saves last wins. The server must allow requests from this app (CORS).</p>
-    <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;">URL</label>
+    <h2 data-i18n="modal.webdav.title">🌐 WebDAV sync</h2>
+    <p class="help-list" style="margin:0 0 10px; font-size:0.82rem; color:var(--muted);" data-i18n="modal.webdav.desc">Reads/writes one shared file over WebDAV, like the local file link but over the network. There's no conflict resolution — whoever saves last wins. The server must allow requests from this app (CORS).</p>
+    <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;" data-i18n="modal.webdav.url">URL</label>
     <input type="text" id="webdavUrlInput" placeholder="https://cloud.example.com/remote.php/dav/files/you/packing-list.json" class="full">
-    <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;">Username (optional)</label>
+    <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;" data-i18n="modal.webdav.username">Username (optional)</label>
     <input type="text" id="webdavUserInput" class="full">
-    <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;">Password (optional)</label>
+    <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;" data-i18n="modal.webdav.password">Password (optional)</label>
     <input type="password" id="webdavPassInput" class="full">
     <div class="row-inline" style="justify-content:flex-end; margin-top:12px;">
-      <button class="ghost" id="webdavDisconnectBtn" onclick="disconnectWebdav()" style="display:none;">Disconnect</button>
-      <button class="secondary" id="webdavPullBtn" onclick="pullFromWebdav()" style="display:none;">Pull now</button>
-      <button class="secondary" onclick="closeWebdavModal()">Cancel</button>
-      <button onclick="connectWebdav()">Save & connect</button>
+      <button class="ghost" id="webdavDisconnectBtn" onclick="disconnectWebdav()" style="display:none;" data-i18n="modal.webdav.disconnect">Disconnect</button>
+      <button class="secondary" id="webdavPullBtn" onclick="pullFromWebdav()" style="display:none;" data-i18n="modal.webdav.pullNow">Pull now</button>
+      <button class="secondary" onclick="closeWebdavModal()" data-i18n="common.cancel">Cancel</button>
+      <button onclick="connectWebdav()" data-i18n="modal.webdav.connect">Save & connect</button>
     </div>
   </div>
 </div>
@@ -362,25 +363,25 @@ Cutlery"></textarea>
 <!-- Item picker (packing list: add items) -->
 <div class="modal-bg" id="pickerModal">
   <div class="modal">
-    <h2>Add items</h2>
+    <h2 data-i18n="modal.picker.title">Add items</h2>
     <div class="row-inline" style="margin-bottom:10px;">
-      <input type="search" id="pSearch" placeholder="Search inventory…" oninput="renderPicker()" style="flex:1;">
-      <select id="pCat" onchange="renderPicker()" aria-label="Filter by category"><option value="">All categories</option></select>
-      <select id="pLoc" onchange="renderPicker()" aria-label="Filter by current location"><option value="">All current locations</option></select>
+      <input type="search" id="pSearch" data-i18n-placeholder="modal.picker.searchPh" placeholder="Search inventory…" oninput="renderPicker()" style="flex:1;">
+      <select id="pCat" onchange="renderPicker()" data-i18n-aria-label="inv.filterCategory" aria-label="Filter by category"><option value="" data-i18n="inv.allCategories">All categories</option></select>
+      <select id="pLoc" onchange="renderPicker()" data-i18n-aria-label="modal.picker.filterCurrentLoc" aria-label="Filter by current location"><option value="" data-i18n="modal.picker.allCurrentLocations">All current locations</option></select>
     </div>
     <div id="pickerList"></div>
-    <p><a class="backlink" onclick="toggleNewItemForm()">+ create new item in inventory</a></p>
+    <p><a class="backlink" onclick="toggleNewItemForm()" data-i18n="modal.picker.createNew">+ create new item in inventory</a></p>
     <div class="newitem-form" id="newItemForm" style="display:none;">
-      <input type="text" id="niName" placeholder="Name">
-      <input type="text" id="niCat" list="categoryOptions" placeholder="Category (new or existing)">
-      <input type="number" id="niQty" placeholder="Quantity" value="1" min="1">
-      <input type="text" id="niLoc" list="locationOptions" placeholder="Destination (optional)">
-      <input type="text" id="niLocFrom" list="locationOptions" placeholder="Origin (optional)">
-      <button class="full small" onclick="quickAddCatalogItem()">Create &amp; add to list</button>
+      <input type="text" id="niName" data-i18n-placeholder="common.name" placeholder="Name">
+      <input type="text" id="niCat" list="categoryOptions" data-i18n-placeholder="modal.newItem.categoryPh" placeholder="Category (new or existing)">
+      <input type="number" id="niQty" data-i18n-placeholder="common.quantity" placeholder="Quantity" value="1" min="1">
+      <input type="text" id="niLoc" list="locationOptions" data-i18n-placeholder="common.destOptional" placeholder="Destination (optional)">
+      <input type="text" id="niLocFrom" list="locationOptions" data-i18n-placeholder="common.originOptional" placeholder="Origin (optional)">
+      <button class="full small" onclick="quickAddCatalogItem()" data-i18n="modal.picker.createAndAdd">Create &amp; add to list</button>
     </div>
     <div class="row-inline" style="justify-content:flex-end; margin-top:12px;">
-      <button class="secondary" onclick="closePicker()">Cancel</button>
-      <button onclick="confirmPicker()">Add selected</button>
+      <button class="secondary" onclick="closePicker()" data-i18n="common.cancel">Cancel</button>
+      <button onclick="confirmPicker()" data-i18n="modal.picker.addSelected">Add selected</button>
     </div>
   </div>
 </div>
@@ -388,19 +389,19 @@ Cutlery"></textarea>
 <!-- New item (inventory) -->
 <div class="modal-bg" id="newItemModal">
   <div class="modal">
-    <h2>New item</h2>
+    <h2 data-i18n="modal.newItem.title">New item</h2>
     <div class="newitem-form">
-      <input type="text" id="mNiName" placeholder="Name" class="full">
-      <input type="text" id="mNiCat" list="categoryOptions" placeholder="Category (new or existing)">
-      <input type="number" id="mNiQty" placeholder="Quantity" value="1" min="1">
-      <input type="text" id="mNiLocTo" list="locationOptions" placeholder="Destination">
-      <input type="text" id="mNiLocFrom" list="locationOptions" placeholder="Origin">
-      <textarea id="mNiNote" placeholder="Note" class="full" rows="2"></textarea>
-      <input type="number" id="mNiWeight" placeholder="Weight per unit (kg, optional)" min="0" step="0.01">
+      <input type="text" id="mNiName" data-i18n-placeholder="common.name" placeholder="Name" class="full">
+      <input type="text" id="mNiCat" list="categoryOptions" data-i18n-placeholder="modal.newItem.categoryPh" placeholder="Category (new or existing)">
+      <input type="number" id="mNiQty" data-i18n-placeholder="common.quantity" placeholder="Quantity" value="1" min="1">
+      <input type="text" id="mNiLocTo" list="locationOptions" data-i18n-placeholder="common.destination" placeholder="Destination">
+      <input type="text" id="mNiLocFrom" list="locationOptions" data-i18n-placeholder="common.origin" placeholder="Origin">
+      <textarea id="mNiNote" data-i18n-placeholder="common.note" placeholder="Note" class="full" rows="2"></textarea>
+      <input type="number" id="mNiWeight" data-i18n-placeholder="common.weightPh" placeholder="Weight per unit (kg, optional)" min="0" step="0.01">
     </div>
     <div class="row-inline" style="justify-content:flex-end;">
-      <button class="secondary" onclick="closeNewItemModal()">Cancel</button>
-      <button onclick="submitNewItemModal()">Create</button>
+      <button class="secondary" onclick="closeNewItemModal()" data-i18n="common.cancel">Cancel</button>
+      <button onclick="submitNewItemModal()" data-i18n="common.create2">Create</button>
     </div>
   </div>
 </div>
@@ -408,13 +409,13 @@ Cutlery"></textarea>
 <!-- Duplicate resolution -->
 <div class="modal-bg" id="dupModal">
   <div class="modal">
-    <h2>Same name, different category</h2>
+    <h2 data-i18n="modal.dup.title">Same name, different category</h2>
     <p id="dupExistingLabel" class="meta" style="color:var(--muted);"></p>
     <p id="dupNewLabel" class="meta" style="color:var(--muted);"></p>
     <div class="row-inline" style="flex-direction:column; align-items:stretch; margin-top:10px;">
       <button onclick="resolveDupChoice('B')" id="dupOptB"></button>
       <button class="secondary" onclick="resolveDupChoice('A')" id="dupOptA"></button>
-      <button class="ghost" onclick="cancelDupModal()">Cancel</button>
+      <button class="ghost" onclick="cancelDupModal()" data-i18n="common.cancel">Cancel</button>
     </div>
   </div>
 </div>
@@ -422,15 +423,15 @@ Cutlery"></textarea>
 <!-- Delete category -->
 <div class="modal-bg" id="deleteCategoryModal">
   <div class="modal">
-    <h2 id="delCatTitle">Delete category</h2>
+    <h2 id="delCatTitle" data-i18n="modal.deleteCat.title">Delete category</h2>
     <div class="row-inline" style="margin-bottom:10px;">
-      <button class="small secondary" onclick="deleteCategoryMoveAll()">Move all items to "Miscellaneous" &amp; delete category</button>
+      <button class="small secondary" onclick="deleteCategoryMoveAll()" data-i18n="modal.deleteCat.moveAll">Move all items to "Miscellaneous" &amp; delete category</button>
     </div>
-    <p class="meta" style="color:var(--muted); font-size:0.8rem;">Or select individually which items should be deleted (unchecked = will be moved to "Miscellaneous"):</p>
+    <p class="meta" style="color:var(--muted); font-size:0.8rem;" data-i18n="modal.deleteCat.orSelect">Or select individually which items should be deleted (unchecked = will be moved to "Miscellaneous"):</p>
     <div id="delCatList"></div>
     <div class="row-inline" style="justify-content:flex-end; margin-top:12px;">
-      <button class="secondary" onclick="closeDeleteCategoryModal()">Cancel</button>
-      <button class="danger" onclick="confirmDeleteCategory()">Delete selected, move the rest</button>
+      <button class="secondary" onclick="closeDeleteCategoryModal()" data-i18n="common.cancel">Cancel</button>
+      <button class="danger" onclick="confirmDeleteCategory()" data-i18n="modal.deleteCat.confirm">Delete selected, move the rest</button>
     </div>
   </div>
 </div>
@@ -438,30 +439,30 @@ Cutlery"></textarea>
 <!-- Export packing list -->
 <div class="modal-bg" id="exportModal">
   <div class="modal">
-    <h2>Export packing list</h2>
+    <h2 data-i18n="modal.exportList.title">Export packing list</h2>
     <div class="radiogroup">
-      <label><input type="radio" name="exportMode" value="pack" checked> Packing list (where to pack things)</label>
-      <label><input type="radio" name="exportMode" value="unpack"> Unpacking list (where to put things back)</label>
+      <label><input type="radio" name="exportMode" value="pack" checked> <span data-i18n="modal.exportList.modePack">Packing list (where to pack things)</span></label>
+      <label><input type="radio" name="exportMode" value="unpack"> <span data-i18n="modal.exportList.modeUnpack">Unpacking list (where to put things back)</span></label>
     </div>
     <div class="radiogroup">
-      <label><input type="radio" name="exportGroup" value="category" checked> Group by: Category</label>
-      <label><input type="radio" name="exportGroup" value="location"> Group by: Destination/Origin</label>
-      <label><input type="radio" name="exportGroup" value="current"> Group by: Current location</label>
+      <label><input type="radio" name="exportGroup" value="category" checked> <span data-i18n="modal.exportList.groupCategory">Group by: Category</span></label>
+      <label><input type="radio" name="exportGroup" value="location"> <span data-i18n="modal.exportList.groupLocation">Group by: Destination/Origin</span></label>
+      <label><input type="radio" name="exportGroup" value="current"> <span data-i18n="modal.exportList.groupCurrent">Group by: Current location</span></label>
     </div>
-    <p class="meta" style="color:var(--muted); font-size:0.78rem; margin:-4px 0 8px;">
+    <p class="meta" style="color:var(--muted); font-size:0.78rem; margin:-4px 0 8px;" data-i18n-html="modal.exportList.groupExplain">
       Destination/Origin — Packing list: by destination (where to pack things). Unpacking list: by origin (where to put things back).<br>
       Current location — both lists: by the place the item is currently at (where to pack from / unpack from).
     </p>
     <div class="radiogroup">
-      <label><input type="checkbox" id="exportIncNote"> Include note in export</label>
-      <label><input type="checkbox" id="exportIncTags"> Include tags in export</label>
+      <label><input type="checkbox" id="exportIncNote"> <span data-i18n="modal.exportList.incNote">Include note in export</span></label>
+      <label><input type="checkbox" id="exportIncTags"> <span data-i18n="modal.exportList.incTags">Include tags in export</span></label>
     </div>
     <div class="row-inline" style="flex-direction:column; align-items:stretch;">
-      <button onclick="doExport('copy')">📋 Copy to clipboard</button>
-      <button class="secondary" onclick="doExport('txt')">⬇ Download as TXT file</button>
-      <button class="secondary" onclick="doExport('share')">📤 Share (smartphone)</button>
-      <button class="secondary" onclick="openPrintView()">🖨 Print view (print / save as PDF)</button>
-      <button class="ghost" onclick="closeExportModal()">Close</button>
+      <button onclick="doExport('copy')" data-i18n="modal.exportList.copyClipboard">📋 Copy to clipboard</button>
+      <button class="secondary" onclick="doExport('txt')" data-i18n="modal.exportList.downloadTxt">⬇ Download as TXT file</button>
+      <button class="secondary" onclick="doExport('share')" data-i18n="modal.exportList.share">📤 Share (smartphone)</button>
+      <button class="secondary" onclick="openPrintView()" data-i18n="modal.exportList.printView">🖨 Print view (print / save as PDF)</button>
+      <button class="ghost" onclick="closeExportModal()" data-i18n="common.close">Close</button>
     </div>
   </div>
 </div>
@@ -469,8 +470,8 @@ Cutlery"></textarea>
 <!-- Quick help -->
 <div class="modal-bg" id="helpModal">
   <div class="modal">
-    <h2>Quick guide</h2>
-    <ul class="help-list">
+    <h2 data-i18n="modal.help.title">Quick guide</h2>
+    <ul class="help-list" data-i18n-html="modal.help.body">
       <li><b>Inventory</b>: all your items (name, category, quantity, locations) — your stock database. Starts empty — import <code>starter-inventory-import.json</code> via the ☰ menu for example items, or add your own.</li>
       <li><b>Lists</b>: individual packing lists for specific trips, filled with items from your inventory.</li>
       <li><b>Bulk Add</b>: add several items to one category at once.</li>
@@ -479,10 +480,10 @@ Cutlery"></textarea>
       <li>Header: <b>🔗 filename</b> = actively linked, <b>🔗⏳ filename</b> = link needs one click to confirm (a prompt appears automatically for this).</li>
       <li>All data stays in this browser only until you export it.</li>
       <li>Tap category/group headings to collapse/expand them.</li>
-      <li>App version: <b id="helpVersionText"></b></li>
+      <li><span data-i18n="modal.help.versionLine">App version:</span> <b id="helpVersionText"></b></li>
     </ul>
     <div class="row-inline" style="justify-content:flex-end; margin-top:12px;">
-      <button onclick="closeHelpModal()">Got it</button>
+      <button onclick="closeHelpModal()" data-i18n="modal.help.gotIt">Got it</button>
     </div>
   </div>
 </div>
@@ -490,11 +491,11 @@ Cutlery"></textarea>
 <!-- Prompt: file link needs to be confirmed -->
 <div class="modal-bg" id="reconnectModal">
   <div class="modal">
-    <h2>🔗 Resume file link</h2>
-    <p>The link to <b id="reconnectFileName"></b> needs to be confirmed once so changes are saved to it automatically again.</p>
+    <h2 data-i18n="modal.reconnect.title">🔗 Resume file link</h2>
+    <p><span data-i18n="modal.reconnect.bodyPre">The link to</span> <b id="reconnectFileName"></b> <span data-i18n="modal.reconnect.bodyPost">needs to be confirmed once so changes are saved to it automatically again.</span></p>
     <div class="row-inline" style="justify-content:flex-end; margin-top:12px;">
-      <button class="ghost" onclick="closeReconnectModal()">Later</button>
-      <button onclick="reconnectLinkedFile(); closeReconnectModal();">🔗 Link now</button>
+      <button class="ghost" onclick="closeReconnectModal()" data-i18n="modal.reconnect.later">Later</button>
+      <button onclick="reconnectLinkedFile(); closeReconnectModal();" data-i18n="modal.reconnect.linkNow">🔗 Link now</button>
     </div>
   </div>
 </div>
@@ -502,12 +503,12 @@ Cutlery"></textarea>
 <!-- Native (Android) file link: choose to create a new file or open an existing one -->
 <div class="modal-bg" id="nativeFileChoiceModal">
   <div class="modal">
-    <h2 id="nativeFileChoiceTitle">🔗 Link a file</h2>
-    <p>Save your data to a file you choose, so you can find, back up or move it yourself. It stays linked and used automatically until you pick a different one here.</p>
+    <h2 id="nativeFileChoiceTitle" data-i18n="native.linkFileTitle">🔗 Link a file</h2>
+    <p data-i18n="native.linkFileDesc">Save your data to a file you choose, so you can find, back up or move it yourself. It stays linked and used automatically until you pick a different one here.</p>
     <div class="row-inline" style="flex-direction:column; align-items:stretch;">
-      <button onclick="nativeCreateFile()">📄 Save to a new file</button>
-      <button class="secondary" onclick="nativeOpenFile()">📂 Open an existing file</button>
-      <button class="ghost" id="nativeFileChoiceSkipBtn" onclick="nativeSkipLink()">Skip — keep data in the app only</button>
+      <button onclick="nativeCreateFile()" data-i18n="native.saveNewFile">📄 Save to a new file</button>
+      <button class="secondary" onclick="nativeOpenFile()" data-i18n="native.openExistingFile">📂 Open an existing file</button>
+      <button class="ghost" id="nativeFileChoiceSkipBtn" onclick="nativeSkipLink()" data-i18n="native.skipKeepInApp">Skip — keep data in the app only</button>
     </div>
   </div>
 </div>
@@ -516,6 +517,339 @@ Cutlery"></textarea>
 // App release version — shown in the header and the Help screen, and used as
 // the identifier for the matching GitHub release. Bump on every feature release.
 const APP_VERSION = '1.1.0';
+
+// =================== i18n (English/German) ===================
+// Static HTML text uses data-i18n[-placeholder|-title|-aria-label|-html] attributes,
+// swept by translatePage(). Dynamic (JS-generated) text calls t('key', {vars}) inline.
+// Fallback chain if a key is missing: current language -> English -> the key itself,
+// so a gap in the dictionary never breaks rendering, it just shows English/the raw key.
+const I18N = {
+en: {
+  'menu.help': 'ℹ️ Help', 'menu.export': '⬇ Export', 'menu.import': '⬆ Import', 'menu.webdav': '🌐 WebDAV', 'menu.exportShort': 'Export',
+  'menu.themeLight': '🎨 Light theme', 'menu.themeDark': '🎨 Dark theme',
+  'menu.langToEnglish': '🌍 English', 'menu.langToGerman': '🌍 Deutsch',
+  'tabs.inventory': 'Inventory', 'tabs.lists': 'Lists', 'tabs.bulk': 'Bulk Add', 'tabs.manage': 'Manage',
+  'common.search': 'Search…', 'common.collapseAll': 'Collapse all', 'common.expandAll': 'Expand all',
+  'common.category': 'Category', 'common.categories': 'Categories', 'common.create': '+ Create', 'common.create2': 'Create',
+  'common.cancel': 'Cancel', 'common.close': 'Close', 'common.name': 'Name', 'common.quantity': 'Quantity',
+  'common.destOptional': 'Destination (optional)', 'common.originOptional': 'Origin (optional)',
+  'common.destination': 'Destination', 'common.origin': 'Origin', 'common.note': 'Note', 'common.weightPh': 'Weight per unit (kg, optional)',
+  'common.active': 'active', 'common.inactive': 'inactive', 'common.packed': 'packed', 'common.deleted': 'deleted', 'common.itemDeleted': 'Item deleted',
+  'common.itemsDeleted': 'Item(s) deleted', 'common.remove': 'remove', 'common.select': 'select', 'common.addToList': 'Add items',
+  'inv.filterCategory': 'Filter by category', 'inv.allCategories': 'All categories',
+  'inv.filterLocation': 'Filter by location', 'inv.allLocations': 'All locations', 'inv.incompleteLocation': 'Incomplete location (destination or origin missing)',
+  'inv.filterStatus': 'Filter by status', 'inv.activeOnly': 'Active only', 'inv.allActiveInactive': 'All (active + inactive)', 'inv.inactiveOnly': 'Inactive only',
+  'inv.filterUsage': 'Filter by list usage', 'inv.allItems': 'All items', 'inv.usedInList': 'Used in a list', 'inv.unusedInList': 'Not used in any list',
+  'inv.filterRating': 'Filter by rating', 'inv.allRatings': 'All ratings', 'inv.notYetRated': 'Not yet rated',
+  'inv.rating1': '★ (rounds to 1)', 'inv.rating2': '★★ (rounds to 2)', 'inv.rating3': '★★★ (rounds to 3)',
+  'inv.newItem': '+ New item', 'inv.statsTitle': 'More statistics', 'inv.stats': '📊 Stats', 'inv.statsHeading': '📊 Inventory statistics',
+  'inv.simplifiedView': '🔎 Simplified view', 'inv.expandedView': '🔎 Expanded view',
+  'inv.weightPerUnit': 'Weight per unit (kg)', 'inv.requires': 'Requires (optional)', 'inv.requiresPh': '+ Requires item…',
+  'inv.addPhoto': '📷 Add photo', 'inv.changePhoto': '📷 Change photo', 'inv.removePhoto': '✕ Remove photo',
+  'inv.batchesHeader': 'Batches ({n}x total)', 'inv.batchesHeaderWeight': 'Batches ({n}x total · {kg} kg total)',
+  'inv.destination': 'Destination', 'inv.origin': 'Origin', 'inv.removeBatch': 'Remove batch', 'inv.addBatch': '+ Batch (own location)',
+  'inv.activeCheckbox': 'active', 'inv.deleteItem': '✕ Delete item', 'inv.usedInTitle': 'Used in: {names}',
+  'inv.avgRatingTitle': 'Average usefulness rating across included lists',
+  'inv.activeInactiveCount': '{active} active · {inactive} inactive', 'inv.noItemsFound': 'No items found.',
+  'common.add': 'Add', 'common.nSelected': '{n} selected', 'inv.changeCategoryTo': 'Change category to…',
+  'common.move': 'Move', 'inv.setActive': 'Set active', 'inv.setInactive': 'Set inactive', 'common.delete': 'Delete',
+  'common.clearSelection': 'Clear selection', 'common.statusUpdated': 'Status updated',
+  'inv.confirmDeleteN': 'Really delete {n} item(s)?',
+  'inv.someUsedInOne': '\n\nSome of them are currently used in 1 packing list:\n- {list}\n\nThey will also be removed from {those}.',
+  'inv.someUsedInMany': '\n\nSome of them are currently used in {n} packing lists:\n- {list}\n\nThey will also be removed from {those}.',
+  'inv.noneUsed': ' None of them are currently used in any packing list.', 'common.thoseLists': 'those lists', 'common.thatList': 'that list',
+  'inv.movedTo': 'Moved to "{cat}"', 'inv.mergedSuffix': ' — {n} item(s) merged into batches',
+  'inv.confirmDeleteItem': 'Really delete this item from the inventory?', 'inv.notUsedAnywhere': ' It is not currently used in any packing list.',
+  'inv.itemUsedInOne': '\n\nIt is currently used in 1 packing list:\n- {list}\n\nIt will also be removed from {those}.',
+  'inv.itemUsedInMany': '\n\nIt is currently used in {n} packing lists:\n- {list}\n\nIt will also be removed from {those}.',
+  'newItem.pleaseEnterName': 'Please enter a name', 'newItem.itemCreated': 'Item created',
+  'dup.existingLabel': '"{name}" already exists in category "{cat}" ({n}x in {batches} batch(es)).',
+  'dup.newLabel': 'You are creating: {qty}x "{name}" in category "{cat}".',
+  'dup.optB': 'Create as a separate item in "{cat}" (recommended if a different category is intentional)',
+  'dup.optA': 'Add as a new batch to "{cat}" instead',
+  'trips.open': 'Open', 'trips.namePrompt': 'Packing list name (e.g. "Summer Trip 2026"):',
+  'trips.typePrompt': 'Type of trip:\nCampsite, Off-grid, Festival, Road trip, Apartment, Other',
+  'trips.duplicateNamePrompt': 'Name of the new packing list:', 'trips.copySuffix': ' (Copy)',
+  'trips.duplicated': 'Packing list duplicated', 'trips.confirmDeleteList': 'Really delete this packing list?',
+  'trips.backToLists': '← Back to packing lists', 'trips.includeInAvgLabel': 'Include this list in inventory average ratings',
+  'trips.shareList': '📤 Share list', 'trips.exportJsonTitle': 'Save/share as an importable file', 'trips.exportJson': '⬇ Export list to JSON',
+  'trips.exportTxtTitle': 'Save/share as an editable .txt file', 'trips.exportTxt': '⬇ Export list to TXT',
+  'trips.exportCsvTitle': 'Open in Excel, Google Sheets, Todoist, or similar (one-way, not re-importable here)', 'trips.exportCsv': '⬇ Export list to CSV',
+  'trips.tabItems': '📦 Items', 'trips.tabTasks': '✅ Tasks', 'trips.tabText': '📝 Text',
+  'trips.filterPackedStatus': 'Filter by packed status', 'trips.all': 'All', 'trips.statusOpen': 'Open', 'trips.statusPacked': 'Packed',
+  'trips.filterTag': 'Filter by tag', 'trips.allTags': 'All tags', 'trips.groupItemsBy': 'Group items by',
+  'trips.groupByCategory': 'Group by: Category', 'trips.groupByDest': 'Group by: Destination', 'trips.groupByOrigin': 'Group by: Origin', 'trips.groupByCurrent': 'Group by: Current location',
+  'trips.addItems': '+ Add items', 'trips.refreshFromListTitle': 'Regenerate text from the current list (discards unapplied edits here)', 'trips.refreshFromList': '🔄 Refresh from list',
+  'trips.applyToListTitle': "Replace this list's items & tasks with the text above", 'trips.applyToList': '✅ Apply to list',
+  'trips.noDestination': '(no destination)', 'trips.noOrigin': '(no origin)', 'trips.unknown': '(unknown)',
+  'trips.noDestinationSet': '(no destination set)', 'trips.noOriginSet': '(no origin set)',
+  'trips.noItemsInView': 'No items in this view. Add some via "+ Add items".', 'trips.kgTotal': ' · {kg} kg total', 'trips.kgSuffix': ' · {kg} kg',
+  'trips.now': 'now', 'trips.currently': 'currently', 'trips.alsoNeeds': '⚠ also needs: {names}',
+  'trips.tagPlaceholder': '+ Tag(s), comma-separated', 'trips.addTags': 'Add tag(s)', 'trips.usefulnessTitle': 'Usefulness after the trip',
+  'trips.star1': 'Not used / superfluous', 'trips.star2': 'Nice to have, alternatives exist', 'trips.star3': 'Essential / mandatory',
+  'trips.availableInInventory': 'Available in inventory: {n}',
+  'trips.markPacked': 'Mark as packed', 'trips.markOpen': 'Mark as open', 'trips.addTag': 'Add tag', 'trips.remove': 'Remove',
+  'trips.tagPrompt': 'Tag(s) for the selected items (separate multiple with a comma):',
+  'trips.tasksDone': '{done}/{total} done', 'trips.tasksBefore': '✅ Tasks before the trip', 'trips.tasksAfter': '✅ Tasks after the trip',
+  'trips.newTaskPh': 'New task…', 'common.addShort': '+ Add',
+  'trips.copiedToClipboard': 'Copied to clipboard', 'trips.copyFailed': 'Copy failed — select manually:',
+  'trips.sharingNotAvailable': 'Sharing not available — copied to clipboard', 'trips.popupBlocked': 'Popup blocked — please allow popups for this site',
+  'trips.printDialogFailed': 'Could not open the print dialog.', 'trips.printNotAvailable': 'Print preview is not available on this device.',
+  'native.linkFileTitle': '🔗 Link a file', 'native.changeFileTitle': '🔗 Change linked file',
+  'native.linkFileDesc': 'Save your data to a file you choose, so you can find, back up or move it yourself. It stays linked and used automatically until you pick a different one here.',
+  'native.saveNewFile': '📄 Save to a new file', 'native.openExistingFile': '📂 Open an existing file',
+  'native.skipKeepInApp': 'Skip — keep data in the app only', 'link.fileLinkedShort': 'File linked: {name}',
+  'native.couldNotReadBackup': 'That file could not be read as a packing list backup.',
+  'common.confirmFullImport': 'Import will overwrite the current inventory & all packing lists. Continue?',
+  'manage.locationsNotSetYet': 'No locations set yet.', 'manage.destOriginCounts': 'Destination: {to} · Origin: {from}',
+  'manage.addChangePhoto': 'Add/change photo', 'manage.removePhotoTitle': 'Remove photo',
+  'manage.clearTitle': 'Remove from all batches, location stays in the list', 'manage.deleteTitle': 'Remove from all batches AND delete from the list',
+  'manage.categoryExists': 'Category already exists', 'manage.categoryCreated': 'Category created',
+  'manage.confirmMergeCategory': 'Category "{clash}" already exists. Move all items from "{old}" to "{clash}" and remove "{old}"?',
+  'manage.categoryRenamed': 'Category renamed', 'manage.deleteCategoryTitle': 'Delete category "{name}" ({n} item(s))',
+  'manage.itemSummary': '{name} ({qty}x, {batches} batch(es))', 'manage.inactiveSuffix': ' — inactive',
+  'manage.noItemsInCategory': 'No items in this category.', 'manage.categoryDeleted': 'Category deleted',
+  'manage.locationRenamed': 'Location renamed', 'manage.confirmClearLocation': 'Remove location "{name}" from all affected batches?',
+  'manage.locationRemoved': 'Location removed', 'manage.confirmDeleteLocation': 'Completely delete location "{name}" (remove from all batches and delete from the list)?',
+  'manage.locationDeleted': 'Location deleted', 'manage.wipeConfirmPrompt': 'This will permanently delete ALL items. Type "DELETE" to confirm:',
+  'common.cancelled': 'Cancelled', 'manage.inventoryWiped': 'Inventory completely deleted',
+  'webdav.pleaseEnterUrl': 'Please enter a URL', 'webdav.createdNew': 'WebDAV connected — no file existed yet, created one from your current data.',
+  'webdav.notAPackingList': "The file at that URL isn't a Packing List export.",
+  'webdav.confirmLoadOrPush': 'A Packing List file already exists at that URL. Load it now (replacing your current data)? Cancel to keep your current data and overwrite the remote file instead.',
+  'webdav.loaded': 'Loaded data from WebDAV.', 'webdav.connectedUploaded': 'WebDAV connected — your current data was uploaded, replacing the remote file.',
+  'webdav.couldNotReach': 'Could not reach that WebDAV URL: {msg}\n\nCheck the URL/credentials, and that the server allows requests from this app (CORS) — see the README.',
+  'webdav.disconnected': 'WebDAV disconnected (the remote file is left as-is).',
+  'webdav.confirmPull': 'Replace your current inventory & lists with the version from WebDAV?',
+  'webdav.couldNotLoad': 'Could not load from WebDAV: {msg}',
+  'photo.couldNotProcess': 'Could not process that image.', 'inv.noItemNamed': 'No item named "{name}" found',
+  'trips.importedSummary': 'Packing list imported ({reused} batch(es) reused, {created} newly created)',
+  'common.importFailed': 'Import failed: {msg}', 'common.importSuccessful': 'Import successful',
+  'link.fileLinked': 'File linked: {name} — changes will be saved to it automatically from now on',
+  'link.fileRelinked': 'File re-linked: {name}', 'link.writeAccessLost': 'Write access was lost — please resume the link from the menu.',
+  'bulk.enterCategory': 'Please enter a category', 'bulk.enterOneName': 'Please enter at least one item name',
+  'bulk.previewHeading': 'Preview ({n} item(s) in "{cat}")', 'bulk.actionFor': 'Action for {name}',
+  'bulk.createNewIn': 'Create new in "{cat}"', 'bulk.addBatchTo': 'Add as new batch to "{name}" ({n}x present)',
+  'bulk.addBatchToOther': 'Add as new batch to existing item in "{cat}"', 'bulk.skip': 'Skip', 'bulk.createNow': 'Create now',
+  'bulk.resultSummary': '{created} created, {batched} added as batch, {skipped} skipped',
+  'trips.newList': '+ New packing list', 'trips.importJson': '⬆ Import list from JSON', 'trips.importTxt': '⬆ Import list from TXT',
+  'trips.duplicate': 'Duplicate', 'trips.delete': 'Delete', 'trips.noLists': 'No packing list created yet.',
+  'trips.itemTypes': '{n} item type(s)', 'trips.packedOf': '{packed}/{total} packed',
+  'bulk.title': 'Add multiple items at once', 'bulk.categoryPh': 'e.g. Kitchen (new or existing)', 'bulk.qtyPerItem': 'Quantity per item (default)',
+  'bulk.destOptional': 'Destination (optional, for all)', 'bulk.originOptional': 'Origin (optional, for all)',
+  'bulk.namesLabel': 'Item names (one name per line)', 'bulk.namesPh': 'Bowl\nPan\nCutlery', 'bulk.preview': 'Create preview',
+  'manage.newCategoryPh': 'New category…', 'manage.locationsTitle': 'Locations (destination & origin)',
+  'manage.dangerZone': '⚠ Danger zone', 'manage.dangerZoneDesc': 'Permanently deletes the entire item inventory (packing lists remain as empty shells).',
+  'manage.deleteInventory': 'Delete entire inventory', 'manage.save': 'Save', 'manage.clear': 'Clear', 'manage.deleteBtn': 'Delete',
+  'modal.exportOpts.title': 'Export options', 'modal.exportOpts.includePhotos': 'Include photos (larger file)',
+  'modal.importOpts.title': 'Import options', 'modal.importOpts.includePhotos': 'Include photos from this file', 'modal.importOpts.chooseFile': 'Choose file…',
+  'modal.webdav.title': '🌐 WebDAV sync',
+  'modal.webdav.desc': "Reads/writes one shared file over WebDAV, like the local file link but over the network. There's no conflict resolution — whoever saves last wins. The server must allow requests from this app (CORS).",
+  'modal.webdav.url': 'URL', 'modal.webdav.username': 'Username (optional)', 'modal.webdav.password': 'Password (optional)',
+  'modal.webdav.disconnect': 'Disconnect', 'modal.webdav.pullNow': 'Pull now', 'modal.webdav.connect': 'Save & connect',
+  'modal.picker.title': 'Add items', 'modal.picker.searchPh': 'Search inventory…', 'modal.picker.filterCurrentLoc': 'Filter by current location',
+  'modal.picker.allCurrentLocations': 'All current locations', 'modal.picker.createNew': '+ create new item in inventory',
+  'modal.picker.createAndAdd': 'Create & add to list', 'modal.picker.addSelected': 'Add selected',
+  'modal.newItem.title': 'New item', 'modal.newItem.categoryPh': 'Category (new or existing)',
+  'modal.dup.title': 'Same name, different category',
+  'modal.deleteCat.title': 'Delete category', 'modal.deleteCat.moveAll': 'Move all items to "Miscellaneous" & delete category',
+  'modal.deleteCat.orSelect': 'Or select individually which items should be deleted (unchecked = will be moved to "Miscellaneous"):',
+  'modal.deleteCat.confirm': 'Delete selected, move the rest',
+  'modal.exportList.title': 'Export packing list', 'modal.exportList.modePack': 'Packing list (where to pack things)',
+  'modal.exportList.modeUnpack': 'Unpacking list (where to put things back)', 'modal.exportList.groupCategory': 'Group by: Category',
+  'modal.exportList.groupLocation': 'Group by: Destination/Origin', 'modal.exportList.groupCurrent': 'Group by: Current location',
+  'modal.exportList.groupExplain': 'Destination/Origin — Packing list: by destination (where to pack things). Unpacking list: by origin (where to put things back).<br>Current location — both lists: by the place the item is currently at (where to pack from / unpack from).',
+  'modal.exportList.incNote': 'Include note in export', 'modal.exportList.incTags': 'Include tags in export',
+  'modal.exportList.copyClipboard': '📋 Copy to clipboard', 'modal.exportList.downloadTxt': '⬇ Download as TXT file',
+  'modal.exportList.share': '📤 Share (smartphone)', 'modal.exportList.printView': '🖨 Print view (print / save as PDF)',
+  'modal.help.title': 'Quick guide',
+  'modal.help.body': '<li><b>Inventory</b>: all your items (name, category, quantity, locations) — your stock database. Starts empty — import <code>starter-inventory-import.json</code> via the ☰ menu for example items, or add your own.</li><li><b>Lists</b>: individual packing lists for specific trips, filled with items from your inventory.</li><li><b>Bulk Add</b>: add several items to one category at once.</li><li><b>Manage</b>: rename/delete categories &amp; locations, reset inventory.</li><li><b>☰ menu</b>: Export/Import as a backup file · "Link" saves changes automatically to a local file — stays linked across reloads (may need one click to confirm).</li><li>Header: <b>🔗 filename</b> = actively linked, <b>🔗⏳ filename</b> = link needs one click to confirm (a prompt appears automatically for this).</li><li>All data stays in this browser only until you export it.</li><li>Tap category/group headings to collapse/expand them.</li>',
+  'modal.help.versionLine': 'App version:', 'modal.help.gotIt': 'Got it',
+  'modal.reconnect.title': '🔗 Resume file link', 'modal.reconnect.bodyPre': 'The link to',
+  'modal.reconnect.bodyPost': 'needs to be confirmed once so changes are saved to it automatically again.',
+  'modal.reconnect.later': 'Later', 'modal.reconnect.linkNow': '🔗 Link now',
+},
+de: {
+  'menu.help': 'ℹ️ Hilfe', 'menu.export': '⬇ Export', 'menu.import': '⬆ Import', 'menu.webdav': '🌐 WebDAV', 'menu.exportShort': 'Export',
+  'menu.themeLight': '🎨 Helles Design', 'menu.themeDark': '🎨 Dunkles Design',
+  'menu.langToEnglish': '🌍 English', 'menu.langToGerman': '🌍 Deutsch',
+  'tabs.inventory': 'Inventar', 'tabs.lists': 'Listen', 'tabs.bulk': 'Mehrfach hinzufügen', 'tabs.manage': 'Verwalten',
+  'common.search': 'Suchen…', 'common.collapseAll': 'Alle einklappen', 'common.expandAll': 'Alle ausklappen',
+  'common.category': 'Kategorie', 'common.categories': 'Kategorien', 'common.create': '+ Anlegen', 'common.create2': 'Anlegen',
+  'common.cancel': 'Abbrechen', 'common.close': 'Schließen', 'common.name': 'Name', 'common.quantity': 'Menge',
+  'common.destOptional': 'Zielort (optional)', 'common.originOptional': 'Herkunftsort (optional)',
+  'common.destination': 'Zielort', 'common.origin': 'Herkunftsort', 'common.note': 'Notiz', 'common.weightPh': 'Gewicht pro Einheit (kg, optional)',
+  'common.active': 'aktiv', 'common.inactive': 'inaktiv', 'common.packed': 'gepackt', 'common.deleted': 'gelöscht', 'common.itemDeleted': 'Artikel gelöscht',
+  'common.itemsDeleted': 'Artikel gelöscht', 'common.remove': 'entfernen', 'common.select': 'auswählen', 'common.addToList': 'Artikel hinzufügen',
+  'inv.filterCategory': 'Nach Kategorie filtern', 'inv.allCategories': 'Alle Kategorien',
+  'inv.filterLocation': 'Nach Ort filtern', 'inv.allLocations': 'Alle Orte', 'inv.incompleteLocation': 'Unvollständiger Ort (Ziel oder Herkunft fehlt)',
+  'inv.filterStatus': 'Nach Status filtern', 'inv.activeOnly': 'Nur aktive', 'inv.allActiveInactive': 'Alle (aktiv + inaktiv)', 'inv.inactiveOnly': 'Nur inaktive',
+  'inv.filterUsage': 'Nach Listennutzung filtern', 'inv.allItems': 'Alle Artikel', 'inv.usedInList': 'In einer Liste verwendet', 'inv.unusedInList': 'In keiner Liste verwendet',
+  'inv.filterRating': 'Nach Bewertung filtern', 'inv.allRatings': 'Alle Bewertungen', 'inv.notYetRated': 'Noch nicht bewertet',
+  'inv.rating1': '★ (rundet auf 1)', 'inv.rating2': '★★ (rundet auf 2)', 'inv.rating3': '★★★ (rundet auf 3)',
+  'inv.newItem': '+ Neuer Artikel', 'inv.statsTitle': 'Weitere Statistiken', 'inv.stats': '📊 Statistik', 'inv.statsHeading': '📊 Inventar-Statistik',
+  'inv.simplifiedView': '🔎 Vereinfachte Ansicht', 'inv.expandedView': '🔎 Erweiterte Ansicht',
+  'inv.weightPerUnit': 'Gewicht pro Einheit (kg)', 'inv.requires': 'Benötigt (optional)', 'inv.requiresPh': '+ Benötigt Artikel…',
+  'inv.addPhoto': '📷 Foto hinzufügen', 'inv.changePhoto': '📷 Foto ändern', 'inv.removePhoto': '✕ Foto entfernen',
+  'inv.batchesHeader': 'Chargen ({n}x gesamt)', 'inv.batchesHeaderWeight': 'Chargen ({n}x gesamt · {kg} kg gesamt)',
+  'inv.destination': 'Zielort', 'inv.origin': 'Herkunftsort', 'inv.removeBatch': 'Charge entfernen', 'inv.addBatch': '+ Charge (eigener Ort)',
+  'inv.activeCheckbox': 'aktiv', 'inv.deleteItem': '✕ Artikel löschen', 'inv.usedInTitle': 'Verwendet in: {names}',
+  'inv.avgRatingTitle': 'Durchschnittliche Bewertung über die einbezogenen Listen',
+  'inv.activeInactiveCount': '{active} aktiv · {inactive} inaktiv', 'inv.noItemsFound': 'Keine Artikel gefunden.',
+  'common.add': 'Hinzufügen', 'common.nSelected': '{n} ausgewählt', 'inv.changeCategoryTo': 'Kategorie ändern zu…',
+  'common.move': 'Verschieben', 'inv.setActive': 'Als aktiv markieren', 'inv.setInactive': 'Als inaktiv markieren', 'common.delete': 'Löschen',
+  'common.clearSelection': 'Auswahl aufheben', 'common.statusUpdated': 'Status aktualisiert',
+  'inv.confirmDeleteN': 'Wirklich {n} Artikel löschen?',
+  'inv.someUsedInOne': '\n\nEinige davon werden aktuell in 1 Packliste verwendet:\n- {list}\n\nSie werden auch aus {those} entfernt.',
+  'inv.someUsedInMany': '\n\nEinige davon werden aktuell in {n} Packlisten verwendet:\n- {list}\n\nSie werden auch aus {those} entfernt.',
+  'inv.noneUsed': ' Keiner davon wird aktuell in einer Packliste verwendet.', 'common.thoseLists': 'diesen Listen', 'common.thatList': 'dieser Liste',
+  'inv.movedTo': 'Nach "{cat}" verschoben', 'inv.mergedSuffix': ' — {n} Artikel zu Chargen zusammengeführt',
+  'inv.confirmDeleteItem': 'Diesen Artikel wirklich aus dem Inventar löschen?', 'inv.notUsedAnywhere': ' Er wird aktuell in keiner Packliste verwendet.',
+  'inv.itemUsedInOne': '\n\nEr wird aktuell in 1 Packliste verwendet:\n- {list}\n\nEr wird auch aus {those} entfernt.',
+  'inv.itemUsedInMany': '\n\nEr wird aktuell in {n} Packlisten verwendet:\n- {list}\n\nEr wird auch aus {those} entfernt.',
+  'newItem.pleaseEnterName': 'Bitte einen Namen eingeben', 'newItem.itemCreated': 'Artikel angelegt',
+  'dup.existingLabel': '"{name}" existiert bereits in Kategorie "{cat}" ({n}x in {batches} Charge(n)).',
+  'dup.newLabel': 'Du legst gerade an: {qty}x "{name}" in Kategorie "{cat}".',
+  'dup.optB': 'Als separaten Artikel in "{cat}" anlegen (empfohlen, falls eine andere Kategorie beabsichtigt ist)',
+  'dup.optA': 'Stattdessen als neue Charge zu "{cat}" hinzufügen',
+  'trips.open': 'Öffnen', 'trips.namePrompt': 'Name der Packliste (z.B. "Sommerurlaub 2026"):',
+  'trips.typePrompt': 'Art der Reise:\nCampingplatz, Offgrid, Festival, Roadtrip, Wohnung, Sonstiges',
+  'trips.duplicateNamePrompt': 'Name der neuen Packliste:', 'trips.copySuffix': ' (Kopie)',
+  'trips.duplicated': 'Packliste dupliziert', 'trips.confirmDeleteList': 'Diese Packliste wirklich löschen?',
+  'trips.backToLists': '← Zurück zu den Packlisten', 'trips.includeInAvgLabel': 'Diese Liste in den Inventar-Durchschnitt einbeziehen',
+  'trips.shareList': '📤 Liste teilen', 'trips.exportJsonTitle': 'Als importierbare Datei speichern/teilen', 'trips.exportJson': '⬇ Liste als JSON exportieren',
+  'trips.exportTxtTitle': 'Als bearbeitbare .txt-Datei speichern/teilen', 'trips.exportTxt': '⬇ Liste als TXT exportieren',
+  'trips.exportCsvTitle': 'In Excel, Google Sheets, Todoist o.ä. öffnen (nur Export, nicht wieder importierbar)', 'trips.exportCsv': '⬇ Liste als CSV exportieren',
+  'trips.tabItems': '📦 Artikel', 'trips.tabTasks': '✅ Aufgaben', 'trips.tabText': '📝 Text',
+  'trips.filterPackedStatus': 'Nach Packstatus filtern', 'trips.all': 'Alle', 'trips.statusOpen': 'Offen', 'trips.statusPacked': 'Gepackt',
+  'trips.filterTag': 'Nach Tag filtern', 'trips.allTags': 'Alle Tags', 'trips.groupItemsBy': 'Artikel gruppieren nach',
+  'trips.groupByCategory': 'Gruppieren nach: Kategorie', 'trips.groupByDest': 'Gruppieren nach: Zielort', 'trips.groupByOrigin': 'Gruppieren nach: Herkunftsort', 'trips.groupByCurrent': 'Gruppieren nach: Aktueller Ort',
+  'trips.addItems': '+ Artikel hinzufügen', 'trips.refreshFromListTitle': 'Text aus der aktuellen Liste neu erzeugen (verwirft nicht angewendete Änderungen hier)', 'trips.refreshFromList': '🔄 Aus Liste aktualisieren',
+  'trips.applyToListTitle': 'Artikel & Aufgaben dieser Liste durch den obigen Text ersetzen', 'trips.applyToList': '✅ Auf Liste anwenden',
+  'trips.noDestination': '(kein Zielort)', 'trips.noOrigin': '(kein Herkunftsort)', 'trips.unknown': '(unbekannt)',
+  'trips.noDestinationSet': '(kein Zielort festgelegt)', 'trips.noOriginSet': '(kein Herkunftsort festgelegt)',
+  'trips.noItemsInView': 'Keine Artikel in dieser Ansicht. Füge welche über "+ Artikel hinzufügen" hinzu.', 'trips.kgTotal': ' · {kg} kg gesamt', 'trips.kgSuffix': ' · {kg} kg',
+  'trips.now': 'jetzt', 'trips.currently': 'aktuell', 'trips.alsoNeeds': '⚠ benötigt auch: {names}',
+  'trips.tagPlaceholder': '+ Tag(s), kommagetrennt', 'trips.addTags': 'Tag(s) hinzufügen', 'trips.usefulnessTitle': 'Nützlichkeit nach der Reise',
+  'trips.star1': 'Nicht verwendet / überflüssig', 'trips.star2': 'Nett zu haben, Alternativen vorhanden', 'trips.star3': 'Unabdingbar / zwingend nötig',
+  'trips.availableInInventory': 'Im Inventar verfügbar: {n}',
+  'trips.markPacked': 'Als gepackt markieren', 'trips.markOpen': 'Als offen markieren', 'trips.addTag': 'Tag hinzufügen', 'trips.remove': 'Entfernen',
+  'trips.tagPrompt': 'Tag(s) für die ausgewählten Artikel (mehrere durch Komma getrennt):',
+  'trips.tasksDone': '{done}/{total} erledigt', 'trips.tasksBefore': '✅ Aufgaben vor der Reise', 'trips.tasksAfter': '✅ Aufgaben nach der Reise',
+  'trips.newTaskPh': 'Neue Aufgabe…', 'common.addShort': '+ Hinzufügen',
+  'trips.copiedToClipboard': 'In Zwischenablage kopiert', 'trips.copyFailed': 'Kopieren fehlgeschlagen — bitte manuell auswählen:',
+  'trips.sharingNotAvailable': 'Teilen nicht verfügbar — in Zwischenablage kopiert', 'trips.popupBlocked': 'Popup blockiert — bitte Popups für diese Seite erlauben',
+  'trips.printDialogFailed': 'Der Druckdialog konnte nicht geöffnet werden.', 'trips.printNotAvailable': 'Druckvorschau ist auf diesem Gerät nicht verfügbar.',
+  'native.linkFileTitle': '🔗 Datei verknüpfen', 'native.changeFileTitle': '🔗 Verknüpfte Datei ändern',
+  'native.linkFileDesc': 'Speichere deine Daten in einer selbst gewählten Datei, damit du sie selbst wiederfinden, sichern oder verschieben kannst. Sie bleibt verknüpft und wird automatisch verwendet, bis du hier eine andere auswählst.',
+  'native.saveNewFile': '📄 In neuer Datei speichern', 'native.openExistingFile': '📂 Bestehende Datei öffnen',
+  'native.skipKeepInApp': 'Überspringen — Daten nur in der App behalten', 'link.fileLinkedShort': 'Datei verknüpft: {name}',
+  'native.couldNotReadBackup': 'Diese Datei konnte nicht als Packing-List-Sicherung gelesen werden.',
+  'common.confirmFullImport': 'Der Import überschreibt das aktuelle Inventar & alle Packlisten. Fortfahren?',
+  'manage.locationsNotSetYet': 'Noch keine Orte festgelegt.', 'manage.destOriginCounts': 'Ziel: {to} · Herkunft: {from}',
+  'manage.addChangePhoto': 'Foto hinzufügen/ändern', 'manage.removePhotoTitle': 'Foto entfernen',
+  'manage.clearTitle': 'Aus allen Chargen entfernen, Ort bleibt in der Liste', 'manage.deleteTitle': 'Aus allen Chargen entfernen UND aus der Liste löschen',
+  'manage.categoryExists': 'Kategorie existiert bereits', 'manage.categoryCreated': 'Kategorie angelegt',
+  'manage.confirmMergeCategory': 'Kategorie "{clash}" existiert bereits. Alle Artikel von "{old}" nach "{clash}" verschieben und "{old}" entfernen?',
+  'manage.categoryRenamed': 'Kategorie umbenannt', 'manage.deleteCategoryTitle': 'Kategorie "{name}" löschen ({n} Artikel)',
+  'manage.itemSummary': '{name} ({qty}x, {batches} Charge(n))', 'manage.inactiveSuffix': ' — inaktiv',
+  'manage.noItemsInCategory': 'Keine Artikel in dieser Kategorie.', 'manage.categoryDeleted': 'Kategorie gelöscht',
+  'manage.locationRenamed': 'Ort umbenannt', 'manage.confirmClearLocation': 'Ort "{name}" aus allen betroffenen Chargen entfernen?',
+  'manage.locationRemoved': 'Ort entfernt', 'manage.confirmDeleteLocation': 'Ort "{name}" vollständig löschen (aus allen Chargen entfernen und aus der Liste löschen)?',
+  'manage.locationDeleted': 'Ort gelöscht', 'manage.wipeConfirmPrompt': 'Dies löscht ALLE Artikel dauerhaft. Zur Bestätigung "DELETE" eingeben:',
+  'common.cancelled': 'Abgebrochen', 'manage.inventoryWiped': 'Inventar vollständig gelöscht',
+  'webdav.pleaseEnterUrl': 'Bitte eine URL eingeben', 'webdav.createdNew': 'WebDAV verbunden — es gab noch keine Datei, eine wurde aus deinen aktuellen Daten erstellt.',
+  'webdav.notAPackingList': 'Die Datei unter dieser URL ist kein Packing-List-Export.',
+  'webdav.confirmLoadOrPush': 'Unter dieser URL existiert bereits eine Packing-List-Datei. Jetzt laden (ersetzt deine aktuellen Daten)? Abbrechen, um deine aktuellen Daten zu behalten und stattdessen die Remote-Datei zu überschreiben.',
+  'webdav.loaded': 'Daten von WebDAV geladen.', 'webdav.connectedUploaded': 'WebDAV verbunden — deine aktuellen Daten wurden hochgeladen und haben die Remote-Datei ersetzt.',
+  'webdav.couldNotReach': 'Diese WebDAV-URL konnte nicht erreicht werden: {msg}\n\nPrüfe URL/Zugangsdaten, und ob der Server Anfragen von dieser App erlaubt (CORS) — siehe README.',
+  'webdav.disconnected': 'WebDAV getrennt (die Remote-Datei bleibt unverändert).',
+  'webdav.confirmPull': 'Aktuelles Inventar & Listen durch die Version von WebDAV ersetzen?',
+  'webdav.couldNotLoad': 'Laden von WebDAV fehlgeschlagen: {msg}',
+  'photo.couldNotProcess': 'Dieses Bild konnte nicht verarbeitet werden.', 'inv.noItemNamed': 'Kein Artikel namens "{name}" gefunden',
+  'trips.importedSummary': 'Packliste importiert ({reused} Charge(n) wiederverwendet, {created} neu angelegt)',
+  'common.importFailed': 'Import fehlgeschlagen: {msg}', 'common.importSuccessful': 'Import erfolgreich',
+  'link.fileLinked': 'Datei verknüpft: {name} — Änderungen werden ab jetzt automatisch darin gespeichert',
+  'link.fileRelinked': 'Datei neu verknüpft: {name}', 'link.writeAccessLost': 'Schreibzugriff wurde verloren — bitte die Verknüpfung über das Menü fortsetzen.',
+  'bulk.enterCategory': 'Bitte eine Kategorie eingeben', 'bulk.enterOneName': 'Bitte mindestens einen Artikelnamen eingeben',
+  'bulk.previewHeading': 'Vorschau ({n} Artikel in "{cat}")', 'bulk.actionFor': 'Aktion für {name}',
+  'bulk.createNewIn': 'Neu anlegen in "{cat}"', 'bulk.addBatchTo': 'Als neue Charge zu "{name}" hinzufügen ({n}x vorhanden)',
+  'bulk.addBatchToOther': 'Als neue Charge zu bestehendem Artikel in "{cat}" hinzufügen', 'bulk.skip': 'Überspringen', 'bulk.createNow': 'Jetzt anlegen',
+  'bulk.resultSummary': '{created} angelegt, {batched} als Charge hinzugefügt, {skipped} übersprungen',
+  'trips.newList': '+ Neue Packliste', 'trips.importJson': '⬆ Liste aus JSON importieren', 'trips.importTxt': '⬆ Liste aus TXT importieren',
+  'trips.duplicate': 'Duplizieren', 'trips.delete': 'Löschen', 'trips.noLists': 'Noch keine Packliste angelegt.',
+  'trips.itemTypes': '{n} Artikelart(en)', 'trips.packedOf': '{packed}/{total} gepackt',
+  'bulk.title': 'Mehrere Artikel auf einmal hinzufügen', 'bulk.categoryPh': 'z.B. Küche (neu oder bestehend)', 'bulk.qtyPerItem': 'Menge pro Artikel (Standard)',
+  'bulk.destOptional': 'Zielort (optional, für alle)', 'bulk.originOptional': 'Herkunftsort (optional, für alle)',
+  'bulk.namesLabel': 'Artikelnamen (ein Name pro Zeile)', 'bulk.namesPh': 'Schüssel\nPfanne\nBesteck', 'bulk.preview': 'Vorschau erstellen',
+  'manage.newCategoryPh': 'Neue Kategorie…', 'manage.locationsTitle': 'Orte (Ziel & Herkunft)',
+  'manage.dangerZone': '⚠ Gefahrenzone', 'manage.dangerZoneDesc': 'Löscht das gesamte Artikel-Inventar dauerhaft (Packlisten bleiben als leere Hüllen bestehen).',
+  'manage.deleteInventory': 'Gesamtes Inventar löschen', 'manage.save': 'Speichern', 'manage.clear': 'Leeren', 'manage.deleteBtn': 'Löschen',
+  'modal.exportOpts.title': 'Export-Optionen', 'modal.exportOpts.includePhotos': 'Fotos einbeziehen (größere Datei)',
+  'modal.importOpts.title': 'Import-Optionen', 'modal.importOpts.includePhotos': 'Fotos aus dieser Datei einbeziehen', 'modal.importOpts.chooseFile': 'Datei auswählen…',
+  'modal.webdav.title': '🌐 WebDAV-Synchronisierung',
+  'modal.webdav.desc': 'Liest/schreibt eine gemeinsame Datei über WebDAV, wie der lokale Datei-Link, nur über das Netzwerk. Es gibt keine Konfliktauflösung — wer zuletzt speichert, gewinnt. Der Server muss Anfragen von dieser App erlauben (CORS).',
+  'modal.webdav.url': 'URL', 'modal.webdav.username': 'Benutzername (optional)', 'modal.webdav.password': 'Passwort (optional)',
+  'modal.webdav.disconnect': 'Trennen', 'modal.webdav.pullNow': 'Jetzt abrufen', 'modal.webdav.connect': 'Speichern & verbinden',
+  'modal.picker.title': 'Artikel hinzufügen', 'modal.picker.searchPh': 'Inventar durchsuchen…', 'modal.picker.filterCurrentLoc': 'Nach aktuellem Ort filtern',
+  'modal.picker.allCurrentLocations': 'Alle aktuellen Orte', 'modal.picker.createNew': '+ neuen Artikel im Inventar anlegen',
+  'modal.picker.createAndAdd': 'Anlegen & zur Liste hinzufügen', 'modal.picker.addSelected': 'Ausgewählte hinzufügen',
+  'modal.newItem.title': 'Neuer Artikel', 'modal.newItem.categoryPh': 'Kategorie (neu oder bestehend)',
+  'modal.dup.title': 'Gleicher Name, andere Kategorie',
+  'modal.deleteCat.title': 'Kategorie löschen', 'modal.deleteCat.moveAll': 'Alle Artikel nach "Sonstiges" verschieben & Kategorie löschen',
+  'modal.deleteCat.orSelect': 'Oder einzeln auswählen, welche Artikel gelöscht werden sollen (nicht angehakt = wird nach "Sonstiges" verschoben):',
+  'modal.deleteCat.confirm': 'Ausgewählte löschen, Rest verschieben',
+  'modal.exportList.title': 'Packliste exportieren', 'modal.exportList.modePack': 'Packliste (wo eingepackt wird)',
+  'modal.exportList.modeUnpack': 'Auspackliste (wo wieder eingeräumt wird)', 'modal.exportList.groupCategory': 'Gruppieren nach: Kategorie',
+  'modal.exportList.groupLocation': 'Gruppieren nach: Ziel/Herkunft', 'modal.exportList.groupCurrent': 'Gruppieren nach: Aktueller Ort',
+  'modal.exportList.groupExplain': 'Ziel/Herkunft — Packliste: nach Zielort (wohin eingepackt wird). Auspackliste: nach Herkunftsort (wohin zurückgeräumt wird).<br>Aktueller Ort — bei beiden Listen: nach dem Ort, an dem sich der Artikel gerade befindet (von wo gepackt/ausgepackt wird).',
+  'modal.exportList.incNote': 'Notiz im Export einbeziehen', 'modal.exportList.incTags': 'Tags im Export einbeziehen',
+  'modal.exportList.copyClipboard': '📋 In Zwischenablage kopieren', 'modal.exportList.downloadTxt': '⬇ Als TXT-Datei herunterladen',
+  'modal.exportList.share': '📤 Teilen (Smartphone)', 'modal.exportList.printView': '🖨 Druckansicht (drucken / als PDF speichern)',
+  'modal.help.title': 'Kurzanleitung',
+  'modal.help.body': '<li><b>Inventar</b>: alle deine Artikel (Name, Kategorie, Menge, Orte) — deine Bestandsdatenbank. Startet leer — importiere <code>starter-inventory-import.json</code> über das ☰-Menü für Beispielartikel, oder lege eigene an.</li><li><b>Listen</b>: einzelne Packlisten für bestimmte Reisen, gefüllt mit Artikeln aus deinem Inventar.</li><li><b>Mehrfach hinzufügen</b>: mehrere Artikel auf einmal zu einer Kategorie hinzufügen.</li><li><b>Verwalten</b>: Kategorien &amp; Orte umbenennen/löschen, Inventar zurücksetzen.</li><li><b>☰-Menü</b>: Export/Import als Sicherungsdatei · "Link" speichert Änderungen automatisch in eine lokale Datei — bleibt über Neuladen hinweg verknüpft (kann einen Klick zur Bestätigung brauchen).</li><li>Kopfzeile: <b>🔗 Dateiname</b> = aktiv verknüpft, <b>🔗⏳ Dateiname</b> = Verknüpfung braucht einen Klick zur Bestätigung (dafür erscheint automatisch ein Hinweis).</li><li>Alle Daten bleiben nur in diesem Browser, bis du sie exportierst.</li><li>Tippe auf Kategorie-/Gruppenüberschriften, um sie ein-/auszuklappen.</li>',
+  'modal.help.versionLine': 'App-Version:', 'modal.help.gotIt': 'Verstanden',
+  'modal.reconnect.title': '🔗 Datei-Link fortsetzen', 'modal.reconnect.bodyPre': 'Die Verknüpfung zu',
+  'modal.reconnect.bodyPost': 'muss einmal bestätigt werden, damit Änderungen wieder automatisch darin gespeichert werden.',
+  'modal.reconnect.later': 'Später', 'modal.reconnect.linkNow': '🔗 Jetzt verknüpfen',
+},
+};
+let currentLang = 'en';
+function t(key, vars){
+  let s = (I18N[currentLang] && I18N[currentLang][key]) ?? I18N.en[key] ?? key;
+  if(vars) Object.keys(vars).forEach(k=>{ s = s.split('{'+k+'}').join(vars[k]); });
+  return s;
+}
+// Alias for use inside callbacks where the parameter is itself named `t` (a trip
+// object — used throughout this codebase, e.g. `db.trips.forEach(t=>...)`), which
+// would otherwise shadow the translation function above.
+const translate = t;
+function translatePage(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el=>{ el.innerHTML = t(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{ el.placeholder = t(el.dataset.i18nPlaceholder); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{ el.title = t(el.dataset.i18nTitle); });
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(el=>{ el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel)); });
+  updateLangMenuLabel();
+}
+function updateLangMenuLabel(){
+  const btn = document.getElementById('langToggleBtn');
+  if(btn) btn.textContent = currentLang==='de' ? t('menu.langToEnglish') : t('menu.langToGerman');
+}
+function detectLang(){
+  try{
+    const saved = localStorage.getItem('app_lang');
+    if(saved==='en' || saved==='de') return saved;
+  }catch(e){}
+  return (typeof navigator!=='undefined' && /^de/i.test(navigator.language||'')) ? 'de' : 'en';
+}
+function toggleLang(){
+  currentLang = currentLang==='de' ? 'en' : 'de';
+  try{ localStorage.setItem('app_lang', currentLang); }catch(e){}
+  translatePage();
+  renderCatalog(); renderTripsList(); renderManage();
+  if(currentTripId) renderTripDetail(currentTripId);
+}
+
 const CATEGORIES_DEFAULT = [];
 const KNOWN_LOCATIONS = [];
 
@@ -718,7 +1052,7 @@ async function handleItemPhotoChange(itemId, input){
     const dataUrl = await compressImageFile(file);
     savePhoto('item:'+itemId, dataUrl);
     renderCatalog();
-  }catch(e){ console.error(e); alert('Could not process that image.'); }
+  }catch(e){ console.error(e); alert(t('photo.couldNotProcess')); }
   input.value='';
 }
 function removeItemPhoto(itemId){
@@ -731,7 +1065,7 @@ async function handleLocationPhotoChange(locationName, input){
     const dataUrl = await compressImageFile(file);
     savePhoto('loc:'+normKey(locationName), dataUrl);
     renderManage();
-  }catch(e){ console.error(e); alert('Could not process that image.'); }
+  }catch(e){ console.error(e); alert(t('photo.couldNotProcess')); }
   input.value='';
 }
 function removeLocationPhoto(locationName){
@@ -930,7 +1264,7 @@ function toggleBestandView(){
 }
 function updateBestandViewBtn(){
   const btn = document.getElementById('bViewToggleBtn');
-  if(btn) btn.textContent = bestandCompactView ? '🔎 Expanded view' : '🔎 Simplified view';
+  if(btn) btn.textContent = bestandCompactView ? t('inv.expandedView') : t('inv.simplifiedView');
 }
 function renderCatalog(){
   renderCategoryDatalist(); renderLocationDatalist(); renderItemNameDatalist();
@@ -939,7 +1273,7 @@ function renderCatalog(){
   const catF = catSel.value;
   const locSel = document.getElementById('bLoc');
   const curLoc = locSel.value;
-  locSel.innerHTML = '<option value="">All locations</option><option value="__none__">Incomplete location (destination or origin missing)</option>'
+  locSel.innerHTML = `<option value="">${t('inv.allLocations')}</option><option value="__none__">${t('inv.incompleteLocation')}</option>`
     + uniqueLocations().map(l=>`<option value="${esc(l)}">${esc(l)}</option>`).join('');
   locSel.value = curLoc;
   const locF = locSel.value;
@@ -968,27 +1302,27 @@ function renderCatalog(){
   items.forEach(i=>{ (byCat[i.category]=byCat[i.category]||[]).push(i); });
 
   const statsText = document.getElementById('bStatsText');
-  if(statsText){ const s = computeInventoryStats(); statsText.textContent = `${s.active} active · ${s.inactive} inactive`; }
+  if(statsText){ const s = computeInventoryStats(); statsText.textContent = t('inv.activeInactiveCount', {active:s.active, inactive:s.inactive}); }
 
   renderSelectBar();
   const wrap = document.getElementById('catalogList');
-  if(items.length===0){ wrap.innerHTML='<p class="empty">No items found.</p>'; return; }
+  if(items.length===0){ wrap.innerHTML=`<p class="empty">${t('inv.noItemsFound')}</p>`; return; }
 
   const order = db.categories.filter(c=>byCat[c]).concat(Object.keys(byCat).filter(c=>!db.categories.includes(c)));
   const btnAll = document.getElementById('bToggleAllBtn');
-  if(btnAll) btnAll.textContent = order.every(c=>bestandClosedGroups.has(c)) ? 'Expand all' : 'Collapse all';
+  if(btnAll) btnAll.textContent = order.every(c=>bestandClosedGroups.has(c)) ? t('common.expandAll') : t('common.collapseAll');
   wrap.innerHTML = order.map(cat=>{
     const list = byCat[cat].sort((a,b)=>a.name.localeCompare(b.name,'en'));
     const st = categoryStats(cat);
     const c = colorFor(cat);
     const isOpen = !bestandClosedGroups.has(cat);
     return `<details ${isOpen?'open':''} data-key="${esc(cat)}" data-scope="bestand" ontoggle="onDetailsToggle(this)" style="border-left:4px solid ${c};">
-      <summary style="color:${c};">${esc(cat)} <span class="cnt">${st.active} active · ${st.inactive} inactive</span></summary>
+      <summary style="color:${c};">${esc(cat)} <span class="cnt">${t('inv.activeInactiveCount', {active:st.active, inactive:st.inactive})}</span></summary>
       ${list.map(i=>{
         const usedIn = tripsUsingItem(i);
-        const usageBadge = usedIn.length ? `<span class="pill" title="${esc('Used in: '+usedIn.map(t=>t.name).join(', '))}">📋 ${usedIn.length}</span>` : '';
+        const usageBadge = usedIn.length ? `<span class="pill" title="${esc(t('inv.usedInTitle',{names:usedIn.map(t=>t.name).join(', ')}))}">📋 ${usedIn.length}</span>` : '';
         const avgRating = avgRatingFor(i);
-        const ratingBadge = avgRating==null ? '' : `<span class="pill warn" title="Average usefulness rating across included lists">★ ${avgRating.toFixed(1)}</span>`;
+        const ratingBadge = avgRating==null ? '' : `<span class="pill warn" title="${t('inv.avgRatingTitle')}">★ ${avgRating.toFixed(1)}</span>`;
         return bestandCompactView ? `<div class="bcard compact ${i.active?'':'inactive'}">
         <div class="selcol"><input type="checkbox" ${selectedBestand.has(i.id)?'checked':''} onchange="toggleSelectBestand('${i.id}',this.checked)"></div>
         <input type="text" class="bname" value="${esc(i.name)}" onchange="updateItem('${i.id}','name',this.value)">
@@ -1001,37 +1335,37 @@ function renderCatalog(){
           <div class="row-inline">
             ${photoCache['item:'+i.id]?`<img class="photothumb" src="${photoCache['item:'+i.id]}">`:''}
             <input type="file" accept="image/*" style="display:none" id="photoInput_${i.id}" onchange="handleItemPhotoChange('${i.id}', this)">
-            <button type="button" class="small secondary" onclick="document.getElementById('photoInput_${i.id}').click()">📷 ${photoCache['item:'+i.id]?'Change':'Add'} photo</button>
-            ${photoCache['item:'+i.id]?`<button type="button" class="small ghost" onclick="removeItemPhoto('${i.id}')">✕ Remove photo</button>`:''}
+            <button type="button" class="small secondary" onclick="document.getElementById('photoInput_${i.id}').click()">${photoCache['item:'+i.id]?t('inv.changePhoto'):t('inv.addPhoto')}</button>
+            ${photoCache['item:'+i.id]?`<button type="button" class="small ghost" onclick="removeItemPhoto('${i.id}')">${t('inv.removePhoto')}</button>`:''}
           </div>
-          <div><label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;">Category</label>
+          <div><label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;">${t('common.category')}</label>
           <input type="text" list="categoryOptions" value="${esc(i.category)}" onchange="updateItem('${i.id}','category',this.value)"></div>
-          <div><label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;">Weight per unit (kg)</label>
+          <div><label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;">${t('inv.weightPerUnit')}</label>
           <input type="number" min="0" step="0.01" value="${i.weight||0}" onchange="updateItem('${i.id}','weight',parseFloat(this.value)||0)"></div>
-          <div><label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;">Requires (optional)</label>
+          <div><label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;">${t('inv.requires')}</label>
           <div class="tags">
             ${(i.requires||[]).map(rid=>{ const req=db.catalog.find(x=>x.id===rid); return req?`<span class="tagpill">${esc(req.name)}<button onclick="removeRequirement('${i.id}','${rid}')">✕</button></span>`:''; }).join('')}
             <span class="tagadd">
-              <input type="text" class="taginput" list="itemNameOptions" id="reqinput_${i.id}" placeholder="+ Requires item…"
+              <input type="text" class="taginput" list="itemNameOptions" id="reqinput_${i.id}" placeholder="${t('inv.requiresPh')}"
                 onkeydown="if(event.key==='Enter'){event.preventDefault(); addRequirement('${i.id}', this.value); this.value='';}">
-              <button type="button" class="tagconfirm" title="Add" onclick="var el=document.getElementById('reqinput_${i.id}'); addRequirement('${i.id}', el.value); el.value='';">✓</button>
+              <button type="button" class="tagconfirm" title="${t('common.add')}" onclick="var el=document.getElementById('reqinput_${i.id}'); addRequirement('${i.id}', el.value); el.value='';">✓</button>
             </span>
           </div></div>
           <div class="batches">
-            <div class="batch-hdr">Batches (${totalQty(i)}x total${i.weight?' · '+(i.weight*totalQty(i)).toFixed(2)+' kg total':''})</div>
+            <div class="batch-hdr">${i.weight?t('inv.batchesHeaderWeight',{n:totalQty(i), kg:(i.weight*totalQty(i)).toFixed(2)}):t('inv.batchesHeader',{n:totalQty(i)})}</div>
             ${i.batches.map(b=>`<div class="batch-row">
-              <input type="number" min="0" value="${b.qty}" title="Quantity" onchange="updateBatch('${i.id}','${b.id}','qty',parseInt(this.value)||0)">
-              <input type="text" list="locationOptions" value="${esc(b.locTo)}" placeholder="Destination" onchange="updateBatch('${i.id}','${b.id}','locTo',this.value)">
-              <input type="text" list="locationOptions" value="${esc(b.locFrom)}" placeholder="Origin" onchange="updateBatch('${i.id}','${b.id}','locFrom',this.value)">
-              <button class="x" onclick="removeBatch('${i.id}','${b.id}')" title="Remove batch">✕</button>
+              <input type="number" min="0" value="${b.qty}" title="${t('common.quantity')}" onchange="updateBatch('${i.id}','${b.id}','qty',parseInt(this.value)||0)">
+              <input type="text" list="locationOptions" value="${esc(b.locTo)}" placeholder="${t('inv.destination')}" onchange="updateBatch('${i.id}','${b.id}','locTo',this.value)">
+              <input type="text" list="locationOptions" value="${esc(b.locFrom)}" placeholder="${t('inv.origin')}" onchange="updateBatch('${i.id}','${b.id}','locFrom',this.value)">
+              <button class="x" onclick="removeBatch('${i.id}','${b.id}')" title="${t('inv.removeBatch')}">✕</button>
             </div>`).join('')}
-            <button class="small secondary" onclick="addBatch('${i.id}')">+ Batch (own location)</button>
+            <button class="small secondary" onclick="addBatch('${i.id}')">${t('inv.addBatch')}</button>
           </div>
-          <div><label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;">Note</label>
+          <div><label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;">${t('common.note')}</label>
           <textarea class="bnote" rows="2" onchange="updateItem('${i.id}','note',this.value)">${esc(i.note)}</textarea></div>
           <div class="btail">
-            <label><input type="checkbox" ${i.active?'checked':''} onchange="updateItem('${i.id}','active',this.checked)"> active</label>
-            <button class="ghost small" onclick="deleteItem('${i.id}')">✕ Delete item</button>
+            <label><input type="checkbox" ${i.active?'checked':''} onchange="updateItem('${i.id}','active',this.checked)"> ${t('inv.activeCheckbox')}</label>
+            <button class="ghost small" onclick="deleteItem('${i.id}')">${t('inv.deleteItem')}</button>
           </div>
         </div>
       </div>`;
@@ -1044,13 +1378,13 @@ function renderSelectBar(){
   const el = document.getElementById('bSelectBar');
   if(selectedBestand.size===0){ el.innerHTML=''; return; }
   el.innerHTML = `<div class="selectbar">
-    <b>${selectedBestand.size} selected</b>
-    <input type="text" id="bulkCatInput" list="categoryOptions" placeholder="Change category to…" style="width:160px;">
-    <button class="small" onclick="bulkSetCategory()">Move</button>
-    <button class="small secondary" onclick="bulkSetActive(true)">Set active</button>
-    <button class="small secondary" onclick="bulkSetActive(false)">Set inactive</button>
-    <button class="small danger" onclick="bulkDelete()">Delete</button>
-    <button class="small ghost" onclick="clearSelection()">Clear selection</button>
+    <b>${t('common.nSelected',{n:selectedBestand.size})}</b>
+    <input type="text" id="bulkCatInput" list="categoryOptions" placeholder="${t('inv.changeCategoryTo')}" style="width:160px;">
+    <button class="small" onclick="bulkSetCategory()">${t('common.move')}</button>
+    <button class="small secondary" onclick="bulkSetActive(true)">${t('inv.setActive')}</button>
+    <button class="small secondary" onclick="bulkSetActive(false)">${t('inv.setInactive')}</button>
+    <button class="small danger" onclick="bulkDelete()">${t('common.delete')}</button>
+    <button class="small ghost" onclick="clearSelection()">${t('common.clearSelection')}</button>
   </div>`;
 }
 function toggleSelectBestand(id, checked){
@@ -1060,7 +1394,7 @@ function toggleSelectBestand(id, checked){
 function clearSelection(){ selectedBestand.clear(); renderCatalog(); }
 function bulkSetActive(active){
   selectedBestand.forEach(id=>{ const it=db.catalog.find(i=>i.id===id); if(it) it.active=active; });
-  saveDB(); renderCatalog(); toast('Status updated');
+  saveDB(); renderCatalog(); toast(t('common.statusUpdated'));
 }
 function bulkDelete(){
   const affectedTrips = new Map();
@@ -1068,11 +1402,11 @@ function bulkDelete(){
     const item = db.catalog.find(i=>i.id===id); if(!item) return;
     tripsUsingItem(item).forEach(t=>affectedTrips.set(t.id, t.name));
   });
-  let msg = `Really delete ${selectedBestand.size} item(s)?`;
+  let msg = t('inv.confirmDeleteN', {n:selectedBestand.size});
   if(affectedTrips.size){
-    msg += `\n\nSome of them are currently used in ${affectedTrips.size} packing list${affectedTrips.size>1?'s':''}:\n- ${[...affectedTrips.values()].join('\n- ')}\n\nThey will also be removed from ${affectedTrips.size>1?'those lists':'that list'}.`;
+    msg += t(affectedTrips.size>1?'inv.someUsedInMany':'inv.someUsedInOne', {n:affectedTrips.size, list:[...affectedTrips.values()].join('\n- '), those:t(affectedTrips.size>1?'common.thoseLists':'common.thatList')});
   } else {
-    msg += ' None of them are currently used in any packing list.';
+    msg += t('inv.noneUsed');
   }
   if(!confirm(msg)) return;
   selectedBestand.forEach(id=>{
@@ -1083,7 +1417,7 @@ function bulkDelete(){
     db.trips.forEach(t=>{ t.items = t.items.filter(ti=>!batchIds.has(ti.batchId)); });
     deletePhoto('item:'+id);
   });
-  selectedBestand.clear(); saveDB(); renderCatalog(); toast('Item(s) deleted');
+  selectedBestand.clear(); saveDB(); renderCatalog(); toast(t('common.itemsDeleted'));
 }
 function bulkSetCategory(){
   const val = document.getElementById('bulkCatInput').value.trim();
@@ -1102,7 +1436,7 @@ function bulkSetCategory(){
     else seen[k]=i;
   });
   selectedBestand.clear(); saveDB(); renderCatalog();
-  toast(`Moved to "${target}"` + (merged?` — ${merged} item(s) merged into batches`:''));
+  toast(t('inv.movedTo',{cat:target}) + (merged?t('inv.mergedSuffix',{n:merged}):''));
 }
 
 function updateItem(id, field, value){
@@ -1134,7 +1468,7 @@ function addRequirement(itemId, name){
   name = (name||'').trim(); if(!name) return;
   const item = db.catalog.find(i=>i.id===itemId); if(!item) return;
   const target = db.catalog.find(i=>normKey(i.name)===normKey(name) && i.id!==itemId);
-  if(!target){ toast(`No item named "${name}" found`); renderCatalog(); return; }
+  if(!target){ toast(t('inv.noItemNamed',{name})); renderCatalog(); return; }
   if(!item.requires) item.requires=[];
   if(!item.requires.includes(target.id)) item.requires.push(target.id);
   saveDB(); renderCatalog();
@@ -1170,11 +1504,11 @@ function removeBatch(itemId, batchId){
 function deleteItem(id){
   const item = db.catalog.find(i=>i.id===id); if(!item) return;
   const usedIn = tripsUsingItem(item);
-  let msg = 'Really delete this item from the inventory?';
+  let msg = t('inv.confirmDeleteItem');
   if(usedIn.length){
-    msg += `\n\nIt is currently used in ${usedIn.length} packing list${usedIn.length>1?'s':''}:\n- ${usedIn.map(t=>t.name).join('\n- ')}\n\nIt will also be removed from ${usedIn.length>1?'those lists':'that list'}.`;
+    msg += t(usedIn.length>1?'inv.itemUsedInMany':'inv.itemUsedInOne', {n:usedIn.length, list:usedIn.map(t=>t.name).join('\n- '), those:t(usedIn.length>1?'common.thoseLists':'common.thatList')});
   } else {
-    msg += ' It is not currently used in any packing list.';
+    msg += t('inv.notUsedAnywhere');
   }
   if(!confirm(msg)) return;
   const batchIds = new Set(item.batches.map(b=>b.id));
@@ -1183,7 +1517,7 @@ function deleteItem(id){
   db.trips.forEach(t=>{ t.items = t.items.filter(ti=>!batchIds.has(ti.batchId)); });
   selectedBestand.delete(id);
   deletePhoto('item:'+id);
-  saveDB(); renderCatalog(); toast('Item deleted');
+  saveDB(); renderCatalog(); toast(t('common.itemDeleted'));
 }
 
 // ---- New item (modal, with duplicate check) ----
@@ -1195,7 +1529,7 @@ function openNewItemModal(){
 function closeNewItemModal(){ document.getElementById('newItemModal').classList.remove('show'); }
 function submitNewItemModal(){
   const name = document.getElementById('mNiName').value.trim();
-  if(!name){ toast('Please enter a name'); return; }
+  if(!name){ toast(t('newItem.pleaseEnterName')); return; }
   const draft = {
     name, category: document.getElementById('mNiCat').value.trim()||'Miscellaneous',
     qty: parseInt(document.getElementById('mNiQty').value)||1,
@@ -1205,7 +1539,7 @@ function submitNewItemModal(){
     weight: parseFloat(document.getElementById('mNiWeight').value)||0
   };
   closeNewItemModal();
-  checkAndCreateItem(draft, ()=>{ renderCatalog(); toast('Item created'); });
+  checkAndCreateItem(draft, ()=>{ renderCatalog(); toast(t('newItem.itemCreated')); });
 }
 
 // ---- shared creation logic with duplicate detection ----
@@ -1233,10 +1567,10 @@ function createItemRaw(draft, onDone){
 }
 function openDupModal(draft, existing, onDone){
   pendingDup = {draft, existing, onDone};
-  document.getElementById('dupExistingLabel').textContent = `"${existing.name}" already exists in category "${existing.category}" (${totalQty(existing)}x in ${existing.batches.length} batch(es)).`;
-  document.getElementById('dupNewLabel').textContent = `You are creating: ${draft.qty}x "${draft.name}" in category "${draft.category}".`;
-  document.getElementById('dupOptB').textContent = `Create as a separate item in "${draft.category}" (recommended if a different category is intentional)`;
-  document.getElementById('dupOptA').textContent = `Add as a new batch to "${existing.category}" instead`;
+  document.getElementById('dupExistingLabel').textContent = t('dup.existingLabel', {name:existing.name, cat:existing.category, n:totalQty(existing), batches:existing.batches.length});
+  document.getElementById('dupNewLabel').textContent = t('dup.newLabel', {qty:draft.qty, name:draft.name, cat:draft.category});
+  document.getElementById('dupOptB').textContent = t('dup.optB', {cat:draft.category});
+  document.getElementById('dupOptA').textContent = t('dup.optA', {cat:existing.category});
   document.getElementById('dupModal').classList.add('show');
 }
 function cancelDupModal(){ pendingDup=null; document.getElementById('dupModal').classList.remove('show'); }
@@ -1260,7 +1594,7 @@ function renderTripsList(){
   document.getElementById('tripsListView').style.display='';
   document.getElementById('tripDetailView').style.display='none';
   const wrap = document.getElementById('tripsList');
-  if(db.trips.length===0){ wrap.innerHTML='<p class="empty">No packing list created yet.</p>'; return; }
+  if(db.trips.length===0){ wrap.innerHTML=`<p class="empty">${t('trips.noLists')}</p>`; return; }
   wrap.innerHTML = db.trips.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(t=>{
     const total = t.items.reduce((s,i)=>s+i.qty,0);
     const packed = t.items.filter(i=>i.packed).reduce((s,i)=>s+i.qty,0);
@@ -1269,38 +1603,38 @@ function renderTripsList(){
       <div class="row-inline">
         <div><b>${esc(t.name)}</b> <span class="pill">${esc(t.type)}</span></div>
         <div class="row-inline">
-          <button class="small" onclick="openTrip('${t.id}')">Open</button>
-          <button class="small secondary" onclick="duplicateTrip('${t.id}')">Duplicate</button>
-          <button class="small danger" onclick="deleteTrip('${t.id}')">Delete</button>
+          <button class="small" onclick="openTrip('${t.id}')">${translate('trips.open')}</button>
+          <button class="small secondary" onclick="duplicateTrip('${t.id}')">${translate('trips.duplicate')}</button>
+          <button class="small danger" onclick="deleteTrip('${t.id}')">${translate('trips.delete')}</button>
         </div>
       </div>
-      <div class="meta">${t.date||''} · ${t.items.length} item type(s) · ${packed}/${total} packed</div>
+      <div class="meta">${t.date||''} · ${translate('trips.itemTypes',{n:t.items.length})} · ${translate('trips.packedOf',{packed,total})}</div>
       <div class="progress"><div style="width:${pct}%"></div></div>
     </div>`;
   }).join('');
 }
 
 function createTrip(){
-  const name = prompt('Packing list name (e.g. "Summer Trip 2026"):');
+  const name = prompt(t('trips.namePrompt'));
   if(!name) return;
-  const type = prompt('Type of trip:\nCampsite, Off-grid, Festival, Road trip, Apartment, Other', 'Campsite') || 'Miscellaneous';
+  const type = prompt(t('trips.typePrompt'), 'Campsite') || 'Miscellaneous';
   const trip = {id:genId(), name, type, date:new Date().toISOString().slice(0,10), items:[], tasksBefore:[], tasksAfter:[], includeInAverage:true};
   db.trips.push(trip); saveDB();
   openTrip(trip.id);
 }
 function duplicateTrip(id){
   const t = db.trips.find(x=>x.id===id); if(!t) return;
-  const name = prompt('Name of the new packing list:', t.name+' (Copy)');
+  const name = prompt(translate('trips.duplicateNamePrompt'), t.name+translate('trips.copySuffix'));
   if(!name) return;
   const copy = {id:genId(), name, type:t.type, date:new Date().toISOString().slice(0,10),
     items:t.items.map(i=>({batchId:i.batchId, qty:i.qty, packed:false, tags:(i.tags||[]).slice(), rating:0})),
     tasksBefore:(t.tasksBefore||[]).map(x=>({id:genId(), text:x.text, done:false})),
     tasksAfter:(t.tasksAfter||[]).map(x=>({id:genId(), text:x.text, done:false})),
     includeInAverage: t.includeInAverage!==false};
-  db.trips.push(copy); saveDB(); renderTripsList(); toast('Packing list duplicated');
+  db.trips.push(copy); saveDB(); renderTripsList(); toast(translate('trips.duplicated'));
 }
 function deleteTrip(id){
-  if(!confirm('Really delete this packing list?')) return;
+  if(!confirm(t('trips.confirmDeleteList'))) return;
   db.trips = db.trips.filter(t=>t.id!==id); saveDB(); renderTripsList();
 }
 function openTrip(id){ currentTripId=id; selectedTripItems.clear(); document.getElementById('tripDetailView').dataset.built=''; renderTripDetail(id); }
@@ -1320,7 +1654,7 @@ function renderTripTasks(t){
   const el = document.getElementById('tripTasksWrap'); if(!el) return;
   const section = (list, when, label) => `
     <details open>
-      <summary>${label} <span class="cnt">${list.filter(x=>x.done).length}/${list.length} done</span></summary>
+      <summary>${label} <span class="cnt">${translate('trips.tasksDone',{done:list.filter(x=>x.done).length,total:list.length})}</span></summary>
       <div>
         ${list.map(task=>`<div class="itemrow">
           <input type="checkbox" ${task.done?'checked':''} onchange="toggleTask('${t.id}','${when}','${task.id}',this.checked)">
@@ -1328,12 +1662,12 @@ function renderTripTasks(t){
           <button class="x" onclick="removeTask('${t.id}','${when}','${task.id}')">✕</button>
         </div>`).join('')}
         <div class="row-inline" style="padding:8px 4px;">
-          <input type="text" class="grow" placeholder="New task…" id="newTask_${when}" onkeydown="if(event.key==='Enter'){addTask('${t.id}','${when}',this.value); this.value='';}">
-          <button class="small secondary" onclick="var inp=document.getElementById('newTask_${when}'); addTask('${t.id}','${when}',inp.value); inp.value='';">+ Add</button>
+          <input type="text" class="grow" placeholder="${translate('trips.newTaskPh')}" id="newTask_${when}" onkeydown="if(event.key==='Enter'){addTask('${t.id}','${when}',this.value); this.value='';}">
+          <button class="small secondary" onclick="var inp=document.getElementById('newTask_${when}'); addTask('${t.id}','${when}',inp.value); inp.value='';">${translate('common.addShort')}</button>
         </div>
       </div>
     </details>`;
-  el.innerHTML = section(t.tasksBefore||[], 'before', '✅ Tasks before the trip') + section(t.tasksAfter||[], 'after', '✅ Tasks after the trip');
+  el.innerHTML = section(t.tasksBefore||[], 'before', translate('trips.tasksBefore')) + section(t.tasksAfter||[], 'after', translate('trips.tasksAfter'));
 }
 function taskListKey(when){ return when==='before' ? 'tasksBefore' : 'tasksAfter'; }
 function addTask(tripId, when, text){
@@ -1371,42 +1705,42 @@ function renderTripDetail(id){
   if(view.dataset.built!==id){
     view.dataset.built = id;
     view.innerHTML = `
-      <a class="backlink" onclick="backToTrips()">← Back to packing lists</a>
+      <a class="backlink" onclick="backToTrips()">${translate('trips.backToLists')}</a>
       <div style="margin:8px 0;">
         <input type="text" id="tName" value="${esc(t.name)}" onchange="updateTrip('name',this.value)" style="font-size:1rem; font-weight:600; width:100%; margin-bottom:8px;">
         <label style="display:flex; align-items:center; gap:6px; font-size:0.82rem; color:var(--muted); margin-bottom:8px;">
           <input type="checkbox" ${t.includeInAverage!==false?'checked':''} onchange="updateTrip('includeInAverage', this.checked)">
-          Include this list in inventory average ratings
+          ${translate('trips.includeInAvgLabel')}
         </label>
         <div class="row-inline">
-        <button class="small secondary" onclick="openExportModal()">📤 Share list</button>
-        <button class="small secondary" onclick="exportTripFile()" title="Save/share as an importable file">⬇ Export list to JSON</button>
-        <button class="small secondary" onclick="exportTripText()" title="Save/share as an editable .txt file">⬇ Export list to TXT</button>
-        <button class="small secondary" onclick="exportTripCSV()" title="Open in Excel, Google Sheets, Todoist, or similar (one-way, not re-importable here)">⬇ Export list to CSV</button>
+        <button class="small secondary" onclick="openExportModal()">${translate('trips.shareList')}</button>
+        <button class="small secondary" onclick="exportTripFile()" title="${translate('trips.exportJsonTitle')}">${translate('trips.exportJson')}</button>
+        <button class="small secondary" onclick="exportTripText()" title="${translate('trips.exportTxtTitle')}">${translate('trips.exportTxt')}</button>
+        <button class="small secondary" onclick="exportTripCSV()" title="${translate('trips.exportCsvTitle')}">${translate('trips.exportCsv')}</button>
         </div>
       </div>
       <div id="tripProgress"></div>
       <div class="tabbar">
-        <button id="tripSubArtikel" class="active" onclick="showTripSubTab('artikel')">📦 Items</button>
-        <button id="tripSubAufgaben" onclick="showTripSubTab('aufgaben')">✅ Tasks</button>
-        <button id="tripSubText" onclick="showTripSubTab('text')">📝 Text</button>
+        <button id="tripSubArtikel" class="active" onclick="showTripSubTab('artikel')">${translate('trips.tabItems')}</button>
+        <button id="tripSubAufgaben" onclick="showTripSubTab('aufgaben')">${translate('trips.tabTasks')}</button>
+        <button id="tripSubText" onclick="showTripSubTab('text')">${translate('trips.tabText')}</button>
       </div>
       <div id="tripArtikelSection">
         <div class="toolbar">
-          <input type="search" id="dSearch" placeholder="Search…" oninput="renderTripDetail(currentTripId)">
-          <select id="dCat" onchange="renderTripDetail(currentTripId)" aria-label="Filter by category"></select>
-          <select id="dStatus" onchange="renderTripDetail(currentTripId)" aria-label="Filter by packed status">
-            <option value="">All</option><option value="open">Open</option><option value="packed">Packed</option>
+          <input type="search" id="dSearch" placeholder="${translate('common.search')}" oninput="renderTripDetail(currentTripId)">
+          <select id="dCat" onchange="renderTripDetail(currentTripId)" aria-label="${translate('inv.filterCategory')}"></select>
+          <select id="dStatus" onchange="renderTripDetail(currentTripId)" aria-label="${translate('trips.filterPackedStatus')}">
+            <option value="">${translate('trips.all')}</option><option value="open">${translate('trips.statusOpen')}</option><option value="packed">${translate('trips.statusPacked')}</option>
           </select>
-          <select id="dTag" onchange="renderTripDetail(currentTripId)" aria-label="Filter by tag"><option value="">All tags</option></select>
-          <select id="dGroup" onchange="renderTripDetail(currentTripId)" aria-label="Group items by">
-            <option value="category">Group by: Category</option>
-            <option value="locTo">Group by: Destination</option>
-            <option value="locFrom">Group by: Origin</option>
-            <option value="current">Group by: Current location</option>
+          <select id="dTag" onchange="renderTripDetail(currentTripId)" aria-label="${translate('trips.filterTag')}"><option value="">${translate('trips.allTags')}</option></select>
+          <select id="dGroup" onchange="renderTripDetail(currentTripId)" aria-label="${translate('trips.groupItemsBy')}">
+            <option value="category">${translate('trips.groupByCategory')}</option>
+            <option value="locTo">${translate('trips.groupByDest')}</option>
+            <option value="locFrom">${translate('trips.groupByOrigin')}</option>
+            <option value="current">${translate('trips.groupByCurrent')}</option>
           </select>
-          <button class="ghost small" onclick="toggleAllTripGroups()" id="tToggleAllBtn">Collapse all</button>
-          <button onclick="openPicker('${t.id}')">+ Add items</button>
+          <button class="ghost small" onclick="toggleAllTripGroups()" id="tToggleAllBtn">${translate('common.collapseAll')}</button>
+          <button onclick="openPicker('${t.id}')">${translate('trips.addItems')}</button>
         </div>
         <div id="tripSelectBar"></div>
         <div id="tripItemsWrap"></div>
@@ -1416,8 +1750,8 @@ function renderTripDetail(id){
       </div>
       <div id="tripTextSection" style="display:none;">
         <div class="toolbar">
-          <button class="small" onclick="refreshTripText(currentTripId)" title="Regenerate text from the current list (discards unapplied edits here)">🔄 Refresh from list</button>
-          <button class="small secondary" onclick="applyTripText(currentTripId)" title="Replace this list's items &amp; tasks with the text above">✅ Apply to list</button>
+          <button class="small" onclick="refreshTripText(currentTripId)" title="${translate('trips.refreshFromListTitle')}">${translate('trips.refreshFromList')}</button>
+          <button class="small secondary" onclick="applyTripText(currentTripId)" title="${translate('trips.applyToListTitle')}">${translate('trips.applyToList')}</button>
         </div>
         <textarea id="tripTextArea" spellcheck="false" style="width:100%; min-height:340px; font-family:ui-monospace,Consolas,monospace; font-size:0.82rem;"></textarea>
       </div>`;
@@ -1434,13 +1768,13 @@ function renderTripDetail(id){
   const pct = total? Math.round(packed/total*100):0;
   const totalWeight = t.items.reduce((s,ti)=>{ const found=resolveBatch(ti.batchId); return s+(found?(found.item.weight||0)*ti.qty:0); },0);
   document.getElementById('tripProgress').innerHTML =
-    `<div class="meta" style="color:var(--muted); font-size:0.82rem;">${packed}/${total} packed (${pct}%)${totalWeight?' · '+totalWeight.toFixed(2)+' kg total':''}</div>
+    `<div class="meta" style="color:var(--muted); font-size:0.82rem;">${translate('trips.packedOf',{packed,total})} (${pct}%)${totalWeight?translate('trips.kgTotal',{kg:totalWeight.toFixed(2)}):''}</div>
      <div class="progress"><div style="width:${pct}%"></div></div>`;
 
   const allTags = [...new Set(t.items.flatMap(i=>i.tags||[]))].sort((a,b)=>a.localeCompare(b,'en'));
   const tagSel = document.getElementById('dTag');
   const curTag = tagSel.value;
-  tagSel.innerHTML = '<option value="">All tags</option>' + allTags.map(tg=>`<option value="${esc(tg)}">${esc(tg)}</option>`).join('');
+  tagSel.innerHTML = `<option value="">${translate('trips.allTags')}</option>` + allTags.map(tg=>`<option value="${esc(tg)}">${esc(tg)}</option>`).join('');
   tagSel.value = curTag;
 
   const search = document.getElementById('dSearch').value.trim().toLowerCase();
@@ -1466,21 +1800,21 @@ function renderTripDetail(id){
 
   function groupKeyFor(r){
     if(groupMode==='category') return r.item.category;
-    if(groupMode==='locTo') return r.batch.locTo || '(no destination)';
-    if(groupMode==='locFrom') return r.batch.locFrom || '(no origin)';
-    return r.ti.packed ? (r.batch.locTo||'(unknown)') : (r.batch.locFrom||r.batch.locTo||'(unknown)');
+    if(groupMode==='locTo') return r.batch.locTo || translate('trips.noDestination');
+    if(groupMode==='locFrom') return r.batch.locFrom || translate('trips.noOrigin');
+    return r.ti.packed ? (r.batch.locTo||translate('trips.unknown')) : (r.batch.locFrom||r.batch.locTo||translate('trips.unknown'));
   }
   const byGroup={};
   rows.forEach(r=>{ (byGroup[groupKeyFor(r)]=byGroup[groupKeyFor(r)]||[]).push(r); });
 
   const wrap = document.getElementById('tripItemsWrap');
-  if(rows.length===0){ wrap.innerHTML='<p class="empty">No items in this view. Add some via "+ Add items".</p>'; return; }
+  if(rows.length===0){ wrap.innerHTML=`<p class="empty">${translate('trips.noItemsInView')}</p>`; return; }
 
   let groupOrder = Object.keys(byGroup);
   groupOrder = groupMode==='category' ? db.categories.filter(c=>byGroup[c]).concat(groupOrder.filter(g=>!db.categories.includes(g))) : groupOrder.sort((a,b)=>a.localeCompare(b,'en'));
 
   const tBtnAll = document.getElementById('tToggleAllBtn');
-  if(tBtnAll) tBtnAll.textContent = groupOrder.every(g=>tripClosedGroups.has(g)) ? 'Expand all' : 'Collapse all';
+  if(tBtnAll) tBtnAll.textContent = groupOrder.every(g=>tripClosedGroups.has(g)) ? translate('common.expandAll') : translate('common.collapseAll');
 
   wrap.innerHTML = groupOrder.map(g=>{
     const list = byGroup[g].sort((a,b)=>a.item.name.localeCompare(b.item.name,'en'));
@@ -1489,35 +1823,35 @@ function renderTripDetail(id){
     const gc = colorFor(g);
     const gOpen = !tripClosedGroups.has(g);
     return `<details ${gOpen?'open':''} data-key="${esc(g)}" data-scope="trip" ontoggle="onDetailsToggle(this)" style="border-left:4px solid ${gc};">
-      <summary style="color:${gc};">${esc(g)} <span class="cnt">${packedCount}/${list.length} packed${groupWeight?' · '+groupWeight.toFixed(2)+' kg':''}</span></summary>
+      <summary style="color:${gc};">${esc(g)} <span class="cnt">${translate('trips.packedOf',{packed:packedCount,total:list.length})}${groupWeight?translate('trips.kgSuffix',{kg:groupWeight.toFixed(2)}):''}</span></summary>
       <div>${list.map(r=>{
         const loc = r.ti.packed ? (r.batch.locTo||'—') : (r.batch.locFrom||r.batch.locTo||'—');
-        const locLabel = r.ti.packed ? 'now' : 'currently';
+        const locLabel = r.ti.packed ? translate('trips.now') : translate('trips.currently');
         const tags = r.ti.tags||[];
         const missingReqs = (r.item.requires||[]).map(rid=>db.catalog.find(c=>c.id===rid)).filter(req=>req && !presentItemIds.has(req.id));
         return `<div class="itemrow">
           <input type="checkbox" ${r.ti.packed?'checked':''} onchange="toggleTripItem('${t.id}','${r.ti.batchId}',this.checked)">
-          <input type="checkbox" title="select" ${selectedTripItems.has(r.ti.batchId)?'checked':''} onchange="toggleSelectTripItem('${r.ti.batchId}',this.checked)">
+          <input type="checkbox" title="${translate('common.select')}" ${selectedTripItems.has(r.ti.batchId)?'checked':''} onchange="toggleSelectTripItem('${r.ti.batchId}',this.checked)">
           ${photoCache['item:'+r.item.id]?`<img class="photothumb" src="${photoCache['item:'+r.item.id]}">`:''}
           <div class="name ${r.ti.packed?'packed':''}">
             <b>${esc(r.item.name)}</b>
             <span class="loc">📍 ${locLabel}: ${esc(loc)}${r.item.note?' · '+esc(r.item.note):''}${r.item.weight?' · '+(r.item.weight*r.ti.qty).toFixed(2)+' kg':''}</span>
-            ${missingReqs.length?`<div class="reqhint">⚠ also needs: ${missingReqs.map(x=>esc(x.name)).join(', ')}</div>`:''}
+            ${missingReqs.length?`<div class="reqhint">${translate('trips.alsoNeeds',{names:missingReqs.map(x=>esc(x.name)).join(', ')})}</div>`:''}
             <div class="tags">
               ${tags.map(tg=>`<span class="tagpill">${esc(tg)}<button onclick="removeTag('${t.id}','${r.ti.batchId}','${esc(tg)}')">✕</button></span>`).join('')}
               <span class="tagadd">
-                <input type="text" class="taginput" id="taginput_${r.ti.batchId}" placeholder="+ Tag(s), comma-separated"
+                <input type="text" class="taginput" id="taginput_${r.ti.batchId}" placeholder="${translate('trips.tagPlaceholder')}"
                   onkeydown="if(event.key==='Enter'){event.preventDefault(); addTag('${t.id}','${r.ti.batchId}',this.value); this.value='';}">
-                <button type="button" class="tagconfirm" title="Add tag(s)" onclick="var el=document.getElementById('taginput_${r.ti.batchId}'); addTag('${t.id}','${r.ti.batchId}',el.value); el.value='';">✓</button>
+                <button type="button" class="tagconfirm" title="${translate('trips.addTags')}" onclick="var el=document.getElementById('taginput_${r.ti.batchId}'); addTag('${t.id}','${r.ti.batchId}',el.value); el.value='';">✓</button>
               </span>
             </div>
-            <div class="starrow" title="Usefulness after the trip">
-              ${[1,2,3].map(n=>`<span class="star ${n<=r.ti.rating?'on':''}" title="${n===1?'Not used / superfluous':n===2?'Nice to have, alternatives exist':'Essential / mandatory'}" onclick="setTripItemRating('${t.id}','${r.ti.batchId}', ${n}===${r.ti.rating}?0:${n})">★</span>`).join('')}
+            <div class="starrow" title="${translate('trips.usefulnessTitle')}">
+              ${[1,2,3].map(n=>`<span class="star ${n<=r.ti.rating?'on':''}" title="${n===1?translate('trips.star1'):n===2?translate('trips.star2'):translate('trips.star3')}" onclick="setTripItemRating('${t.id}','${r.ti.batchId}', ${n}===${r.ti.rating}?0:${n})">★</span>`).join('')}
             </div>
           </div>
           <input type="number" min="0" value="${r.ti.qty}" id="tiQtyInput_${r.ti.batchId}" oninput="updateTripItemQtyIndicator('${r.ti.batchId}', ${r.batch.qty})" onchange="updateTripItemQty('${t.id}','${r.ti.batchId}',parseInt(this.value)||0)">
-          <span id="tiQtyInd_${r.ti.batchId}" style="font-size:0.72rem; color:${r.ti.qty > r.batch.qty ? 'var(--danger)' : 'var(--accent2)'};" title="Available in inventory: ${r.batch.qty}">/${r.batch.qty}</span>
-          <button class="x" onclick="removeTripItem('${t.id}','${r.ti.batchId}')" title="remove">✕</button>
+          <span id="tiQtyInd_${r.ti.batchId}" style="font-size:0.72rem; color:${r.ti.qty > r.batch.qty ? 'var(--danger)' : 'var(--accent2)'};" title="${translate('trips.availableInInventory',{n:r.batch.qty})}">/${r.batch.qty}</span>
+          <button class="x" onclick="removeTripItem('${t.id}','${r.ti.batchId}')" title="${translate('common.remove')}">✕</button>
         </div>`;
       }).join('')}</div>
       </details>`;
@@ -1528,12 +1862,12 @@ function renderTripSelectBar(){
   const el = document.getElementById('tripSelectBar'); if(!el) return;
   if(selectedTripItems.size===0){ el.innerHTML=''; return; }
   el.innerHTML = `<div class="selectbar">
-    <b>${selectedTripItems.size} selected</b>
-    <button class="small" onclick="bulkTripSetPacked(true)">Mark as packed</button>
-    <button class="small secondary" onclick="bulkTripSetPacked(false)">Mark as open</button>
-    <button class="small secondary" onclick="bulkTripAddTag()">Add tag</button>
-    <button class="small danger" onclick="bulkTripRemove()">Remove</button>
-    <button class="small ghost" onclick="clearTripSelection()">Clear selection</button>
+    <b>${t('common.nSelected',{n:selectedTripItems.size})}</b>
+    <button class="small" onclick="bulkTripSetPacked(true)">${t('trips.markPacked')}</button>
+    <button class="small secondary" onclick="bulkTripSetPacked(false)">${t('trips.markOpen')}</button>
+    <button class="small secondary" onclick="bulkTripAddTag()">${t('trips.addTag')}</button>
+    <button class="small danger" onclick="bulkTripRemove()">${t('trips.remove')}</button>
+    <button class="small ghost" onclick="clearTripSelection()">${t('common.clearSelection')}</button>
   </div>`;
 }
 function toggleSelectTripItem(batchId, checked){
@@ -1556,7 +1890,7 @@ function splitTags(raw){
   return (raw||'').split(',').map(s=>s.trim()).filter(Boolean);
 }
 function bulkTripAddTag(){
-  const raw = prompt('Tag(s) for the selected items (separate multiple with a comma):'); if(!raw) return;
+  const raw = prompt(translate('trips.tagPrompt')); if(!raw) return;
   const tags = splitTags(raw); if(tags.length===0) return;
   const t = db.trips.find(x=>x.id===currentTripId);
   t.items.forEach(ti=>{
@@ -1687,7 +2021,7 @@ async function doExport(action){
   };
   const text = buildTripText(t, mode, opts);
   if(action==='copy'){
-    navigator.clipboard?.writeText(text).then(()=>toast('Copied to clipboard')).catch(()=>{ prompt('Copy failed — select manually:', text); });
+    navigator.clipboard?.writeText(text).then(()=>toast(translate('trips.copiedToClipboard'))).catch(()=>{ prompt(translate('trips.copyFailed'), text); });
   } else if(action==='txt'){
     const filename = `${mode==='pack'?'packing-list':'unpacking-list'}_${GROUP_LABEL_FOR_FILENAME[groupBy]||groupBy}_${slugify(t.name)}_${fileTimestamp()}.txt`;
     if(isNative){ await nativeSaveOrShareText(filename, text, 'text/plain'); }
@@ -1702,7 +2036,7 @@ async function doExport(action){
     const share = isNative ? nativeSharePlugin() : null;
     if(share){ share.share({title:t.name, text}).catch(()=>{}); }
     else if(navigator.share){ navigator.share({title:t.name, text}).catch(()=>{}); }
-    else { navigator.clipboard?.writeText(text).then(()=>toast('Sharing not available — copied to clipboard')); }
+    else { navigator.clipboard?.writeText(text).then(()=>toast(translate('trips.sharingNotAvailable'))); }
   }
   closeExportModal();
 }
@@ -1777,15 +2111,15 @@ async function openPrintView(){
     const printer = nativePrintPlugin();
     if(printer){
       try{ await printer.printHtml({html, jobName: title}); }
-      catch(e){ toast('Could not open the print dialog.'); }
+      catch(e){ toast(translate('trips.printDialogFailed')); }
     } else {
-      toast('Print preview is not available on this device.');
+      toast(translate('trips.printNotAvailable'));
     }
     closeExportModal();
     return;
   }
   const win = window.open('', '_blank');
-  if(!win){ toast('Popup blocked — please allow popups for this site'); return; }
+  if(!win){ toast(translate('trips.popupBlocked')); return; }
   win.document.write(html);
   win.document.close();
   closeExportModal();
@@ -1863,9 +2197,9 @@ function importTripFile(evt){
         includeInAverage: src.includeInAverage!==false};
       db.trips.push(newTrip);
       saveDB();
-      toast(`Packing list imported (${reused} batch(es) reused, ${created} newly created)`);
+      toast(t('trips.importedSummary',{reused,created}));
       showTab('trips'); openTrip(newTrip.id);
-    }catch(e){ alert('Import failed: '+e.message); }
+    }catch(e){ alert(t('common.importFailed',{msg:e.message})); }
   };
   reader.readAsText(file);
   evt.target.value='';
@@ -2017,9 +2351,9 @@ function importTripText(evt){
         includeInAverage: parsed.includeInAverage!==false};
       db.trips.push(newTrip);
       saveDB();
-      toast(`Packing list imported (${reused} batch(es) reused, ${created} newly created)`);
+      toast(t('trips.importedSummary',{reused,created}));
       showTab('trips'); openTrip(newTrip.id);
-    }catch(e){ alert('Import failed: '+e.message); }
+    }catch(e){ alert(t('common.importFailed',{msg:e.message})); }
   };
   reader.readAsText(file);
   evt.target.value='';
@@ -2157,10 +2491,10 @@ let bulkAddRows = [];
 function previewBulkAdd(){
   renderCategoryDatalist(); renderLocationDatalist();
   const catRaw = document.getElementById('baCat').value.trim();
-  if(!catRaw){ toast('Please enter a category'); return; }
+  if(!catRaw){ toast(t('bulk.enterCategory')); return; }
   const qtyDefault = parseInt(document.getElementById('baQtyDefault').value)||1;
   const names = document.getElementById('baNames').value.split('\n').map(s=>s.trim()).filter(Boolean);
-  if(names.length===0){ toast('Please enter at least one item name'); return; }
+  if(names.length===0){ toast(t('bulk.enterOneName')); return; }
   bulkAddRows = names.map(name=>{
     const sameCat = db.catalog.find(i=>normKey(i.name)===normKey(name) && normKey(i.category)===normKey(catRaw));
     const otherCat = !sameCat ? db.catalog.find(i=>normKey(i.name)===normKey(name)) : null;
@@ -2170,19 +2504,19 @@ function previewBulkAdd(){
 }
 function renderBulkPreview(catRaw){
   const wrap = document.getElementById('baPreviewWrap');
-  wrap.innerHTML = `<h3>Preview (${bulkAddRows.length} item(s) in "${esc(catRaw)}")</h3>
+  wrap.innerHTML = `<h3>${t('bulk.previewHeading',{n:bulkAddRows.length, cat:esc(catRaw)})}</h3>
     ${bulkAddRows.map((r,idx)=>`<div class="manage-row">
       <span class="grow">${esc(r.name)}</span>
       <input type="number" min="0" value="${r.qty}" style="width:60px;" onchange="bulkAddRows[${idx}].qty=parseInt(this.value)||0">
-      <select id="baAction_${idx}" aria-label="Action for ${esc(r.name)}">
-        <option value="new">Create new in "${esc(catRaw)}"</option>
-        ${r.sameCat? `<option value="batch" selected>Add as new batch to "${esc(r.sameCat.name)}" (${totalQty(r.sameCat)}x present)</option>`:''}
-        ${r.otherCat? `<option value="batch_other">Add as new batch to existing item in "${esc(r.otherCat.category)}"</option>`:''}
-        <option value="skip">Skip</option>
+      <select id="baAction_${idx}" aria-label="${t('bulk.actionFor',{name:esc(r.name)})}">
+        <option value="new">${t('bulk.createNewIn',{cat:esc(catRaw)})}</option>
+        ${r.sameCat? `<option value="batch" selected>${t('bulk.addBatchTo',{name:esc(r.sameCat.name), n:totalQty(r.sameCat)})}</option>`:''}
+        ${r.otherCat? `<option value="batch_other">${t('bulk.addBatchToOther',{cat:esc(r.otherCat.category)})}</option>`:''}
+        <option value="skip">${t('bulk.skip')}</option>
       </select>
     </div>`).join('')}
     <div class="row-inline" style="margin-top:10px; justify-content:flex-end;">
-      <button onclick="commitBulkAdd('${esc(catRaw).replace(/'/g,"&#39;")}')">Create now</button>
+      <button onclick="commitBulkAdd('${esc(catRaw).replace(/'/g,"&#39;")}')">${t('bulk.createNow')}</button>
     </div>`;
 }
 function commitBulkAdd(catRaw){
@@ -2208,7 +2542,7 @@ function commitBulkAdd(catRaw){
   document.getElementById('baNames').value='';
   document.getElementById('baPreviewWrap').innerHTML='';
   bulkAddRows=[];
-  toast(`${created} created, ${batched} added as batch, ${skipped} skipped`);
+  toast(t('bulk.resultSummary',{created,batched,skipped}));
   showTab('bestand');
 }
 
@@ -2220,15 +2554,15 @@ function renderManage(){
     const st = categoryStats(c);
     return `<div class="manage-row" data-old="${esc(c)}">
       <input type="text" class="grow catNewName" value="${esc(c)}">
-      <span class="pill">${st.active} active · ${st.inactive} inactive</span>
-      <button class="small secondary" onclick="renameCategoryRow(this)">Save</button>
-      <button class="small danger" onclick="openDeleteCategoryModal('${esc(c).replace(/'/g,"&#39;")}')">Delete</button>
+      <span class="pill">${t('inv.activeInactiveCount',{active:st.active,inactive:st.inactive})}</span>
+      <button class="small secondary" onclick="renameCategoryRow(this)">${t('manage.save')}</button>
+      <button class="small danger" onclick="openDeleteCategoryModal('${esc(c).replace(/'/g,"&#39;")}')">${t('manage.deleteBtn')}</button>
     </div>`;
   }).join('');
 
   const locWrap = document.getElementById('manageLocList');
   const locs = uniqueLocations();
-  if(locs.length===0){ locWrap.innerHTML='<p class="empty">No locations set yet.</p>'; return; }
+  if(locs.length===0){ locWrap.innerHTML=`<p class="empty">${t('manage.locationsNotSetYet')}</p>`; return; }
   locWrap.innerHTML = locs.map((l,idx)=>{
     let asTo=0, asFrom=0;
     db.catalog.forEach(i=>i.batches.forEach(b=>{ if(b.locTo===l) asTo++; if(b.locFrom===l) asFrom++; }));
@@ -2237,21 +2571,21 @@ function renderManage(){
     return `<div class="manage-row" data-old="${esc(l)}">
       ${photo?`<img class="photothumb" src="${photo}">`:''}
       <input type="text" class="grow locNewName" value="${esc(l)}">
-      <span class="pill">Destination: ${asTo} · Origin: ${asFrom}</span>
+      <span class="pill">${t('manage.destOriginCounts',{to:asTo,from:asFrom})}</span>
       <input type="file" accept="image/*" style="display:none" id="locPhotoInput_${idx}" onchange="handleLocationPhotoChange('${lSafe}', this)">
-      <button type="button" class="small secondary" onclick="document.getElementById('locPhotoInput_${idx}').click()" title="Add/change photo">📷</button>
-      ${photo?`<button type="button" class="small ghost" onclick="removeLocationPhoto('${lSafe}')" title="Remove photo">✕📷</button>`:''}
-      <button class="small secondary" onclick="renameLocationRow(this)">Save</button>
-      <button class="small ghost" onclick="clearLocationRow(this)" title="Remove from all batches, location stays in the list">Clear</button>
-      <button class="small danger" onclick="deleteLocationRow(this)" title="Remove from all batches AND delete from the list">Delete</button>
+      <button type="button" class="small secondary" onclick="document.getElementById('locPhotoInput_${idx}').click()" title="${t('manage.addChangePhoto')}">📷</button>
+      ${photo?`<button type="button" class="small ghost" onclick="removeLocationPhoto('${lSafe}')" title="${t('manage.removePhotoTitle')}">✕📷</button>`:''}
+      <button class="small secondary" onclick="renameLocationRow(this)">${t('manage.save')}</button>
+      <button class="small ghost" onclick="clearLocationRow(this)" title="${t('manage.clearTitle')}">${t('manage.clear')}</button>
+      <button class="small danger" onclick="deleteLocationRow(this)" title="${t('manage.deleteTitle')}">${t('manage.deleteBtn')}</button>
     </div>`;
   }).join('');
 }
 function addCategoryFromInput(){
   const val = document.getElementById('newCatName').value.trim();
   if(!val) return;
-  if(db.categories.some(c=>normKey(c)===normKey(val))){ toast('Category already exists'); return; }
-  db.categories.push(val); saveDB(); document.getElementById('newCatName').value=''; renderManage(); toast('Category created');
+  if(db.categories.some(c=>normKey(c)===normKey(val))){ toast(t('manage.categoryExists')); return; }
+  db.categories.push(val); saveDB(); document.getElementById('newCatName').value=''; renderManage(); toast(t('manage.categoryCreated'));
 }
 function renameCategoryRow(btn){
   const row = btn.closest('.manage-row');
@@ -2260,24 +2594,24 @@ function renameCategoryRow(btn){
   if(!newName || newName===oldName) return;
   const clash = db.categories.find(c=>normKey(c)===normKey(newName) && c!==oldName);
   if(clash){
-    if(!confirm(`Category "${clash}" already exists. Move all items from "${oldName}" to "${clash}" and remove "${oldName}"?`)) return;
+    if(!confirm(t('manage.confirmMergeCategory',{clash, old:oldName}))) return;
     db.catalog.forEach(i=>{ if(i.category===oldName) i.category=clash; });
     db.categories = db.categories.filter(c=>c!==oldName);
   } else {
     db.catalog.forEach(i=>{ if(i.category===oldName) i.category=newName; });
     db.categories = db.categories.map(c=>c===oldName?newName:c);
   }
-  saveDB(); renderManage(); toast('Category renamed');
+  saveDB(); renderManage(); toast(t('manage.categoryRenamed'));
 }
 function openDeleteCategoryModal(catName){
   pendingDeleteCategory = catName;
   const items = db.catalog.filter(i=>i.category===catName);
-  document.getElementById('delCatTitle').textContent = `Delete category "${catName}" (${items.length} item(s))`;
+  document.getElementById('delCatTitle').textContent = t('manage.deleteCategoryTitle',{name:catName, n:items.length});
   document.getElementById('delCatList').innerHTML = items.map(i=>`
     <div class="manage-row" data-id="${i.id}">
       <input type="checkbox" class="delCatCheck">
-      <span class="grow">${esc(i.name)} (${totalQty(i)}x, ${i.batches.length} batch(es))${i.active?'':' — inactive'}</span>
-    </div>`).join('') || '<p class="empty">No items in this category.</p>';
+      <span class="grow">${esc(t('manage.itemSummary',{name:i.name, qty:totalQty(i), batches:i.batches.length}))}${i.active?'':esc(t('manage.inactiveSuffix'))}</span>
+    </div>`).join('') || `<p class="empty">${t('manage.noItemsInCategory')}</p>`;
   document.getElementById('deleteCategoryModal').classList.add('show');
 }
 function closeDeleteCategoryModal(){ pendingDeleteCategory=null; document.getElementById('deleteCategoryModal').classList.remove('show'); }
@@ -2306,7 +2640,7 @@ function confirmDeleteCategory(){
   db.categories = db.categories.filter(c=>c!==pendingDeleteCategory);
   saveDB(); pendingDeleteCategory=null;
   document.getElementById('deleteCategoryModal').classList.remove('show');
-  renderManage(); toast('Category deleted');
+  renderManage(); toast(t('manage.categoryDeleted'));
 }
 function renameLocationRow(btn){
   const row = btn.closest('.manage-row');
@@ -2319,37 +2653,37 @@ function renameLocationRow(btn){
   }));
   const oldKey = 'loc:'+normKey(oldName);
   if(photoCache[oldKey]){ savePhoto('loc:'+normKey(newName), photoCache[oldKey]); deletePhoto(oldKey); }
-  saveDB(); renderManage(); toast('Location renamed');
+  saveDB(); renderManage(); toast(t('manage.locationRenamed'));
 }
 function clearLocationRow(btn){
   const row = btn.closest('.manage-row');
   const name = row.dataset.old;
-  if(!confirm(`Remove location "${name}" from all affected batches?`)) return;
+  if(!confirm(t('manage.confirmClearLocation',{name}))) return;
   db.catalog.forEach(i=>i.batches.forEach(b=>{
     if(b.locTo===name) b.locTo='';
     if(b.locFrom===name) b.locFrom='';
   }));
-  saveDB(); renderManage(); toast('Location removed');
+  saveDB(); renderManage(); toast(t('manage.locationRemoved'));
 }
 function deleteLocationRow(btn){
   const row = btn.closest('.manage-row');
   const name = row.dataset.old;
-  if(!confirm(`Completely delete location "${name}" (remove from all batches and delete from the list)?`)) return;
+  if(!confirm(t('manage.confirmDeleteLocation',{name}))) return;
   db.catalog.forEach(i=>i.batches.forEach(b=>{
     if(b.locTo===name) b.locTo='';
     if(b.locFrom===name) b.locFrom='';
   }));
   db.locations = (db.locations||[]).filter(l=>l!==name);
   deletePhoto('loc:'+normKey(name));
-  saveDB(); renderManage(); toast('Location deleted');
+  saveDB(); renderManage(); toast(t('manage.locationDeleted'));
 }
 function wipeCatalog(){
-  const input = prompt('This will permanently delete ALL items. Type "DELETE" to confirm:');
-  if(input!=='DELETE'){ toast('Cancelled'); return; }
+  const input = prompt(t('manage.wipeConfirmPrompt'));
+  if(input!=='DELETE'){ toast(t('common.cancelled')); return; }
   db.catalog = [];
   db.trips.forEach(t=>{ t.items = []; });
   selectedBestand.clear();
-  saveDB(); renderManage(); toast('Inventory completely deleted');
+  saveDB(); renderManage(); toast(t('manage.inventoryWiped'));
 }
 
 // =================== EXPORT / IMPORT / FILE LINKING ===================
@@ -2413,11 +2747,11 @@ function importJSON(evt){
     try{
       const data = JSON.parse(reader.result);
       if(!data.catalog || !data.trips) throw new Error('invalid format');
-      if(!confirm('Import will overwrite the current inventory & all packing lists. Continue?')) return;
+      if(!confirm(t('common.confirmFullImport'))) return;
       applyFullDbImport(data, pendingImportIncludePhotos);
       saveDB();
-      renderCatalog(); renderTripsList(); renderManage(); toast('Import successful');
-    }catch(e){ alert('Import failed: '+e.message); }
+      renderCatalog(); renderTripsList(); renderManage(); toast(t('common.importSuccessful'));
+    }catch(e){ alert(t('common.importFailed',{msg:e.message})); }
   };
   reader.readAsText(file);
   evt.target.value='';
@@ -2429,7 +2763,7 @@ async function linkFile(){
     await storeLinkedHandle(fileHandle);
     await writeLinkedFile();
     updateLinkedFileUI();
-    toast(`File linked: ${fileHandle.name} — changes will be saved to it automatically from now on`);
+    toast(t('link.fileLinked',{name:fileHandle.name}));
   }catch(e){ /* user cancelled the picker */ }
 }
 function handleLinkButtonClick(){
@@ -2532,7 +2866,7 @@ async function initNativeStorage(){
 function openNativeFileChoiceModal(isInitial){
   const title = document.getElementById('nativeFileChoiceTitle');
   const skipBtn = document.getElementById('nativeFileChoiceSkipBtn');
-  if(title) title.textContent = isInitial ? '🔗 Link a file' : '🔗 Change linked file';
+  if(title) title.textContent = isInitial ? t('native.linkFileTitle') : t('native.changeFileTitle');
   if(skipBtn) skipBtn.style.display = isInitial ? '' : 'none';
   document.getElementById('nativeFileChoiceModal').classList.add('show');
 }
@@ -2552,7 +2886,7 @@ async function nativeCreateFile(){
     closeNativeFileChoiceModal();
     updateLinkedFileUI();
     await writeNativeFile();
-    toast(`File linked: ${nativeLinkedName}`);
+    toast(t('link.fileLinkedShort',{name:nativeLinkedName}));
   }catch(e){ /* user cancelled the picker */ }
 }
 async function nativeOpenFile(){
@@ -2568,12 +2902,12 @@ async function nativeOpenFile(){
         applyMigrations();
         saveDB();
         renderCatalog(); renderTripsList();
-      }catch(e){ alert('That file could not be read as a packing list backup.'); }
+      }catch(e){ alert(t('native.couldNotReadBackup')); }
     } else {
       await writeNativeFile();
     }
     updateLinkedFileUI();
-    toast(`File linked: ${nativeLinkedName}`);
+    toast(t('link.fileLinkedShort',{name:nativeLinkedName}));
   }catch(e){ /* user cancelled the picker */ }
 }
 // Shortens long filenames for the narrow menu button (the full name stays
@@ -2663,7 +2997,7 @@ async function restoreLinkedFile(){
     const perm = await handle.queryPermission({mode:'readwrite'});
     if(perm === 'granted'){
       fileHandle = handle;
-      toast(`File re-linked: ${fileHandle.name}`);
+      toast(t('link.fileRelinked',{name:fileHandle.name}));
     } else {
       pendingHandle = handle;
       openReconnectModal(handle.name);
@@ -2679,7 +3013,7 @@ async function reconnectLinkedFile(){
       fileHandle = pendingHandle;
       pendingHandle = null;
       updateLinkedFileUI();
-      toast(`File re-linked: ${fileHandle.name}`);
+      toast(t('link.fileRelinked',{name:fileHandle.name}));
     } else {
       pendingHandle = null;
       await clearLinkedHandle();
@@ -2720,7 +3054,7 @@ function updateThemeMenuLabel(){
   const btn = document.getElementById('themeToggleBtn');
   if(!btn) return;
   const current = localStorage.getItem('app_theme')==='light' ? 'light' : 'dark';
-  btn.textContent = current==='light' ? '🎨 Dark theme' : '🎨 Light theme';
+  btn.textContent = current==='light' ? t('menu.themeDark') : t('menu.themeLight');
 }
 document.addEventListener('click', (e)=>{
   const menu = document.getElementById('mainMenu');
@@ -2739,7 +3073,7 @@ async function writeLinkedFile(){
     pendingHandle = fileHandle;
     fileHandle = null;
     updateLinkedFileUI();
-    toast('Write access was lost — please resume the link from the menu.');
+    toast(t('link.writeAccessLost'));
   }
 }
 
@@ -2780,7 +3114,7 @@ function updateWebdavUI(){
 }
 async function connectWebdav(){
   const url = document.getElementById('webdavUrlInput').value.trim();
-  if(!url){ toast('Please enter a URL'); return; }
+  if(!url){ toast(t('webdav.pleaseEnterUrl')); return; }
   webdavUrl = url;
   webdavUser = document.getElementById('webdavUserInput').value.trim();
   webdavPass = document.getElementById('webdavPassInput').value;
@@ -2791,26 +3125,26 @@ async function connectWebdav(){
     const res = await fetch(webdavUrl, {method:'GET', headers: webdavAuthHeader()});
     if(res.status===404){
       await pushToWebdav();
-      toast('WebDAV connected — no file existed yet, created one from your current data.');
+      toast(t('webdav.createdNew'));
     } else if(res.ok){
       const text = await res.text();
       const data = JSON.parse(text);
-      if(!data.catalog || !data.trips) throw new Error('The file at that URL isn\'t a Packing List export.');
-      if(confirm('A Packing List file already exists at that URL. Load it now (replacing your current data)? Cancel to keep your current data and overwrite the remote file instead.')){
+      if(!data.catalog || !data.trips) throw new Error(t('webdav.notAPackingList'));
+      if(confirm(t('webdav.confirmLoadOrPush'))){
         applyFullDbImport(data, true);
         saveDB();
         renderCatalog(); renderTripsList(); renderManage();
-        toast('Loaded data from WebDAV.');
+        toast(t('webdav.loaded'));
       } else {
         await pushToWebdav();
-        toast('WebDAV connected — your current data was uploaded, replacing the remote file.');
+        toast(t('webdav.connectedUploaded'));
       }
     } else {
       throw new Error(`Server returned ${res.status}`);
     }
   }catch(e){
     console.error('WebDAV connect failed', e);
-    alert('Could not reach that WebDAV URL: '+e.message+'\n\nCheck the URL/credentials, and that the server allows requests from this app (CORS) — see the README.');
+    alert(t('webdav.couldNotReach', {msg:e.message}));
   }
 }
 function disconnectWebdav(){
@@ -2818,7 +3152,7 @@ function disconnectWebdav(){
   saveWebdavConfigToStorage();
   updateWebdavUI();
   closeWebdavModal();
-  toast('WebDAV disconnected (the remote file is left as-is).');
+  toast(t('webdav.disconnected'));
 }
 async function pushToWebdav(){
   if(!webdavUrl) return;
@@ -2828,7 +3162,7 @@ async function pushToWebdav(){
 }
 async function pullFromWebdav(){
   if(!webdavUrl) return;
-  if(!confirm('Replace your current inventory & lists with the version from WebDAV?')) return;
+  if(!confirm(t('webdav.confirmPull'))) return;
   try{
     const res = await fetch(webdavUrl, {method:'GET', headers: webdavAuthHeader()});
     if(!res.ok) throw new Error(`Server returned ${res.status}`);
@@ -2838,10 +3172,10 @@ async function pullFromWebdav(){
     saveDB();
     renderCatalog(); renderTripsList(); renderManage();
     closeWebdavModal();
-    toast('Loaded data from WebDAV.');
+    toast(t('webdav.loaded'));
   }catch(e){
     console.error('WebDAV pull failed', e);
-    alert('Could not load from WebDAV: '+e.message);
+    alert(t('webdav.couldNotLoad', {msg:e.message}));
   }
 }
 
@@ -2870,6 +3204,7 @@ function applyMigrations(){
   if(changed) saveDB();
 }
 
+currentLang = detectLang();
 loadDB();
 applyMigrations();
 document.getElementById('appVersionBadge').textContent = 'v'+APP_VERSION;
@@ -2881,6 +3216,7 @@ initNativeStorage();
 updateThemeMenuLabel();
 updateBestandViewBtn();
 updateSaveTimestampUI();
+translatePage();
 renderCatalog();
 renderTripsList();
 loadPhotoCache().then(()=>{ renderCatalog(); renderManage(); });

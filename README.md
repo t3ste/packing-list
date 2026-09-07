@@ -65,6 +65,7 @@ Runs as a website, an installable Progressive Web App (desktop and iOS), or a st
 
 ### Customization & housekeeping
 - Light and dark theme.
+- **English and German**, auto-detected from your browser/device language, switchable anytime from the ☰ menu. Some rarely-seen text (the shared/printed list format itself, not the app screens) is English-only for now.
 - Manage your own categories and locations (rename, delete, merge).
 - Warnings before deleting anything still referenced by a packing list — no silent data loss.
 - A small stats view (total items, batches, units, total weight, how many are actively used) for a sanity check on a growing inventory.
