@@ -55,7 +55,7 @@ button.danger{background:var(--danger); color:#fff;}
 button.ghost{background:transparent; color:var(--muted); border:1px solid var(--border); padding:6px 9px;}
 button.small{padding:5px 9px; font-size:0.78rem;}
 button:disabled{opacity:.4; cursor:default;}
-input[type=text],input[type=number],input[type=search],select,textarea{
+input[type=text],input[type=number],input[type=search],input[type=password],select,textarea{
   background:var(--field-bg); color:var(--text); border:1px solid var(--border); border-radius:6px;
   padding:7px 8px; font-size:0.87rem; font-family:inherit;}
 textarea{resize:vertical;}
@@ -126,7 +126,8 @@ summary .cnt{color:var(--muted); font-weight:400; font-size:0.74rem; white-space
 .starrow .star{cursor:pointer; font-size:1rem; color:var(--border); line-height:1; user-select:none;}
 .starrow .star.on{color:var(--warn);}
 .reqhint{font-size:0.72rem; color:var(--warn); margin-top:2px;}
-.photothumb{width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid var(--border); flex-shrink:0;}
+.photothumb{width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid var(--border); flex-shrink:0; cursor:pointer;}
+.photoslot{width:40px; height:40px; flex-shrink:0;}
 .tagpill{display:inline-flex; align-items:center; gap:4px; background:var(--accent-soft-15); color:var(--accent);
   border-radius:10px; padding:1px 6px 1px 8px; font-size:0.7rem;}
 .tagpill button{background:none; border:none; color:var(--accent); padding:0; margin:0; font-size:0.85rem; cursor:pointer; line-height:1;}
@@ -172,7 +173,7 @@ a.backlink{color:var(--accent); text-decoration:none; font-size:0.85rem; cursor:
 <body>
 
 <div class="topbar">
-  <h1>Packing List <span class="pill" id="appVersionBadge" title="App version"></span><small>local · offline · <span id="appVersion">v3</span> · 📦 <span id="cacheTimestamp"></span> · 💾 <span id="saveTimestamp"></span></small><small id="linkedFileIndicator" style="color:var(--accent);"></small><small id="webdavIndicator" style="color:var(--accent);"></small></h1>
+  <h1>Packing List <span class="pill" id="appVersionBadge" title="App version"></span><small>local · <span id="appVersion">v3</span> · 📦 <span id="cacheTimestamp"></span> · 💾 <span id="saveTimestamp"></span></small><small id="linkedFileIndicator" style="color:var(--accent);"></small><small id="webdavIndicator" style="color:var(--accent);"></small></h1>
   <div class="menuWrap">
     <button class="menuToggle" id="menuToggleBtn" onclick="toggleMainMenu()" aria-label="Menu" title="Menu">☰</button>
     <div class="mainMenu" id="mainMenu">
@@ -345,17 +346,33 @@ Cutlery"></textarea>
   <div class="modal">
     <h2 data-i18n="modal.webdav.title">🌐 WebDAV sync</h2>
     <p class="help-list" style="margin:0 0 10px; font-size:0.82rem; color:var(--muted);" data-i18n="modal.webdav.desc">Reads/writes one shared file over WebDAV, like the local file link but over the network. There's no conflict resolution — whoever saves last wins. The server must allow requests from this app (CORS).</p>
-    <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;" data-i18n="modal.webdav.url">URL</label>
-    <input type="text" id="webdavUrlInput" placeholder="https://cloud.example.com/remote.php/dav/files/you/packing-list.json" class="full">
-    <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;" data-i18n="modal.webdav.username">Username (optional)</label>
-    <input type="text" id="webdavUserInput" class="full">
-    <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;" data-i18n="modal.webdav.password">Password (optional)</label>
-    <input type="password" id="webdavPassInput" class="full">
+    <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px;">
+      <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;" data-i18n="modal.webdav.url">URL</label>
+      <input type="text" id="webdavUrlInput" placeholder="https://cloud.example.com/remote.php/dav/files/you/packing-list.json" style="width:100%;">
+    </div>
+    <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px;">
+      <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;" data-i18n="modal.webdav.username">Username (optional)</label>
+      <input type="text" id="webdavUserInput" style="width:100%;">
+    </div>
+    <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px;">
+      <label style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;" data-i18n="modal.webdav.password">Password (optional)</label>
+      <input type="password" id="webdavPassInput" style="width:100%;">
+    </div>
     <div class="row-inline" style="justify-content:flex-end; margin-top:12px;">
       <button class="ghost" id="webdavDisconnectBtn" onclick="disconnectWebdav()" style="display:none;" data-i18n="modal.webdav.disconnect">Disconnect</button>
       <button class="secondary" id="webdavPullBtn" onclick="pullFromWebdav()" style="display:none;" data-i18n="modal.webdav.pullNow">Pull now</button>
       <button class="secondary" onclick="closeWebdavModal()" data-i18n="common.cancel">Cancel</button>
       <button onclick="connectWebdav()" data-i18n="modal.webdav.connect">Save & connect</button>
+    </div>
+  </div>
+</div>
+
+<!-- Photo lightbox -->
+<div class="modal-bg" id="photoViewModal" onclick="closePhotoView()">
+  <div class="modal" style="max-width:90vw; padding:12px; background:transparent; box-shadow:none;" onclick="event.stopPropagation()">
+    <img id="photoViewImg" src="" style="display:block; max-width:100%; max-height:80vh; margin:0 auto; border-radius:8px;">
+    <div class="row-inline" style="justify-content:center; margin-top:10px;">
+      <button class="secondary" onclick="closePhotoView()" data-i18n="common.close">Close</button>
     </div>
   </div>
 </div>
@@ -841,6 +858,7 @@ let pendingImportIncludePhotos = true;
 let webdavUrl = null;
 let webdavUser = '';
 let webdavPass = '';
+let webdavConnected = false;
 let currentTripId = null;
 let pickerTripId = null;
 let pickerSelections = {};
@@ -1303,7 +1321,7 @@ function renderCatalog(){
           <input type="text" class="bname" value="${esc(i.name)}" onchange="updateItem('${i.id}','name',this.value)">
           ${usageBadge}${ratingBadge}
           <div class="row-inline">
-            ${photoCache['item:'+i.id]?`<img class="photothumb" src="${photoCache['item:'+i.id]}">`:''}
+            ${photoCache['item:'+i.id]?`<img class="photothumb" src="${photoCache['item:'+i.id]}" onclick="viewPhoto('${photoCache['item:'+i.id]}')">`:''}
             <input type="file" accept="image/*" style="display:none" id="photoInput_${i.id}" onchange="handleItemPhotoChange('${i.id}', this)">
             <button type="button" class="small secondary" onclick="document.getElementById('photoInput_${i.id}').click()">${photoCache['item:'+i.id]?t('inv.changePhoto'):t('inv.addPhoto')}</button>
             ${photoCache['item:'+i.id]?`<button type="button" class="small ghost" onclick="removeItemPhoto('${i.id}')">${t('inv.removePhoto')}</button>`:''}
@@ -1802,7 +1820,7 @@ function renderTripDetail(id){
         return `<div class="itemrow">
           <input type="checkbox" ${r.ti.packed?'checked':''} onchange="toggleTripItem('${t.id}','${r.ti.batchId}',this.checked)">
           <input type="checkbox" title="${translate('common.select')}" ${selectedTripItems.has(r.ti.batchId)?'checked':''} onchange="toggleSelectTripItem('${r.ti.batchId}',this.checked)">
-          ${photoCache['item:'+r.item.id]?`<img class="photothumb" src="${photoCache['item:'+r.item.id]}">`:''}
+          <span class="photoslot">${photoCache['item:'+r.item.id]?`<img class="photothumb" src="${photoCache['item:'+r.item.id]}" onclick="viewPhoto('${photoCache['item:'+r.item.id]}')">`:''}</span>
           <div class="name ${r.ti.packed?'packed':''}">
             <b>${esc(r.item.name)}</b>
             <span class="loc">📍 ${locLabel}: ${esc(loc)}${r.item.note?' · '+esc(r.item.note):''}${r.item.weight?' · '+(r.item.weight*r.ti.qty).toFixed(2)+' kg':''}</span>
@@ -2504,7 +2522,7 @@ function renderManage(){
     const lSafe = esc(l).replace(/'/g,"&#39;");
     const photo = photoCache['loc:'+normKey(l)];
     return `<div class="manage-row" data-old="${esc(l)}">
-      ${photo?`<img class="photothumb" src="${photo}">`:''}
+      <span class="photoslot">${photo?`<img class="photothumb" src="${photo}" onclick="viewPhoto('${photo}')">`:''}</span>
       <input type="text" class="grow locNewName" value="${esc(l)}">
       <span class="pill">${t('manage.destOriginCounts',{to:asTo,from:asFrom})}</span>
       <input type="file" accept="image/*" style="display:none" id="locPhotoInput_${idx}" onchange="handleLocationPhotoChange('${lSafe}', this)">
@@ -2869,12 +2887,12 @@ function loadWebdavConfig(){
     const raw = localStorage.getItem('packliste_webdav_config');
     if(!raw) return;
     const cfg = JSON.parse(raw);
-    webdavUrl = cfg.url||null; webdavUser = cfg.user||''; webdavPass = cfg.pass||'';
+    webdavUrl = cfg.url||null; webdavUser = cfg.user||''; webdavPass = cfg.pass||''; webdavConnected = !!cfg.connected;
   }catch(e){ console.warn('Could not load WebDAV config', e); }
 }
 function saveWebdavConfigToStorage(){
   try{
-    if(webdavUrl) localStorage.setItem('packliste_webdav_config', JSON.stringify({url:webdavUrl, user:webdavUser, pass:webdavPass}));
+    if(webdavUrl) localStorage.setItem('packliste_webdav_config', JSON.stringify({url:webdavUrl, user:webdavUser, pass:webdavPass, connected:webdavConnected}));
     else localStorage.removeItem('packliste_webdav_config');
   }catch(e){ console.warn('Could not save WebDAV config', e); }
 }
@@ -2890,9 +2908,18 @@ function openWebdavModal(){
   document.getElementById('webdavModal').classList.add('show');
 }
 function closeWebdavModal(){ document.getElementById('webdavModal').classList.remove('show'); }
+function viewPhoto(dataUrl){
+  if(!dataUrl) return;
+  document.getElementById('photoViewImg').src = dataUrl;
+  document.getElementById('photoViewModal').classList.add('show');
+}
+function closePhotoView(){
+  document.getElementById('photoViewModal').classList.remove('show');
+  document.getElementById('photoViewImg').src = '';
+}
 function updateWebdavUI(){
   const indicator = document.getElementById('webdavIndicator');
-  if(indicator) indicator.textContent = webdavUrl ? ` · 🌐 ${webdavUrl}` : '';
+  if(indicator) indicator.textContent = (webdavUrl && webdavConnected) ? ` · 🌐 ${webdavUrl}` : '';
 }
 async function connectWebdav(){
   const url = document.getElementById('webdavUrlInput').value.trim();
@@ -2900,6 +2927,7 @@ async function connectWebdav(){
   webdavUrl = url;
   webdavUser = document.getElementById('webdavUserInput').value.trim();
   webdavPass = document.getElementById('webdavPassInput').value;
+  webdavConnected = false;
   saveWebdavConfigToStorage();
   updateWebdavUI();
   closeWebdavModal();
@@ -2915,6 +2943,9 @@ async function connectWebdav(){
       if(confirm(t('webdav.confirmLoadOrPush'))){
         applyFullDbImport(data, true);
         saveDB();
+        webdavConnected = true;
+        saveWebdavConfigToStorage();
+        updateWebdavUI();
         renderCatalog(); renderTripsList(); renderManage();
         toast(t('webdav.loaded'));
       } else {
@@ -2926,11 +2957,14 @@ async function connectWebdav(){
     }
   }catch(e){
     console.error('WebDAV connect failed', e);
+    webdavConnected = false;
+    saveWebdavConfigToStorage();
+    updateWebdavUI();
     alert(t('webdav.couldNotReach', {msg:e.message}));
   }
 }
 function disconnectWebdav(){
-  webdavUrl = null; webdavUser=''; webdavPass='';
+  webdavUrl = null; webdavUser=''; webdavPass=''; webdavConnected = false;
   saveWebdavConfigToStorage();
   updateWebdavUI();
   closeWebdavModal();
@@ -2940,7 +2974,15 @@ async function pushToWebdav(){
   if(!webdavUrl) return;
   try{
     await fetch(webdavUrl, {method:'PUT', headers:{...webdavAuthHeader(), 'Content-Type':'application/json'}, body: JSON.stringify(db,null,2)});
-  }catch(e){ console.warn('WebDAV push failed (will retry on next save):', e); }
+    webdavConnected = true;
+    saveWebdavConfigToStorage();
+    updateWebdavUI();
+  }catch(e){
+    console.warn('WebDAV push failed (will retry on next save):', e);
+    webdavConnected = false;
+    saveWebdavConfigToStorage();
+    updateWebdavUI();
+  }
 }
 async function pullFromWebdav(){
   if(!webdavUrl) return;
@@ -2952,11 +2994,17 @@ async function pullFromWebdav(){
     if(!data.catalog || !data.trips) throw new Error('invalid format');
     applyFullDbImport(data, true);
     saveDB();
+    webdavConnected = true;
+    saveWebdavConfigToStorage();
+    updateWebdavUI();
     renderCatalog(); renderTripsList(); renderManage();
     closeWebdavModal();
     toast(t('webdav.loaded'));
   }catch(e){
     console.error('WebDAV pull failed', e);
+    webdavConnected = false;
+    saveWebdavConfigToStorage();
+    updateWebdavUI();
     alert(t('webdav.couldNotLoad', {msg:e.message}));
   }
 }
